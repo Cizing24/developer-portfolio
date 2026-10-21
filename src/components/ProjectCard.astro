@@ -1,0 +1,64 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+interface Props {
+  project: CollectionEntry<'projects'>;
+  index: number;
+}
+const { project, index } = Astro.props;
+const { data } = project;
+---
+
+<article class="project-card" data-tags={JSON.stringify(data.tags)}>
+  <a
+    href={`/projects/${project.id}/`}
+    class:list={['project-visual', project.id]}
+    tabindex="-1"
+    aria-hidden="true"
+  >
+    <div class="visual-caption">
+      <span>{data.category}</span>
+      <span>0{index + 1} / CASE STUDY</span>
+    </div>
+    <div class="screen-frame">
+      <div class="screen-bar">
+        <i></i>
+        <i></i>
+        <i></i>
+        <span>{data.title} / WORKSPACE</span>
+      </div>
+      <Image
+        src={data.cover}
+        alt=""
+        widths={[480, 800, 1200]}
+        sizes="(max-width: 760px) 90vw, 46vw"
+        loading="lazy"
+      />
+    </div>
+    <span class="visual-arrow" aria-hidden="true">
+      ↗
+    </span>
+  </a>
+  <div class="project-meta">
+    <span class="eyebrow">
+      0{index + 1} — {data.category}
+    </span>
+    <span class="status">
+      <span></span>
+      {data.visibility === 'private' ? 'PRIVATE SOURCE' : 'PUBLIC SOURCE'}
+    </span>
+  </div>
+  <h3>
+    <a href={`/projects/${project.id}/`}>
+      {data.title}
+      <span aria-hidden="true">↗</span>
+    </a>
+  </h3>
+  <p>{data.description}</p>
+  <ul class="tags" aria-label="使用技術">
+    {data.tags.map((tag) => (
+      <li>{tag}</li>
+    ))}
+  </ul>
+  <p class="project-note">{data.status} · 未公開部署</p>
+</article>

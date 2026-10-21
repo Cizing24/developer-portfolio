@@ -1,0 +1,105 @@
+---
+title: BookFlow SaaS
+description: 將多租戶授權、真實可用時段與預約一致性串成完整流程，處理撞期、改期與遺失回應後的重試。
+category: MULTI-TENANT BOOKING
+tags: [Next.js, TypeScript, PostgreSQL, Prisma]
+highlights: [多租戶隔離, GiST 排他約束, 交易 Outbox]
+status: 已實作・隔離展示
+visibility: public
+repository: https://github.com/Cizing24/bookflow-saas
+featured: true
+order: 2
+sourceCommit: 4c913361edab42f4be2ac4a8dc28eef942947824
+reviewedAt: '2026-10-22'
+cover: ../../assets/bookflow.png
+coverAlt: BookFlow 專業行事曆實際截圖，呈現合成測試店家及預約資料
+---
+
+## 專案概覽
+
+BookFlow 是以工作室、美容護理與單次服務為情境的多租戶預約平台。店家管理服務、人員、營業時間與行事曆；顧客透過店家專屬路徑查詢真實時段、預約與自助管理。
+
+**已實作本機完整流程、公開原始碼，尚未公開部署，也未寄送正式 Email。** 「SaaS」描述多租戶產品形態，不代表已營運、收費或具有正式服務承諾。
+
+## 問題與動機
+
+人工訊息排程容易忽略人員資格、休假與服務前後緩衝。即使前端顯示可用，兩個顧客仍可能同時送出相同時段。核心目標是讓「可預約」有一致、可驗證的定義，並將權限與資料隔離放在伺服器及資料庫邊界。
+
+## 核心需求
+
+- 每個店家的服務、人員、顧客與預約相互隔離。
+- 依營業時間、人員排班、休假、資格、緩衝與現有預約計算可用時段。
+- 同一員工的有效占用不可重疊；取消必須釋放時段。
+- 遺失回應後重送不能重複建單；舊畫面不能覆蓋較新的改期。
+- 管理者、Staff、顧客私人連結與平台管理員具有不同權限邊界。
+
+## 系統架構
+
+```text
+管理端 / 公開預約 / 顧客自助 / 平台管理
+                    ↓
+       Next.js Route Handlers / Session / Zod
+                    ↓
+     Application Services → Availability Engine
+                    ↓
+ PostgreSQL: tenant lock / composite FK / exclusion
+                    ↓
+ Booking + BookingEvent + Notification (one transaction)
+                    ↓
+          Lease-based Worker → Email Gateway
+```
+
+Next.js App Router 整合管理介面與 HTTP 路由。純函式排程引擎不依賴 HTTP，方便驗證時區與邊界；應用服務協調授權、交易與真實資料。沒有把前端生成的時間清單視為權威來源。
+
+## 技術選型
+
+使用 Next.js、React、TypeScript strict、PostgreSQL、Prisma、Better Auth、Zod、Luxon 與 Tailwind CSS。Vitest 負責 domain 與服務驗證，Playwright 驗證正式編譯伺服器。容器與 GitHub Actions 支援可重現交付。
+
+選擇 PostgreSQL 的原因不只是儲存資料，而是使用複合外鍵、CHECK、trigger 與 GiST exclusion 表達不可違反的規則。
+
+## 資料模型
+
+Tenant 關聯 Membership、Service、Staff、Customer 與 Booking。Membership 將登入 User 與店家角色連結；StaffService 表達員工服務資格；StaffSchedule 與 StaffAbsence 表達排班及停班。
+
+Booking 保存服務名稱、價格與緩衝快照，避免設定修改回頭改寫歷史。複合外鍵包含 tenantId，阻止跨店服務或顧客被連入同一預約。PlatformAdmin 為獨立權限來源，店家 Owner 不會自動取得平台權限。
+
+## 主要功能
+
+已實作店家與成員、服務、人員、每週營業、排班、休假、匿名預約、顧客私人連結取消／改期、日週行事曆、顧客管理、營運統計、稽核與 Outbox。平台管理可啟停店家，但不因此獲得店家完整顧客資料權限。
+
+## 工程難點
+
+**競爭不能只靠畫面防止。** 建立、改期、取消與設定修改共用 Tenant row lock；取得鎖後重新讀取並驗證。資料庫對同店、同員工的 CONFIRMED 預約另設部分 GiST exclusion，禁止含緩衝的占用範圍交集。
+
+半開區間 `[start, end)` 允許相鄰預約。取消移出有效約束範圍；revision 防止過期畫面覆蓋，trigger 阻止終態復活。
+
+時段以店家 IANA 時區計算，再保存 UTC instant。DST 不存在的本地時間不提供，重複時間則以不同 UTC instant 區別；前端不自行猜測可用時段。
+
+## 技術決策
+
+- **店家層級鎖**：讓排程設定與預約的順序容易推理；代價是同店寫入序列化。
+- **冪等鍵 + 請求 hash**：同店同鍵同內容重送回原結果，不同內容回 409。
+- **Outbox**：預約、事件與通知工作同交易建立，避免只寫入其中一半。
+- **顧客 capability token**：匿名 Email 不是身分驗證，隨機私人 token 只授權對應預約。
+
+## 安全與可靠性
+
+每次管理請求由 Session 查 Membership，URL 的 tenantId 不構成授權。HTTP 邊界具 Origin、Zod、共享資料庫限流與 body 大小限制。私人管理 token 以 hash 保存；通知內容仍含私人連結，必須當敏感資料處理。
+
+Worker 使用 SKIP LOCKED 與租約重試；對外寄信為 **at-least-once**，不是 exactly-once。Provider 接受後、資料庫寫回前當機仍可能重送，因此 Gateway 需要持久化去重。SENT 只代表 Provider 接受，不代表投遞成功。
+
+## 測試與品質
+
+本頁唯讀核對 README、架構、Technical Deep Dive、STATUS，以及 booking service／repository、notification worker 與 SQL migration。原專案 2026-10-22 文件記錄 30 單元、28 PostgreSQL 整合與 15 正式伺服器 E2E 通過，桌面／平板／手機各 20 請求搶訂均為 1 成功、19 衝突。
+
+另有獨立 DB connection 約束測試、遺失 HTTP 回應後重送與六個 migration 的空庫重建驗證。這些是**原專案的已記錄結果，本網站未重新執行其測試**，也不能由 20 併發推論容量 SLA。
+
+## 取捨與限制
+
+尚無訂閱金流、Email 驗證／復原／邀請、Owner 移轉、私人連結輪替或完整隱私刪除流程。未部署正式環境與寄送正式信件。不是 PostgreSQL RLS；不是完整 nonce CSP。
+
+同店 row lock 簡化正確性，但通知 Provider 呼叫期間持鎖會影響延遲。行事曆有查詢範圍與筆數上限，大量聚合仍需最佳化。原專案 STATUS 另記錄尚未修補的開發工具相依公告；正式相依 audit 與開發相依的結果分開呈現。
+
+## 後續改善
+
+先量測鎖等待、SQL 與 Provider 延遲，再決定是否縮小鎖粒度。加入金流前，需先定義待付款占位、逾時釋放與 Webhook 冪等；公開營運前則需正式郵件、監控、備份還原及帳號治理驗收。
