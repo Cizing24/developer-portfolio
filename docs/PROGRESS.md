@@ -23,6 +23,16 @@
 
 已完成 Lint／Format／Astro Check、24 Unit、24 E2E、SEO fixture 與 audit 0。Lighthouse 最終實測：首頁 mobile 90／desktop 100、BookFlow mobile 89，Accessibility／Best Practices 全為 100；SEO 63／63／66，因未設定真實 origin 而刻意 noindex。完整條件與限制見 TESTING。
 
-## Phase 4 — 本機完成，遠端驗證中
+## Phase 4 — 文件與 GitHub 交付完成
 
-八份必要文件、來源查核、六張實際網站截圖與完整 Lighthouse 報告已完成。新 repository 已建立為 public，main 與 feature/developer-portfolio 分開；準備公開檔案掃描、完整提交、PR 與 CI。未部署 Production。
+八份必要文件、來源查核、六張實際網站截圖與完整 Lighthouse 報告已完成。新 repository 已建立為 public，main 與 feature/developer-portfolio 分開，Phase 1–4 各有提交。74 個追蹤檔案公開掃描通過、16 個文件相對連結存在、網站三個對外 GitHub 連結 HTTP 200。未部署 Production。
+
+- Repository：[Cizing24/developer-portfolio](https://github.com/Cizing24/developer-portfolio)。
+- PR：[#1](https://github.com/Cizing24/developer-portfolio/pull/1)。最終合併狀態與 main SHA 以此 PR 的 merge commit 為準。
+- 第一輪完整交付 SHA：`73e3d750d23495cf49832f77eacf673de7b69f45`。
+- [PR CI 39663791160](https://github.com/Cizing24/developer-portfolio/actions/runs/39663791160) 與 [branch push CI 39663789856](https://github.com/Cizing24/developer-portfolio/actions/runs/39663789856) 均 success，已讀回 steps 與日誌：Linux npm ci、品質檢查、Unit、audit 0、Build、SEO contract、24 項 E2E 通過。
+- 本次只回填已確認的遠端紀錄；文件提交亦執行相同 CI。交付流程必須核對最新 PR checks 成功才正常合併，再確認 main push CI，不能以這輪歷史結果代替。
+
+## 尚未執行的外部驗收
+
+沒有正式公開網址、Production 部署或收費資源。使用者仍可補個人介紹、Email、LinkedIn、履歷與真實 SITE_URL；未提供的入口保持隱藏。部署後的 TLS、CDN、搜尋索引、社群預覽、遠端 Lighthouse 需另驗；跨瀏覽器與人工讀屏亦未宣稱通過。

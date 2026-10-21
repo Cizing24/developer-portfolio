@@ -28,6 +28,8 @@ Windows 若已有舊 Node，不必更動其他專案，可用 nvm-windows 切換
 
 不需要 Vercel adapter，因為輸出是純靜態。`vercel.json` 指定 dist、trailing slash、基本安全 headers 與 hashed asset 長期快取。未知路由由 `404.html` 處理，沒有將所有路由 rewrite 為首頁。
 
+官方依據：[Astro 靜態部署](https://docs.astro.build/en/guides/deploy/vercel/)、[Vercel 支援 Node.js 24.x](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)。平台會選擇可用的 24.x patch，不保證與本機 patch 完全相同。
+
 ## 部署後驗收
 
 - 首頁、兩個案例、兩篇筆記與 Contact 均可讀，錯誤路由 HTTP 404。

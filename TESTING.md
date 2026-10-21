@@ -81,4 +81,6 @@ npm run lighthouse
 
 ## 遠端 CI
 
-`.github/workflows/ci.yml` 在功能分支 push、PR 與 main push 執行。實際 run URL、SHA 與合併結果將由交付報告讀回 GitHub 確認；未有結果前不宣稱遠端成功。
+`.github/workflows/ci.yml` 在功能分支 push、PR 與 main push 執行。首次完整交付 `73e3d750d23495cf49832f77eacf673de7b69f45` 的 [PR CI](https://github.com/Cizing24/developer-portfolio/actions/runs/39663791160) 與 [branch push CI](https://github.com/Cizing24/developer-portfolio/actions/runs/39663789856) 皆 success。已讀回全部步驟與 Linux 日誌，確認乾淨 npm ci、Lint、公開檔案掃描、Format、Astro Check、Unit、audit 0、Build、SEO contract、24 E2E，並上傳 browser evidence artifact。
+
+這是精確 SHA 的紀錄。後續文件提交亦必須重跑；PR 最新 checks 與 main 合併後結果以 [PR #1](https://github.com/Cizing24/developer-portfolio/pull/1) 及 [Actions](https://github.com/Cizing24/developer-portfolio/actions) 為準，最終交付報告會讀回確認。CI 有上游 `url.parse()` deprecation warning，未關閉警告或宣稱無任何工具提示。
