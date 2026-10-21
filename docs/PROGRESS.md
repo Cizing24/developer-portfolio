@@ -19,9 +19,9 @@
 
 完整路由、兩個各 13 章案例、兩篇技術文章、分類／標籤／技術篩選、目錄與閱讀導覽均已完成。Production Build 成功。第一輪 E2E 為 21 通過／3 失敗，根據 trace 修正 label 關聯後，原失敗情境在桌面／平板／手機全部通過；Phase 3 將跑最終完整矩陣。
 
-## Phase 3 — 待執行
+## Phase 3 — 已完成
 
-需要完成品質檢查、瀏覽器、無障礙與 Lighthouse 實測。
+已完成 Lint／Format／Astro Check、24 Unit、24 E2E、SEO fixture 與 audit 0。Lighthouse 最終實測：首頁 mobile 90／desktop 100、BookFlow mobile 89，Accessibility／Best Practices 全為 100；SEO 63／63／66，因未設定真實 origin 而刻意 noindex。完整條件與限制見 TESTING。
 
 ## Phase 4 — 待執行
 

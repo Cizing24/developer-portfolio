@@ -15,7 +15,31 @@ const {
   type = 'website',
 } = Astro.props;
 const canonical = canonicalUrl(Astro.url.pathname, Astro.site);
-const image = canonicalUrl('/og.svg', Astro.site);
+const image = canonicalUrl('/og.png', Astro.site);
+const entity = {
+  '@type': 'Person',
+  name: profile.name,
+  sameAs: [profile.github],
+  description: profile.description,
+};
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type':
+    type === 'article'
+      ? 'Article'
+      : Astro.url.pathname === '/about/'
+        ? 'ProfilePage'
+        : Astro.url.pathname === '/'
+          ? 'WebSite'
+          : 'WebPage',
+  ...(canonical ? { url: canonical } : {}),
+  name: title,
+  description,
+  ...(type === 'article'
+    ? { headline: title, author: entity, ...(image ? { image } : {}) }
+    : { about: entity }),
+  ...(Astro.url.pathname === '/about/' ? { mainEntity: entity } : {}),
+};
 const indexable = !!Astro.site && !noindex;
 ---
 
@@ -40,20 +64,7 @@ const indexable = !!Astro.site && !noindex;
     {canonical && <meta property="og:url" content={canonical} />}
     {image && <meta property="og:image" content={image} />}
     <meta name="twitter:card" content="summary_large_image" />
-    <script
-      type="application/ld+json"
-      set:html={safeJsonLd({
-        '@context': 'https://schema.org',
-        '@type': 'ProfilePage',
-        ...(canonical ? { url: canonical } : {}),
-        mainEntity: {
-          '@type': 'Person',
-          name: profile.name,
-          sameAs: [profile.github],
-          description: profile.description,
-        },
-      })}
-    />
+    <script type="application/ld+json" set:html={safeJsonLd(structuredData)} />
     <script is:inline>
       try {
         document.documentElement.dataset.theme =
@@ -68,12 +79,13 @@ const indexable = !!Astro.site && !noindex;
       跳到主要內容
     </a>
     <header class="site-header wrap">
-      <a class="wordmark" href="/" aria-label={`${profile.name} 首頁`}>
-        <span class="brand-mark" aria-hidden="true">
+      <a class="wordmark" href="/">
+        <span class="brand-mark">
           c<span>.</span>
         </span>
         {profile.name}
         <span class="wordmark-role"> / ENGINEER</span>
+        <span class="sr-only">首頁</span>
       </a>
       <div class="header-actions">
         <button class="theme-toggle" aria-label="切換淺色主題" type="button">
