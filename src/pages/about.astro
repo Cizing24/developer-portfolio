@@ -1,0 +1,80 @@
+---
+import Base from '../layouts/Base.astro';
+import ContactCTA from '../components/ContactCTA.astro';
+import { profile } from '../config';
+---
+
+<Base
+  title="關於我"
+  description="認識 Cizing24 的全端開發方向、問題拆解方式與以可驗證成果為基礎的工程理念。"
+>
+  <div class="wrap">
+    <section class="page-heading">
+      <p class="eyebrow">ABOUT / THE ENGINEERING MINDSET</p>
+      <h1>
+        關於 {profile.name}
+        <span class="accent">.</span>
+      </h1>
+      <p>
+        專注全端開發，以完整的軟體專案呈現需求分析、介面設計、資料建模與交付驗證。
+      </p>
+    </section>
+    <div class="about-grid">
+      <div>
+        <p class="eyebrow">A THOUGHTFUL APPROACH</p>
+        <p class="large-copy">
+          好的工程，
+          <br />
+          始於清楚的問題。
+        </p>
+        <div class="about-index" aria-hidden="true">{`{ }`}</div>
+      </div>
+      <div>
+        {[
+          [
+            '01 / UNDERSTAND',
+            '先理解使用情境',
+            '從人會如何操作系統開始，整理正常流程、失敗情境與真正不可違反的規則。設備歸還與離職交接，是同一條業務鏈上的不同步驟。',
+          ],
+          [
+            '02 / MODEL',
+            '讓規則有明確的邊界',
+            '介面提供回饋，API 執行驗證與授權，資料庫保護完整性。以型別契約、狀態機與交易邊界串起這些責任。',
+          ],
+          [
+            '03 / VERIFY',
+            '用證據說明完成',
+            '不把畫面能操作等同系統正確。透過單元、真實資料庫整合與正式編譯後的瀏覽器測試，驗證並行、權限與回滾。',
+          ],
+          [
+            '04 / EVOLVE',
+            '保留可理解的取捨',
+            '先選擇能解決問題的簡潔架構，記錄限制與替代方案。需要更多複雜度時，讓量測與需求成為理由。',
+          ],
+        ].map(([number, title, text]) => (
+          <section class="principle">
+            <p class="eyebrow">{number}</p>
+            <h2>{title}</h2>
+            <p>{text}</p>
+          </section>
+        ))}
+      </div>
+    </div>
+    <section class="page-content">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">PRACTICE, MADE VISIBLE</p>
+          <h2>把方法放進作品裡。</h2>
+        </div>
+        <a class="text-link" href="/projects/">
+          深入案例 ↗
+        </a>
+      </div>
+      <p class="muted">
+        AssetFlow 聚焦資產生命週期與交易稽核；BookFlow
+        聚焦多租戶排程與預約一致性。這裡以專案與設計決策呈現能力，未填寫未提供的工作經歷、學歷或任職資訊。
+      </p>
+    </section>
+  </div>
+  <ContactCTA />
+</Base>

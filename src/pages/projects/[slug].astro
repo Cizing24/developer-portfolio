@@ -1,0 +1,107 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import TableOfContents from '../../components/TableOfContents.astro';
+export async function getStaticPaths() {
+  return (await getCollection('projects')).map((project) => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { project } = Astro.props;
+const { data } = project;
+const { Content, headings } = await render(project);
+---
+
+<Base title={data.title} description={data.description} type="article">
+  <div class="wrap">
+    <section class="case-intro">
+      <nav class="breadcrumbs" aria-label="麵包屑">
+        <a href="/">首頁</a>
+        <span>/</span>
+        <a href="/projects/">作品</a>
+        <span>/</span>
+        <span aria-current="page">{data.title}</span>
+      </nav>
+      <p class="eyebrow">CASE STUDY / {data.category}</p>
+      <h1>
+        {data.title}
+        <span class="accent">.</span>
+      </h1>
+      <p class="case-description">{data.description}</p>
+      <ul class="tags">
+        {data.tags.map((tag) => (
+          <li>{tag}</li>
+        ))}
+      </ul>
+      <dl class="case-facts">
+        <div>
+          <dt>開發狀態</dt>
+          <dd>{data.status}</dd>
+        </div>
+        <div>
+          <dt>部署狀態</dt>
+          <dd>未公開部署</dd>
+        </div>
+        <div>
+          <dt>原始碼</dt>
+          <dd>
+            {data.repository ? (
+              <a class="text-link" href={data.repository}>
+                GitHub ↗
+              </a>
+            ) : (
+              '私人專案・僅展示案例'
+            )}
+          </dd>
+        </div>
+        {data.demo && (
+          <div>
+            <dt>展示</dt>
+            <dd>
+              <a class="text-link" href={data.demo}>
+                Live Demo ↗
+              </a>
+            </dd>
+          </div>
+        )}
+        <div>
+          <dt>資料核對</dt>
+          <dd>
+            <time datetime={data.reviewedAt}>{data.reviewedAt}</time>
+          </dd>
+        </div>
+      </dl>
+    </section>
+    <figure class="case-cover">
+      <Image
+        src={data.cover}
+        alt={data.coverAlt}
+        widths={[640, 960, 1400]}
+        sizes="(max-width: 760px) 90vw, 1100px"
+        loading="eager"
+      />
+      <figcaption>
+        實際產品畫面 · 所有店家、人員與設備均為合成展示資料。
+      </figcaption>
+    </figure>
+    <div class="article-layout">
+      <TableOfContents headings={headings} />
+      <article class="prose">
+        <Content />
+        <div class="article-footer">
+          <p>
+            內容查核版本：<code>{data.sourceCommit.slice(0, 12)}</code> ·{' '}
+            {data.reviewedAt}
+          </p>
+          <a href="/projects/">← 返回作品列表</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</Base>
