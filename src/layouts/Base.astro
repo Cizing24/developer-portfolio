@@ -1,0 +1,176 @@
+---
+import '../styles/global.css';
+import { profile, navigation } from '../config';
+import { canonicalUrl, pageTitle, safeJsonLd } from '../lib/metadata';
+interface Props {
+  title: string;
+  description?: string;
+  noindex?: boolean;
+  type?: 'website' | 'article';
+}
+const {
+  title,
+  description = profile.description,
+  noindex = false,
+  type = 'website',
+} = Astro.props;
+const canonical = canonicalUrl(Astro.url.pathname, Astro.site);
+const image = canonicalUrl('/og.svg', Astro.site);
+const indexable = !!Astro.site && !noindex;
+---
+
+<!doctype html>
+<html lang={profile.locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle(title, profile.name)}</title>
+    <meta name="description" content={description} />
+    <meta
+      name="robots"
+      content={indexable ? 'index,follow' : 'noindex,follow'}
+    />
+    <meta name="theme-color" content="#101310" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:title" content={pageTitle(title, profile.name)} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={type} />
+    <meta property="og:locale" content="zh_TW" />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {image && <meta property="og:image" content={image} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <script
+      type="application/ld+json"
+      set:html={safeJsonLd({
+        '@context': 'https://schema.org',
+        '@type': 'ProfilePage',
+        ...(canonical ? { url: canonical } : {}),
+        mainEntity: {
+          '@type': 'Person',
+          name: profile.name,
+          sameAs: [profile.github],
+          description: profile.description,
+        },
+      })}
+    />
+    <script is:inline>
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
+      } catch {
+        /* Dark is the default when storage is unavailable. */
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">
+      跳到主要內容
+    </a>
+    <header class="site-header wrap">
+      <a class="wordmark" href="/" aria-label={`${profile.name} 首頁`}>
+        <span class="brand-mark" aria-hidden="true">
+          c<span>.</span>
+        </span>
+        {profile.name}
+        <span class="wordmark-role"> / ENGINEER</span>
+      </a>
+      <div class="header-actions">
+        <button class="theme-toggle" aria-label="切換淺色主題" type="button">
+          <span aria-hidden="true">◐</span>
+        </button>
+        <button
+          class="menu-toggle"
+          aria-expanded="false"
+          aria-controls="navigation"
+          type="button"
+        >
+          選單 <span aria-hidden="true">＋</span>
+        </button>
+      </div>
+      <nav id="navigation" aria-label="主要導覽">
+        {navigation.map((item) => (
+          <a
+            href={item.href}
+            aria-current={
+              Astro.url.pathname.startsWith(item.href) ? 'page' : undefined
+            }
+          >
+            {item.label}
+          </a>
+        ))}
+        <a href={profile.github} class="nav-github">
+          GitHub <span aria-hidden="true">↗</span>
+        </a>
+      </nav>
+    </header>
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <footer class="wrap site-footer">
+      <div>
+        <a class="footer-brand" href="/">
+          {profile.name}
+          <span>.</span>
+        </a>
+        <p>把思考寫進設計，把可靠留在細節。</p>
+      </div>
+      <div class="footer-links">
+        <a href="/projects/">瀏覽作品 ↗</a>
+        <a href={profile.github}>GitHub ↗</a>
+        <a href="/contact/">保持聯繫 ↗</a>
+      </div>
+      <div class="footer-bottom">
+        <span>
+          © {new Date().getUTCFullYear()} {profile.name}
+        </span>
+        <span>BUILT WITH ASTRO · DESIGNED WITH INTENT</span>
+        <a href="#main">回到頂部 ↑</a>
+      </div>
+    </footer>
+    <script>
+      const menu = document.querySelector<HTMLButtonElement>('.menu-toggle');
+      const nav = document.querySelector<HTMLElement>('#navigation');
+      function closeMenu() {
+        menu?.setAttribute('aria-expanded', 'false');
+        nav?.classList.remove('open');
+      }
+      menu?.addEventListener('click', () => {
+        const open = menu.getAttribute('aria-expanded') !== 'true';
+        menu.setAttribute('aria-expanded', String(open));
+        nav?.classList.toggle('open', open);
+      });
+      document.addEventListener('keydown', (event) => {
+        if (
+          event.key === 'Escape' &&
+          menu?.getAttribute('aria-expanded') === 'true'
+        ) {
+          closeMenu();
+          menu.focus();
+        }
+      });
+      matchMedia('(min-width: 761px)').addEventListener('change', closeMenu);
+      const theme = document.querySelector<HTMLButtonElement>('.theme-toggle');
+      function updateThemeLabel() {
+        theme?.setAttribute(
+          'aria-label',
+          document.documentElement.dataset.theme === 'light'
+            ? '切換深色主題'
+            : '切換淺色主題',
+        );
+      }
+      updateThemeLabel();
+      theme?.addEventListener('click', () => {
+        const next =
+          document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+        document.documentElement.dataset.theme = next;
+        try {
+          localStorage.setItem('theme', next);
+        } catch {
+          /* Theme still works without storage. */
+        }
+        updateThemeLabel();
+      });
+    </script>
+  </body>
+</html>

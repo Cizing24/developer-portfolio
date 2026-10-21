@@ -1,0 +1,18 @@
+---
+import type { MarkdownHeading } from 'astro';
+interface Props {
+  headings: MarkdownHeading[];
+}
+const headings = Astro.props.headings.filter((heading) => heading.depth === 2);
+---
+
+<aside class="toc" aria-label="文章目錄">
+  <h2>ON THIS PAGE / 目錄</h2>
+  <ol>
+    {headings.map((heading) => (
+      <li>
+        <a href={`#${heading.slug}`}>{heading.text}</a>
+      </li>
+    ))}
+  </ol>
+</aside>

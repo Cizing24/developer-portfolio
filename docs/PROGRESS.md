@@ -1,0 +1,28 @@
+# 開發進度
+
+目標：完成四個 Phase 的可執行作品集網站，公開新 repository，不部署 Production。
+
+## 來源查核 — 已完成
+
+- 2026-10-22 唯讀查核兩個本機 repository 與遠端 HEAD 一致。
+- AssetFlow：`7a698fbcd8bbffb4e46ec434a310690973aab77a`，GitHub API 確認 private。
+- BookFlow：`4c913361edab42f4be2ac4a8dc28eef942947824`，GitHub API 確認 public。
+- 已讀真實存在的 README、架構、設計／資料文件、測試／狀態與相關交易、鎖、SQL 約束原始碼；未修改來源 repository。
+- 僅採用兩張 README 明示合成資料的實際截圖，逐張目視檢查；未複製私人原始碼或環境檔案。
+
+## Phase 1 — 已完成
+
+已建立深色優先設計系統、響應式首頁、導覽、作品元件、主題切換與聯絡 CTA。Production Build 成功、Astro Check 零錯誤／警告／提示、單元 24 項通過。桌面與手機首頁真實截圖已檢查。
+相依審計發現 Astro 6／MDX 5 已公告漏洞，改用專案本地 Node 24 與穩定 Astro 7，不升級系統 runtime。未以 force 或 legacy-peer-deps 忽略相容性。
+
+## Phase 2 — 待階段驗證
+
+路由與內容已撰寫；兩個案例各有 13 個技術章節，兩篇專案來源技術文章。
+
+## Phase 3 — 待執行
+
+需要完成品質檢查、瀏覽器、無障礙與 Lighthouse 實測。
+
+## Phase 4 — 待執行
+
+需要完整文件、網站截圖、公開 repository、PR、CI 與正常合併。

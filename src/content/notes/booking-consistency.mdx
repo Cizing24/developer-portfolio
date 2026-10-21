@@ -1,0 +1,54 @@
+---
+title: 看見可用時段之後，為什麼還需要資料庫約束？
+description: 從 BookFlow 的實作拆解 Tenant lock、GiST 排他約束與冪等鍵，說明它們各自保護的失敗情境。
+publishedAt: '2026-10-22'
+category: 資料一致性
+tags: [PostgreSQL, Concurrency, BookFlow]
+---
+
+## 查詢結果不是保留承諾
+
+BookFlow 的可用時段由伺服器依營業時間、排班、休假與占用計算。但查詢與送單之間有時間差：A 與 B 都可以在寫入前看到相同空時段。前端禁用送出按鈕只能防止同一畫面的重複操作。
+
+本文依 BookFlow `4c913361edab42f4be2ac4a8dc28eef942947824` 的 booking service、repository 與 migration 整理，是原始碼案例分析，沒有編造個人學習經歷。
+
+## 應用層鎖負責順序
+
+應用服務在交易內取得 Tenant row lock，再重新讀取排程與有效占用。建立、改期、取消與設定更新採用相同邊界，讓「先改設定還是先建預約」有可解釋的順序。
+
+以下為概念流程，非專案原始碼的逐字複製：
+
+```text
+begin transaction
+  lock tenant
+  revalidate membership and scheduling rules
+  check real availability
+  create booking, audit event, and outbox work
+commit
+```
+
+不同店家不共用同一把鎖，但同店寫入會序列化。這是刻意接受的取捨，未經負載測試不能宣稱具有特定吞吐量。
+
+## 資料庫約束守住不變條件
+
+GiST exclusion 對同店、同員工的有效預約禁止占用時間範圍交集。占用包含服務前後緩衝；區間採半開形式 `[start, end)`，因此相鄰服務可以銜接。
+
+應用鎖負責協調多個業務規則，資料庫約束負責阻止非法結果落地。兩者不是重複：若未來出現其他寫入入口，資料庫仍有最後一道不變條件。
+
+## 冪等處理另一種失敗
+
+若資料庫提交成功，HTTP 回應卻遺失，顧客會不知道結果而重送。排他約束可能擋住第二筆，卻不能告訴顧客第一次已成功。
+
+BookFlow 將 idempotencyKey 限定在店家內，再以請求 hash 比對內容。同鍵同內容取回原結果，同鍵不同內容回衝突。冪等 identity 不因取消而刪除。
+
+## 如何驗證與如何解讀
+
+原專案文件記錄 HTTP 20 次搶訂結果為 1 成功、19 衝突，也以獨立 DB connections 驗證約束，並測試提交後主動中斷回應再重送。這些驗證對應不同失敗來源。
+
+這是原專案測試紀錄，不是本文章重新執行的壓力測試。若要評估正式容量，還需量測鎖等待、連線池與長尾延遲。
+
+## 延伸閱讀
+
+- [BookFlow 完整案例](/projects/bookflow/)
+- [公開原始碼](https://github.com/Cizing24/bookflow-saas)
+- [技術設計文件](https://github.com/Cizing24/bookflow-saas/blob/main/docs/TECHNICAL_DEEP_DIVE.md)
