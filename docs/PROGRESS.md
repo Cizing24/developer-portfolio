@@ -23,6 +23,6 @@
 
 已完成 Lint／Format／Astro Check、24 Unit、24 E2E、SEO fixture 與 audit 0。Lighthouse 最終實測：首頁 mobile 90／desktop 100、BookFlow mobile 89，Accessibility／Best Practices 全為 100；SEO 63／63／66，因未設定真實 origin 而刻意 noindex。完整條件與限制見 TESTING。
 
-## Phase 4 — 待執行
+## Phase 4 — 本機完成，遠端驗證中
 
-需要完整文件、網站截圖、公開 repository、PR、CI 與正常合併。
+八份必要文件、來源查核、六張實際網站截圖與完整 Lighthouse 報告已完成。新 repository 已建立為 public，main 與 feature/developer-portfolio 分開；準備公開檔案掃描、完整提交、PR 與 CI。未部署 Production。

@@ -39,7 +39,10 @@ try {
     });
     if (!result) throw new Error('No Lighthouse result');
     const { lhr, report } = result;
-    await writeFile(`docs/evidence/lighthouse-${name}.html`, report[0]);
+    await writeFile(
+      `docs/evidence/lighthouse-${name}.html`,
+      report[0].replace(/[ \t]+$/gm, ''),
+    );
     await writeFile(`docs/evidence/lighthouse-${name}.json`, report[1]);
     const row = {
       name,
