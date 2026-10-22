@@ -34,8 +34,7 @@ const links = [
         href: profile.resume,
       }
     : null,
-].filter(
-    (item): item is NonNullable<typeof item> => item !== null,);
+].filter((item): item is NonNullable<typeof item> => item !== null);
 ---
 
 <ul class="contact-links" role="list">
@@ -54,7 +53,7 @@ const links = [
             <svg
               width="22"
               height="22"
-              viewBox"0 0 24 24"
+              viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
             >
@@ -66,7 +65,7 @@ const links = [
             <svg
               width="22"
               height="22"
-              viewBox"0 0 24 24"
+              viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
             >
@@ -75,9 +74,9 @@ const links = [
           )}
           {item.key === 'linkedin' && (
             <svg
-             width="22"
+              width="22"
               height="22"
-              viewBox"0 0 24 24"
+              viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
             >
@@ -90,7 +89,7 @@ const links = [
             <svg
               width="22"
               height="22"
-              viewBox"0 0 24 24"
+              viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
             >
@@ -110,7 +109,6 @@ const links = [
     </li>
   ))}
 </ul>
-
 
 <style>
   .contact-links {

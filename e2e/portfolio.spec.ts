@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { profile } from '../src/config';
 const paths = [
   '',
   'about/',
@@ -285,12 +286,25 @@ test('reduced motion, contact boundaries and readable content without JavaScript
   await page.locator('[data-node="6"]').click();
   await expect(page.locator('.step-count')).toHaveText('6 / 6');
   await page.goto('/en/contact/');
-  await expect(page.locator('form,a[href^="mailto:"],a[download]')).toHaveCount(
-    0,
+
+  await expect(page.locator('form')).toHaveCount(0);
+
+  const contactLinks = page.locator('.contact-links');
+
+  await expect(contactLinks).toBeVisible();
+
+  await expect(contactLinks.locator('a[href^="mailto:"]')).toHaveCount(
+    profile.email ? 1 : 0,
   );
-  await expect(
-    page.getByRole('link', { name: 'Visit GitHub' }),
-  ).toHaveAttribute('href', 'https://github.com/Cizing24');
+
+  await expect(contactLinks.locator('a[download]')).toHaveCount(
+    profile.resume ? 1 : 0,
+  );
+
+  await expect(contactLinks.locator(`a[href="${profile.github}"]`)).toHaveCount(
+    1,
+  );
+
   const context = await browser.newContext({ javaScriptEnabled: false });
   const plain = await context.newPage();
   await plain.goto('http://127.0.0.1:4321/en/projects/bookflow/');

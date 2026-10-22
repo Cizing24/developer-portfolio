@@ -5,5 +5,5 @@ export const profile = {
   github: 'https://github.com/Cizing24',
   email: 'yasg3106@gmail.com',
   linkedin: 'https://linkedin.com/in/zing-ci-7312851a3',
-  resume: '/resume.pdf',
+  resume: '',
 };
