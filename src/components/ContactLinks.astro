@@ -34,7 +34,8 @@ const links = [
         href: profile.resume,
       }
     : null,
-].filter(Boolean);
+].filter(
+    (item): item is NonNullable<typeof item> => item !== null,);
 ---
 
 <ul class="contact-links" role="list">
@@ -51,12 +52,11 @@ const links = [
         <span class="contact-link__icon" aria-hidden="true">
           {item.key === 'email' && (
             <svg
-              viewBox="0 0 24 24"
+              width="22"
+              height="22"
+              viewBox"0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
             >
               <rect x="3" y="5" width="18" height="14" rx="2"></rect>
               <path d="M3 7l9 6 9-6"></path>
@@ -64,24 +64,22 @@ const links = [
           )}
           {item.key === 'github' && (
             <svg
-              viewBox="0 0 24 24"
+              width="22"
+              height="22"
+              viewBox"0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
             >
               <path d="M9 19c-4.5 1.5-4.5-2.5-6-3m12 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 18 4.77 5.07 5.07 0 0 0 17.91 1S16.73.65 14 2.48a13.38 13.38 0 0 0-5 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77 5.44 5.44 0 0 0 3.5 8.52c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
             </svg>
           )}
           {item.key === 'linkedin' && (
             <svg
-              viewBox="0 0 24 24"
+             width="22"
+              height="22"
+              viewBox"0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
             >
               <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
               <rect x="2" y="9" width="4" height="12"></rect>
@@ -90,12 +88,11 @@ const links = [
           )}
           {item.key === 'resume' && (
             <svg
-              viewBox="0 0 24 24"
+              width="22"
+              height="22"
+              viewBox"0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
             >
               <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"></path>
               <path d="M14 2v5h5"></path>
@@ -113,3 +110,84 @@ const links = [
     </li>
   ))}
 </ul>
+
+
+<style>
+  .contact-links {
+    display: grid;
+    gap: 8px;
+    max-width: 480px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .contact-link {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    min-height: 72px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    color: var(--text);
+    text-decoration: none;
+    transition: background-color 180ms ease;
+  }
+
+  .contact-link:hover {
+    background: rgba(152, 45, 54, 0.06);
+    color: var(--accent);
+  }
+
+  .contact-link__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    color: var(--muted);
+  }
+
+  .contact-link__icon :global(svg) {
+    display: block;
+    width: 22px;
+    height: 22px;
+    max-width: 22px;
+    max-height: 22px;
+  }
+
+  .contact-link__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .contact-link__label {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--text);
+  }
+
+  .contact-link__description {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  @media (max-width: 480px) {
+    .contact-link {
+      padding: 12px;
+      gap: 12px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .contact-link {
+      transition: none;
+    }
+  }
+</style>
