@@ -2,7 +2,7 @@
   {
     "name": "home-mobile",
     "url": "http://127.0.0.1:4321/zh-tw/",
-    "fetchTime": "2026-10-22T06:03:24.037Z",
+    "fetchTime": "2026-10-22T06:13:51.065Z",
     "lighthouseVersion": "13.5.0",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
     "settings": {
@@ -75,13 +75,8 @@
     "failed": [
       {
         "id": "max-potential-fid",
-        "score": 0.31,
+        "score": 0.28,
         "title": "Max Potential First Input Delay"
-      },
-      {
-        "id": "label-content-name-mismatch",
-        "score": 0,
-        "title": "Elements with visible text labels do not have matching accessible names."
       },
       {
         "id": "is-crawlable",
@@ -103,7 +98,7 @@
   {
     "name": "home-desktop",
     "url": "http://127.0.0.1:4321/en/",
-    "fetchTime": "2026-10-22T06:03:31.140Z",
+    "fetchTime": "2026-10-22T06:13:57.964Z",
     "lighthouseVersion": "13.5.0",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
     "settings": {
@@ -175,11 +170,6 @@
     "cls": "0",
     "failed": [
       {
-        "id": "label-content-name-mismatch",
-        "score": 0,
-        "title": "Elements with visible text labels do not have matching accessible names."
-      },
-      {
         "id": "is-crawlable",
         "score": 0,
         "title": "Page is blocked from indexing"
@@ -204,7 +194,7 @@
   {
     "name": "case-mobile",
     "url": "http://127.0.0.1:4321/zh-tw/projects/bookflow/",
-    "fetchTime": "2026-10-22T06:03:37.996Z",
+    "fetchTime": "2026-10-22T06:14:04.686Z",
     "lighthouseVersion": "13.5.0",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
     "settings": {
@@ -282,13 +272,8 @@
       },
       {
         "id": "max-potential-fid",
-        "score": 0.16,
+        "score": 0.07,
         "title": "Max Potential First Input Delay"
-      },
-      {
-        "id": "label-content-name-mismatch",
-        "score": 0,
-        "title": "Elements with visible text labels do not have matching accessible names."
       },
       {
         "id": "is-crawlable",

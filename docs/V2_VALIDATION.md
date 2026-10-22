@@ -42,6 +42,8 @@ Lighthouse：繁中手機首頁 100／100／100／63、英文桌面首頁 100／
 
 初次 E2E 的 4 個失敗為同一 Shiki 註解色對比問題，已調整 token，完整回歸 44 通過，未降低檢查。視覺比較的首次輸出缺少目錄，補 mkdir 後完整重跑通過。早期 sandbox cache／loopback 問題未被計為成功。
 
+Lighthouse 逐項另找到語言切換可見文字與 accessible name 不一致（未反映於總分），已修正並擴充 WCAG 2.1 A／2.2 A 回歸；不以總分替代逐項稽核。
+
 ## 尚待確認
 
 未部署，正式網域、TLS／CDN、HTTP permanent redirects、host 的語系 404、搜尋索引與公開 Lighthouse 待下一階段。Safari／Firefox、真實觸控、人工讀屏、母語英文審稿與招聘者任務測試未執行。Pixel 基準只適用本輪 Windows／Chromium；Linux CI 功能驗證獨立。

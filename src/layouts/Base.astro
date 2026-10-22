@@ -133,7 +133,9 @@ const navigation = ['projects', 'notes', 'about', 'contact'] as const;
             href={alternate}
             lang={other === 'en' ? 'en' : 'zh-TW'}
             hreflang={other === 'en' ? 'en' : 'zh-TW'}
-            aria-label={other === 'en' ? 'Switch to English' : '切換繁體中文'}
+            aria-label={
+              other === 'en' ? 'EN — Switch to English' : '繁中 — 切換繁體中文'
+            }
           >
             {other === 'en' ? 'EN' : '繁中'}
           </a>

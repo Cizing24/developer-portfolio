@@ -259,7 +259,14 @@ test('all localized pages pass automated WCAG 2.2 AA checks', async ({
   for (const route of routes) {
     await page.goto(route);
     const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+      .withTags([
+        'wcag2a',
+        'wcag2aa',
+        'wcag21a',
+        'wcag21aa',
+        'wcag22a',
+        'wcag22aa',
+      ])
       .analyze();
     expect(results.violations, route).toEqual([]);
   }

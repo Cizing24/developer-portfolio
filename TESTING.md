@@ -27,7 +27,7 @@ verify：ESLint → Prettier → Astro Check → `tsc --noEmit` → Vitest → �
 | Production Build  | 30 HTML 頁、robots、最佳化圖片與少量 JS                                                                                  |
 | SEO contracts     | 18 個內容頁；預覽 noindex、正式 fixture canonical／hreflang／x-default／OG／Article／sitemap／robots；404 與 legacy 排除 |
 | Playwright E2E    | 44 項通過，四尺寸各 11 項                                                                                                |
-| axe               | 18 個中英內容頁 × 四尺寸（72 次頁面分析），所測 WCAG 2A／AA、2.1AA、2.2AA tags 零 violations                             |
+| axe               | 18 個中英內容頁 × 四尺寸（72 次頁面分析），所測 WCAG 2A／AA、2.1A／AA、2.2A／AA tags 零 violations                       |
 | 內部連結／anchors | 18 頁 × 四尺寸驗證，無缺漏                                                                                               |
 | 視覺回歸          | 16 組相同 Windows／Chromium 完整頁面像素比較通過                                                                         |
 | 截圖              | 94 張 V2 新截圖，另 2 張 V1 歷史網站圖                                                                                   |
@@ -47,9 +47,11 @@ verify：ESLint → Prettier → Astro Check → `tsc --noEmit` → Vitest → �
 
 像素回歸第一次完成比較後，輸出目錄尚未建立造成 ENOENT；補 mkdir，重新執行 16 組通過。這是報告輸出問題，沒有移除斷言。早期 sandbox 的 Chromium cache／loopback 不一致，最終使用既有主機 Chromium cache 與主機 loopback，沒有把連線失敗算成驗證成功。
 
+Lighthouse 逐項報告另找到語言切換 accessible name 未完整包含可見「繁中」文字。即使 Accessibility 總分 100 仍須修正；已讓中英控制名稱包含可見文字，並把 axe 納入 WCAG 2.1 A／2.2 A tags，再完整回歸。
+
 ## Lighthouse 真實量測
 
-Production 靜態產物、本機 loopback，其他瀏覽器測試結束後執行。Mobile 採 Lighthouse 預設模擬節流（CPU 4×），Desktop 為 1350×940、CPU 1×、40ms RTT／10240Kbps。每條件量測一次；分數會受環境波動，非公開網路或真實使用者 Core Web Vitals。
+Production 靜態產物、本機 loopback，其他瀏覽器測試結束後執行。Mobile 採 Lighthouse 預設模擬節流（CPU 4×），Desktop 為 1350×940、CPU 1×、40ms RTT／10240Kbps。可及性修正後，每條件最終量測一次，保留最後完整批次而不挑最高分；分數會受環境波動，非公開網路或真實使用者 Core Web Vitals。
 
 | 頁面／條件            | Performance | Accessibility | Best Practices | SEO | LCP  | CLS |
 | --------------------- | ----------: | ------------: | -------------: | --: | ---- | --- |

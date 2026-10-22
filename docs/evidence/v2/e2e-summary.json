@@ -1,7 +1,7 @@
 {
   "stats": {
-    "startTime": "2026-10-22T06:07:46.955Z",
-    "duration": 69360.033,
+    "startTime": "2026-10-22T06:12:22.976Z",
+    "duration": 73758.539,
     "expected": 44,
     "skipped": 0,
     "unexpected": 0,
@@ -13,5 +13,5 @@
     "390x844",
     "320x760"
   ],
-  "note": "Final local verify: 44 passing Chromium tests; source projects are not rerun."
+  "note": "Final local Chromium: 44 passing tests including WCAG 2.1 A/AA and 2.2 A/AA; source projects are not rerun."
 }
