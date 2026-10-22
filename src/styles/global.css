@@ -1531,3 +1531,15 @@ figcaption {
     display: none;
   }
 }
+
+.contact-link__label {
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.contact-link__description {
+  font-size: 1.2rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.72);
+}

@@ -5,6 +5,7 @@ import { locales, localizedPath, t, type Locale } from '../../lib/i18n';
 export function getStaticPaths() {
   return locales.map((locale) => ({ params: { locale } }));
 }
+import ContactLinks from '../../components/ContactLinks.astro';
 const locale = Astro.params.locale as Locale;
 const en = locale === 'en';
 const copy = t(locale);
@@ -44,23 +45,7 @@ const copy = t(locale);
       </a>
     </section>
     <div class="prose">
-      {profile.email && (
-        <p>
-          <a href={`mailto:${profile.email}`}>{profile.email}</a>
-        </p>
-      )}
-      {profile.linkedin && (
-        <p>
-          <a href={profile.linkedin}>LinkedIn</a>
-        </p>
-      )}
-      {profile.resume && (
-        <p>
-          <a href={profile.resume} download>
-            {en ? 'Download resume' : '下載履歷'}
-          </a>
-        </p>
-      )}
+      <ContactLinks />
       <h2>{en ? 'Start with the technical detail.' : '想先了解技術細節？'}</h2>
       <p>
         <a href={localizedPath(locale, 'projects/assetflow')}>
