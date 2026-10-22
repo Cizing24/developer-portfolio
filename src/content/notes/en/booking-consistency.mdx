@@ -1,0 +1,56 @@
+---
+locale: en
+translationKey: booking-consistency
+title: 'Why does an available slot still need a database constraint?'
+description: A source-based analysis of BookFlow tenant locks, GiST exclusion and idempotency keys, explaining the different failures each mechanism protects against.
+publishedAt: '2026-10-22'
+category: Data consistency
+tags: [PostgreSQL, Concurrency, BookFlow]
+---
+
+## A query is not a reservation
+
+BookFlow computes availability on the server using opening hours, schedules, absences and occupied ranges. But there is a gap between querying and submitting: A and B can see the same slot before either writes. Disabling the submit button only prevents duplicate interaction in one browser.
+
+This analysis is based on booking services, repositories and migrations at BookFlow `4c913361edab42f4be2ac4a8dc28eef942947824`. It does not invent a personal learning history.
+
+## Application locks establish order
+
+The application acquires a Tenant row lock inside a transaction, then rereads scheduling rules and active occupancy. Creation, rescheduling, cancellation and settings changes share this boundary so their ordering can be explained.
+
+This is conceptual pseudocode, not a verbatim source extract:
+
+```text
+begin transaction
+  lock tenant
+  revalidate membership and scheduling rules
+  check real availability
+  create booking, audit event, and outbox work
+commit
+```
+
+Different tenants do not share the same lock; same-tenant writes serialize. This is a deliberate tradeoff, not a claim of measured throughput.
+
+## Database constraints preserve invariants
+
+GiST exclusion prevents intersecting occupancy for active bookings of the same tenant and staff member. Occupancy includes service buffers. Half-open ranges `[start, end)` permit adjacent occupancy.
+
+The application lock coordinates business rules. The database constraint prevents an invalid result from being stored, including writes from future alternative entry points. They cover different responsibilities.
+
+## Idempotency handles a different failure
+
+A database commit can succeed while its HTTP response is lost. The customer then retries without knowing the first result. An exclusion constraint can block the second booking but cannot identify the first success for the customer.
+
+BookFlow scopes an idempotencyKey to the tenant and compares a request hash. Identical retries return the original booking; the same key with different content returns a conflict. Cancellation does not remove that identity.
+
+## Verification and its limits
+
+Source documentation records 20 competing HTTP requests producing one success and 19 conflicts, independent database connections testing constraints, and retries after deliberately dropping a post-commit response. These test distinct failure sources.
+
+These are recorded source-project results, not a new load test performed for this article. Production capacity requires lock-wait, connection-pool and tail-latency measurements.
+
+## Further reading
+
+- [Full BookFlow case study](/en/projects/bookflow/)
+- [Public source](https://github.com/Cizing24/bookflow-saas)
+- [Technical design document](https://github.com/Cizing24/bookflow-saas/blob/main/docs/TECHNICAL_DEEP_DIVE.md)

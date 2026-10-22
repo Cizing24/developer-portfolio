@@ -1,0 +1,108 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import TableOfContents from '../../../components/TableOfContents.astro';
+import {
+  publishedNotes,
+  formatDate,
+  readingMinutes,
+} from '../../../lib/content';
+import { entrySlug, localizedPath, t } from '../../../lib/i18n';
+export async function getStaticPaths() {
+  return publishedNotes(await getCollection('notes')).map((note) => ({
+    params: { locale: note.data.locale, slug: entrySlug(note.id) },
+    props: { note },
+  }));
+}
+interface Props {
+  note: CollectionEntry<'notes'>;
+}
+const { note } = Astro.props;
+const locale = note.data.locale;
+const en = locale === 'en';
+const copy = t(locale);
+const { Content, headings } = await render(note);
+const notes = publishedNotes(
+  await getCollection('notes', (n) => n.data.locale === locale),
+);
+const index = notes.findIndex((n) => n.id === note.id);
+const previous = notes[index - 1];
+const next = notes[index + 1];
+const counterpart = (await getCollection('notes')).find(
+  (n) =>
+    !n.data.draft &&
+    n.data.locale !== locale &&
+    n.data.translationKey === note.data.translationKey,
+);
+const other = counterpart ? await render(counterpart) : null;
+const anchorMap = Object.fromEntries([
+  ['main', 'main'],
+  ...headings
+    .filter((h) => h.depth === 2)
+    .map((h, i) => [
+      h.slug,
+      other?.headings.filter((x) => x.depth === 2)[i]?.slug ?? 'main',
+    ]),
+]);
+---
+
+<Base
+  title={note.data.title}
+  description={note.data.description}
+  type="article"
+  alternate={
+    counterpart
+      ? localizedPath(
+          counterpart.data.locale,
+          `notes/${entrySlug(counterpart.id)}`,
+        )
+      : null
+  }
+  anchorMap={anchorMap}
+>
+  <div class="wrap">
+    <section class="case-intro article-intro">
+      <nav class="breadcrumbs" aria-label={en ? 'Breadcrumbs' : '麵包屑'}>
+        <a href={localizedPath(locale)}>{copy.home}</a>
+        <span>/</span>
+        <a href={localizedPath(locale, 'notes')}>{copy.notes}</a>
+      </nav>
+      <p class="eyebrow">{note.data.category} / FIELD NOTES</p>
+      <h1>{note.data.title}</h1>
+      <p class="case-description">{note.data.description}</p>
+      <p class="article-meta mono">
+        <time datetime={note.data.publishedAt}>
+          {formatDate(note.data.publishedAt, en ? 'en' : 'zh-TW')}
+        </time>{' '}
+        · {readingMinutes(note.body)} {copy.minutes}
+      </p>
+      <ul class="tags">
+        {note.data.tags.map((tag) => (
+          <li>{tag}</li>
+        ))}
+      </ul>
+    </section>
+    <div class="article-layout">
+      <TableOfContents headings={headings} />
+      <article class="prose">
+        <Content />
+        <nav
+          class="article-footer"
+          aria-label={en ? 'More reading' : '閱讀導覽'}
+        >
+          <a href={localizedPath(locale, 'notes')}>{copy.allNotes}</a>
+          {[previous, next].filter(Boolean).map(
+            (n) =>
+              n && (
+                <p>
+                  <a href={localizedPath(locale, `notes/${entrySlug(n.id)}`)}>
+                    {n.data.title}
+                  </a>
+                </p>
+              ),
+          )}
+        </nav>
+      </article>
+    </div>
+  </div>
+</Base>

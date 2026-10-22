@@ -1,16 +1,16 @@
 import lighthouse from 'lighthouse';
 import { chromium } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
-await mkdir('docs/evidence', { recursive: true });
+await mkdir('docs/evidence/v2', { recursive: true });
 const browser = await chromium.launch({
   args: ['--remote-debugging-port=9222'],
 });
 try {
   const summary = [];
   for (const [name, path, desktop] of [
-    ['home-mobile', '/', false],
-    ['home-desktop', '/', true],
-    ['case-mobile', '/projects/bookflow/', false],
+    ['home-mobile', '/zh-tw/', false],
+    ['home-desktop', '/en/', true],
+    ['case-mobile', '/zh-tw/projects/bookflow/', false],
   ]) {
     const result = await lighthouse(`http://127.0.0.1:4321${path}`, {
       port: 9222,
@@ -40,10 +40,10 @@ try {
     if (!result) throw new Error('No Lighthouse result');
     const { lhr, report } = result;
     await writeFile(
-      `docs/evidence/lighthouse-${name}.html`,
+      `docs/evidence/v2/lighthouse-${name}.html`,
       report[0].replace(/[ \t]+$/gm, ''),
     );
-    await writeFile(`docs/evidence/lighthouse-${name}.json`, report[1]);
+    await writeFile(`docs/evidence/v2/lighthouse-${name}.json`, report[1]);
     const row = {
       name,
       url: lhr.finalDisplayedUrl,
@@ -69,7 +69,7 @@ try {
     );
   }
   await writeFile(
-    'docs/evidence/lighthouse-summary.json',
+    'docs/evidence/v2/lighthouse-summary.json',
     JSON.stringify(summary, null, 2),
   );
 } finally {

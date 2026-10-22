@@ -1,4 +1,6 @@
 ---
+locale: zh-tw
+translationKey: booking-consistency
 title: 看見可用時段之後，為什麼還需要資料庫約束？
 description: 從 BookFlow 的實作拆解 Tenant lock、GiST 排他約束與冪等鍵，說明它們各自保護的失敗情境。
 publishedAt: '2026-10-22'
@@ -49,6 +51,6 @@ BookFlow 將 idempotencyKey 限定在店家內，再以請求 hash 比對內容�
 
 ## 延伸閱讀
 
-- [BookFlow 完整案例](/projects/bookflow/)
+- [BookFlow 完整案例](/zh-tw/projects/bookflow/)
 - [公開原始碼](https://github.com/Cizing24/bookflow-saas)
 - [技術設計文件](https://github.com/Cizing24/bookflow-saas/blob/main/docs/TECHNICAL_DEEP_DIVE.md)

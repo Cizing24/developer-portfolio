@@ -1,0 +1,90 @@
+---
+import { getCollection } from 'astro:content';
+import { locales, t, type Locale } from '../../../lib/i18n';
+import Base from '../../../layouts/Base.astro';
+import ProjectCard from '../../../components/ProjectCard.astro';
+import ContactCTA from '../../../components/ContactCTA.astro';
+import { sortProjects } from '../../../lib/content';
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { locale } }));
+}
+const locale = Astro.params.locale as Locale;
+const en = locale === 'en';
+const copy = t(locale);
+const projects = sortProjects(
+  await getCollection('projects', (p) => p.data.locale === locale),
+);
+const tags = [...new Set(projects.flatMap((p) => p.data.tags))].sort();
+---
+
+<Base
+  title={copy.projects}
+  description={
+    en
+      ? 'Explore full-stack engineering projects, from asset lifecycles to multi-tenant booking, with evidence and technical decisions.'
+      : '從資產生命週期到多租戶預約，深入探索 Cizing24 的全端工程作品與技術決策。'
+  }
+>
+  <div class="wrap">
+    <section class="page-heading">
+      <p class="eyebrow">SELECTED WORK / PROJECT INDEX</p>
+      <h1>
+        {en ? 'Every project,' : '每個作品，'}
+        <br />
+        <span class="accent">
+          {en ? 'a complete line of reasoning.' : '一個完整的解題過程。'}
+        </span>
+      </h1>
+      <p>
+        {en
+          ? 'Go beyond the interface. Follow requirements, data models and tests to understand each decision.'
+          : '不只展示畫面，也打開設計背後的取捨。從需求、資料模型到測試，沿著案例理解每一個選擇。'}
+      </p>
+    </section>
+    <section class="page-content" aria-label={copy.projects}>
+      <div class="filter-bar">
+        <p class="mono muted" id="project-count" aria-live="polite">
+          {projects.length} PROJECTS
+        </p>
+        <div class="filter-control">
+          <label for="project-filter">{copy.filter}</label>
+          <select id="project-filter">
+            <option value="">{copy.allTech}</option>
+            {tags.map((tag) => (
+              <option value={tag}>{tag}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div class="project-grid">
+        {projects.map((project, index) => (
+          <ProjectCard project={project} index={index} />
+        ))}
+      </div>
+      <p id="filter-empty" hidden>
+        {copy.empty}
+      </p>
+    </section>
+  </div>
+  <ContactCTA />
+</Base>
+<script>
+  import { filterProjects } from '../../../lib/content';
+  const select = document.querySelector<HTMLSelectElement>('#project-filter');
+  const cards = [
+    ...document.querySelectorAll<HTMLElement>('.project-card'),
+  ].map((element) => ({
+    element,
+    data: { tags: JSON.parse(element.dataset.tags ?? '[]') as string[] },
+  }));
+  select?.addEventListener('change', () => {
+    const selected = filterProjects(cards, select.value);
+    cards.forEach((card) => {
+      card.element.hidden = !selected.includes(card);
+    });
+    const count = document.querySelector('#project-count');
+    if (count) count.textContent = `${selected.length} PROJECTS`;
+    const empty = document.querySelector<HTMLElement>('#filter-empty');
+    if (empty) empty.hidden = selected.length > 0;
+  });
+</script>

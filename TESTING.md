@@ -1,86 +1,76 @@
-# 測試與實測紀錄
+# V2 測試與實測紀錄
 
-日期：2026-10-22（Asia/Taipei）。以下僅計入 Developer Portfolio 本身，沒有將 AssetFlow 或 BookFlow 的原專案測試數量算入。
+日期：2026-10-22（Asia/Taipei）。Windows、Node 24.22.0、Astro 7.4.2、Playwright 1.64.1／Chromium 156、Lighthouse 13.5.0。此處僅記 Developer Portfolio，不將來源 AssetFlow／BookFlow 的測試數量算入。
 
-## 環境與指令
-
-Windows、專案專用 Node 24.22.0、npm 10.9.8、Astro 7.4.2、Playwright 1.64.1 Chromium。正式靜態 Build 由 Astro preview 在 loopback 4321 提供，非 dev server。
+## 指令
 
 ```sh
 npm ci
 npx playwright install chromium
 npm run verify
+npm run check:public
+npm audit --audit-level=moderate
 ```
 
-verify 包含 Lint、Format、Astro Check、Unit、Build、SEO 契約與 E2E。CI 亦安裝 Linux Chromium 系統相依、執行 audit，並保留瀏覽器報告作 artifact。結果需核對實際 commit，不以歷史綠燈代替。
+verify：ESLint → Prettier → Astro Check → `tsc --noEmit` → Vitest → 內容契約 → Production Build → SEO fixture → Playwright／axe。CI 使用 Linux、Node 24.22.0，另外執行 audit，保留 browser report artifact。
 
 ## 本機結果
 
-| 檢查             | 結果                                                                                                 |
-| ---------------- | ---------------------------------------------------------------------------------------------------- |
-| ESLint           | 零錯誤、零警告                                                                                       |
-| Prettier         | 全部納入檢查的來源與文件格式一致；原生工具報告不重新格式化                                           |
-| Astro Check      | 0 errors／0 warnings／0 hints                                                                        |
-| Vitest           | 24 項通過                                                                                            |
-| Production Build | 10 頁成功，另輸出 robots、資產與多尺寸 WebP                                                          |
-| SEO contract     | 預覽 noindex／無假 canonical；隔離 fixture canonical／OG PNG／Article／sitemap／robots／404 排除成功 |
-| Playwright       | 24 項通過，桌面／平板／手機各 8 項                                                                   |
-| axe              | 已測主要頁面 WCAG 2 A／AA、2.1 AA、2.2 AA tags 為零 violations；另測淺色 Contact                     |
-| npm audit        | 0 vulnerabilities（含開發相依）                                                                      |
-| 實際截圖         | 6 張，逐張目視檢查，見 docs/screenshots                                                              |
+| 項目              | 實際結果                                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| ESLint            | 零錯誤、零警告                                                                                                           |
+| Prettier          | 來源、測試與文件格式檢查通過                                                                                             |
+| Astro Check       | 0 errors／0 warnings／0 hints                                                                                            |
+| TypeScript Check  | `tsc --noEmit` 通過                                                                                                      |
+| Vitest            | 33 項通過；保留 V1 原有 24 項契約並增加語系、模擬與箭頭防回歸                                                            |
+| Content contracts | 兩語完整、配對唯一、同來源 SHA／可見性、每案例 13 章、英文無殘留中文                                                     |
+| Production Build  | 30 HTML 頁、robots、最佳化圖片與少量 JS                                                                                  |
+| SEO contracts     | 18 個內容頁；預覽 noindex、正式 fixture canonical／hreflang／x-default／OG／Article／sitemap／robots；404 與 legacy 排除 |
+| Playwright E2E    | 44 項通過，四尺寸各 11 項                                                                                                |
+| axe               | 18 個中英內容頁 × 四尺寸（72 次頁面分析），所測 WCAG 2A／AA、2.1A／AA、2.2A／AA tags 零 violations                       |
+| 內部連結／anchors | 18 頁 × 四尺寸驗證，無缺漏                                                                                               |
+| 視覺回歸          | 16 組相同 Windows／Chromium 完整頁面像素比較通過                                                                         |
+| 截圖              | 94 張 V2 新截圖，另 2 張 V1 歷史網站圖                                                                                   |
+| npm audit         | 0 vulnerabilities，含開發相依                                                                                            |
 
-單元覆蓋內容 schema、私人來源公開邊界、URL、真實曆日、來源 SHA、草稿、排序、中文閱讀時間、metadata escaping、canonical 與 site URL 驗證。
+可重現的 JSON：[E2E 摘要](docs/evidence/v2/e2e-summary.json)、[視覺回歸](docs/evidence/v2/visual-regression.json)、[Lighthouse](docs/evidence/v2/lighthouse-summary.json)、[截圖索引](docs/screenshots/v2/README.md)。
 
-瀏覽器覆蓋首頁、主要導覽、skip link、技術篩選、兩個 13 章案例、來源連結邊界、分類／tags／空結果、文章程式碼、目錄、閱讀導覽、手機選單／Escape、主題持久化、無效路由 HTTP 404、站內連結與錨點、圖片 decode、console／資源錯誤、水平 overflow、reduced-motion 與真實聯絡入口。最後另補 localStorage 不可用時的主題操作，並在最終回歸確認。
+## E2E 覆蓋
 
-E2E 視窗：Desktop Chrome 1280×720、tablet 768×1024、Pixel 7 模擬手機。沒有宣稱實體手機或 Safari／Firefox 已驗證。
+1440×1000、768×1024、390×844、320×760。中英首頁、skip link、導航、作品技術篩選、案例 13 章、private／public 來源邊界、無假 Demo、文章分類／tags／空狀態／程式碼／閱讀導覽、語言保留案例與 query／翻譯章節錨點、手機 Enter／Tab／Escape／focus return、9 個舊路由、無效語系與真實 404、兩個模擬的成功／409／403、step／replay／reset、reduced motion、無 JS 閱讀、圖片 decode、console／資源錯誤、溢位、內部連結、無裝飾箭頭、聯絡空值。
+
+單元保留 schema、日期、來源 SHA、private guard、metadata escaping 等原契約，新增 Locale path、鎖後重驗順序、權限拒絕未進交易、稽核回滾、完成步進上限與 UI source 箭頭限制。
 
 ## 發現與修復
 
-1. 初始 Astro 6／MDX 5 相依出現已公告漏洞，升級相容穩定版本；剩餘 esbuild low 採相容修補，最終 audit 0，未 force 降版或忽略公告。
-2. 第一輪 Typecheck 發現測試圖片 locator 的元素型別過寬，加入 HTMLImageElement 檢查後通過。
-3. 第一輪 E2E 21 通過／3 失敗，精確 label locator 包含 select 子內容；改成明確 for／id 關聯，保留斷言，原情境三裝置通過，再完整 24 項通過。
-4. Lighthouse 找到品牌連結可見文字與 accessible name 不一致；移除覆寫名稱，保留真實文字及隱藏首頁文字，重測不再出現該項。
-5. Windows chrome-launcher spawn 失敗，改為同一 Playwright Chromium 的 CDP 連線，未捏造分數。
+第一輪 40 通過／4 失敗，同一根因：date-contracts 的 Shiki github-dark 註解 `#6a737d` 在深底只有約 3.04:1，不足一般文字 AA。改為建置 transformer 提高至 `#aab3bd`，不關閉或排除 axe；完整重跑後 44 通過。
 
-## Lighthouse
+像素回歸第一次完成比較後，輸出目錄尚未建立造成 ENOENT；補 mkdir，重新執行 16 組通過。這是報告輸出問題，沒有移除斷言。早期 sandbox 的 Chromium cache／loopback 不一致，最終使用既有主機 Chromium cache 與主機 loopback，沒有把連線失敗算成驗證成功。
 
-實際工具 Lighthouse 13.5.0，Playwright Chromium headless，Windows 本機 loopback 的 Production 靜態產物；手機使用 Lighthouse 預設 simulated throttling／CPU 4×，桌面使用 1350×940、CPU 1×、40ms RTT／10240Kbps。每個條件最終測一次；不同執行曾有波動，以下保留最後完整測量而非挑最高分。
+Lighthouse 逐項報告另找到語言切換 accessible name 未完整包含可見「繁中」文字。即使 Accessibility 總分 100 仍須修正；已讓中英控制名稱包含可見文字，並把 axe 納入 WCAG 2.1 A／2.2 A tags，再完整回歸。
+
+## Lighthouse 真實量測
+
+Production 靜態產物、本機 loopback，其他瀏覽器測試結束後執行。Mobile 採 Lighthouse 預設模擬節流（CPU 4×），Desktop 為 1350×940、CPU 1×、40ms RTT／10240Kbps。可及性修正後，每條件最終量測一次，保留最後完整批次而不挑最高分；分數會受環境波動，非公開網路或真實使用者 Core Web Vitals。
 
 | 頁面／條件            | Performance | Accessibility | Best Practices | SEO | LCP  | CLS |
 | --------------------- | ----------: | ------------: | -------------: | --: | ---- | --- |
-| 首頁／mobile          |          90 |           100 |            100 |  63 | 0.9s | 0   |
-| 首頁／desktop         |         100 |           100 |            100 |  63 | 0.3s | 0   |
-| BookFlow 案例／mobile |          89 |           100 |            100 |  66 | 1.1s | 0   |
+| 繁中首頁／mobile      |         100 |           100 |            100 |  63 | 0.9s | 0   |
+| 英文首頁／desktop     |         100 |           100 |            100 |  63 | 0.2s | 0   |
+| 繁中 BookFlow／mobile |          93 |           100 |            100 |  66 | 1.2s | 0   |
 
-SEO 的 is-crawlable 失敗是未設定真實 SITE_URL 時的刻意 noindex 與 robots 禁爬。沒有為了取得分數公開假網域。設定網址的 SEO 輸出已以 reserved `.test` fixture 驗證，但不是正式部署實測。手機案例 TBT 約 460ms，需於真實部署與固定環境再量測，不能把本機結果等同真實使用者 Core Web Vitals。
+SEO 63／66 來自未知正式網域時刻意 noindex／robots 禁爬；沒有為分數建立假網址。正式網址輸出用 reserved `.test` 隔離 fixture 驗證，不是公開部署。完整 HTML／JSON 在 `docs/evidence/v2/`。V1 舊報告留在上一層，沒有覆寫成 V2 結果。
 
-完整報告：
+## 截圖與 pixel regression
 
-- [摘要與條件 JSON](docs/evidence/lighthouse-summary.json)
-- [手機首頁 HTML](docs/evidence/lighthouse-home-mobile.html)
-- [桌面首頁 HTML](docs/evidence/lighthouse-home-desktop.html)
-- [手機案例 HTML](docs/evidence/lighthouse-case-mobile.html)
+在獨立終端啟動 preview 後，依序執行 `npm run screenshots`、目視檢視、`npm run test:visual`、`npm run lighthouse`。截圖涵蓋兩語全部 10 頁型與四尺寸、手機選單、兩個衝突結果與 AssetFlow 權限拒絕。
 
-Lighthouse 與 axe 均不能證明完整 WCAG 合規；人工讀屏、所有鍵盤情境、真實裝置、跨瀏覽器與正式公開網路仍需後續驗收。
+Pixel 比較 16 張：中英 × 桌面／手機 × 首頁／AssetFlow／BookFlow／Article。baseline 為本輪實際目視檢查的 screenshot，不是設計圖。每色頻差超過 12 才計差異，容許比率 0.1%；尺寸必須完全一致。換 OS／Chromium 要另審基準，不靜默覆蓋。Linux CI 跑功能、幾何／溢位、axe，不使用 Windows 字型 pixel baseline；不宣稱跨 OS 視覺完全一致。
 
-## 重新產生證據
+## 公開與限制
 
-先 `npm run build`，另一個終端啟動 `npm run preview`，再執行：
+`check:public` 掃描 Git 追蹤檔案的 env/local 與常見 secret pattern，是有界檢查，不是所有機密均不存在的證明。人工檢視 diff、公開身分、來源圖片與新截圖。沒有複製私人原始碼、環境檔、登入資料或第三方研究素材。
 
-```sh
-npm run screenshots
-npm run lighthouse
-```
+自動 axe 與 Lighthouse 100 不等於完整 WCAG 合規。未完成 Safari／Firefox、實體手機觸控、人工讀屏與專業英文母語審稿。正式 HTTP redirect、host 404、TLS、CDN、索引與公開網路效能必須部署後再測。本輪未部署，也未重跑兩個來源系統的後端測試。
 
-請不要讓多個 Playwright 測試同時寫入同一 test-results；Lighthouse 亦應在其他測試結束後量測，降低資源競爭。腳本會正常關閉自己建立的瀏覽器。
-
-## 公開檔案檢查
-
-`npm run check:public` 掃描 Git 追蹤檔案，拒絕 `.local`／環境檔與常見 token、private key pattern。這是有界掃描，不能證明所有可能機密均不存在。另人工檢查兩張來源圖片、六張網站截圖、設定與 diff。來源程式、環境檔與 credential helper 均不公開。
-
-## 遠端 CI
-
-`.github/workflows/ci.yml` 在功能分支 push、PR 與 main push 執行。首次完整交付 `73e3d750d23495cf49832f77eacf673de7b69f45` 的 [PR CI](https://github.com/Cizing24/developer-portfolio/actions/runs/39663791160) 與 [branch push CI](https://github.com/Cizing24/developer-portfolio/actions/runs/39663789856) 皆 success。已讀回全部步驟與 Linux 日誌，確認乾淨 npm ci、Lint、公開檔案掃描、Format、Astro Check、Unit、audit 0、Build、SEO contract、24 E2E，並上傳 browser evidence artifact。
-
-這是精確 SHA 的紀錄。後續文件提交亦必須重跑；PR 最新 checks 與 main 合併後結果以 [PR #1](https://github.com/Cizing24/developer-portfolio/pull/1) 及 [Actions](https://github.com/Cizing24/developer-portfolio/actions) 為準，最終交付報告會讀回確認。CI 有上游 `url.parse()` deprecation warning，未關閉警告或宣稱無任何工具提示。
+GitHub Actions 必須以 PR 最新 head SHA 判斷，不能沿用 V1 的綠燈。最終遠端 run 與 PR 連結由交付回報提供；本機紀錄不冒稱 CI 成功。

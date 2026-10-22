@@ -1,7 +1,7 @@
 name: Portfolio CI
 on:
   push:
-    branches: [main, 'feature/**']
+    branches: [main, 'feature/**', 'codex/**']
   pull_request:
     branches: [main]
 permissions:
@@ -24,7 +24,9 @@ jobs:
       - run: npm run check:public
       - run: npm run format:check
       - run: npm run check
+      - run: npm run typecheck
       - run: npm test
+      - run: npm run test:content
       - run: npm audit --audit-level=moderate
       - run: npm run build
       - run: npm run test:seo

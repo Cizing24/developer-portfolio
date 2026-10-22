@@ -1,0 +1,76 @@
+---
+import Base from '../../layouts/Base.astro';
+import { profile } from '../../config';
+import { locales, localizedPath, t, type Locale } from '../../lib/i18n';
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { locale } }));
+}
+const locale = Astro.params.locale as Locale;
+const en = locale === 'en';
+const copy = t(locale);
+---
+
+<Base
+  title={copy.contact}
+  description={
+    en
+      ? 'Connect with Cizing24 through the verified GitHub profile to discuss projects, technology and software engineering opportunities.'
+      : '透過 Cizing24 的真實 GitHub 帳號，交流作品、技術與軟體工程機會。'
+  }
+>
+  <div class="wrap page-content">
+    <section class="page-heading">
+      <p class="eyebrow">CONTACT / THE NEXT CONVERSATION</p>
+      <h1>{copy.ctaTitle}</h1>
+      <p>
+        {copy.ctaCopy}{' '}
+        {en
+          ? 'Start with the public repositories or the information on my GitHub profile.'
+          : '可以先瀏覽公開專案，或透過 GitHub 上的公開資訊認識我。'}
+      </p>
+    </section>
+    <section class="contact-panel">
+      <div>
+        <p class="eyebrow">FIND ME ON GITHUB</p>
+        <h2>Cizing24</h2>
+        <p>
+          {en
+            ? 'Explore source code, engineering documents and project updates. Private work is presented as case summaries. There is no public login or live demo.'
+            : '查看原始碼、工程文件與專案更新。私人專案以案例摘要呈現，未提供公開登入或 Demo。'}
+        </p>
+      </div>
+      <a class="button" href={profile.github}>
+        {copy.github}
+      </a>
+    </section>
+    <div class="prose">
+      {profile.email && (
+        <p>
+          <a href={`mailto:${profile.email}`}>{profile.email}</a>
+        </p>
+      )}
+      {profile.linkedin && (
+        <p>
+          <a href={profile.linkedin}>LinkedIn</a>
+        </p>
+      )}
+      {profile.resume && (
+        <p>
+          <a href={profile.resume} download>
+            {en ? 'Download resume' : '下載履歷'}
+          </a>
+        </p>
+      )}
+      <h2>{en ? 'Start with the technical detail.' : '想先了解技術細節？'}</h2>
+      <p>
+        <a href={localizedPath(locale, 'projects/assetflow')}>
+          {en ? 'AssetFlow transaction consistency' : 'AssetFlow 的交易一致性'}
+        </a>{' '}
+        ·{' '}
+        <a href={localizedPath(locale, 'projects/bookflow')}>
+          {en ? 'BookFlow multi-tenant scheduling' : 'BookFlow 的多租戶排程'}
+        </a>
+      </p>
+    </div>
+  </div>
+</Base>

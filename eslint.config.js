@@ -8,6 +8,7 @@ export default [
       'dist/**',
       '.astro/**',
       '.local/**',
+      '.work/**',
       'node_modules/**',
       'playwright-report/**',
       'test-results/**',

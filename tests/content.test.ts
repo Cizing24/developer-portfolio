@@ -11,6 +11,8 @@ import { canonicalUrl, pageTitle, safeJsonLd } from '../src/lib/metadata';
 import { resolveSiteUrl } from '../src/lib/site-url.mjs';
 
 const project = {
+  locale: 'zh-tw',
+  translationKey: 'project',
   title: 'Project',
   description: 'A verified engineering project for public display.',
   category: 'ENGINEERING',

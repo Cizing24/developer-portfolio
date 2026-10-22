@@ -24,8 +24,8 @@ export function readingMinutes(body = ''): number {
     Math.ceil((body.match(/[\u3400-\u9fff]|\b\w+\b/g)?.length ?? 0) / 350),
   );
 }
-export function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('zh-TW', {
+export function formatDate(value: string, locale = 'zh-TW'): string {
+  return new Intl.DateTimeFormat(locale, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
