@@ -1,0 +1,616 @@
+{
+  "capturedAt": "2026-10-22T06:01:20.594Z",
+  "platform": "win32",
+  "browser": "156.0.8078.4",
+  "v1": "Copied from committed V1 actual website screenshots (historical), not recaptured or prototype imagery.",
+  "screenshots": [
+    {
+      "file": "zh-tw-home-desktop.png",
+      "url": "http://127.0.0.1:4321/zh-tw/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-projects-desktop.png",
+      "url": "http://127.0.0.1:4321/zh-tw/projects/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-date-article-desktop.png",
+      "url": "http://127.0.0.1:4321/zh-tw/notes/date-contracts/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-404-desktop.png",
+      "url": "http://127.0.0.1:4321/zh-tw/404/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-assetflow-desktop.png",
+      "url": "http://127.0.0.1:4321/zh-tw/projects/assetflow/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-assetflow-result-desktop.png",
+      "result": "A · 成功 / B · 409 衝突",
+      "detail": "A 提交後，B 取鎖重新讀到 ASSIGNED，重複領用回傳 409。部分唯一索引另保護有效領用。",
+      "scenario": "conflict"
+    },
+    {
+      "file": "zh-tw-bookflow-desktop.png",
+      "url": "http://127.0.0.1:4321/zh-tw/projects/bookflow/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-bookflow-result-desktop.png",
+      "result": "A · 成功 / B · 409 衝突",
+      "detail": "A 成功。B 取得鎖後重新讀到已提交占用，時段不可用，回傳 409；GiST 仍是獨立的資料庫防線。",
+      "scenario": "conflict"
+    },
+    {
+      "file": "zh-tw-notes-desktop.png",
+      "url": "http://127.0.0.1:4321/zh-tw/notes/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-article-desktop.png",
+      "url": "http://127.0.0.1:4321/zh-tw/notes/booking-consistency/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-about-desktop.png",
+      "url": "http://127.0.0.1:4321/zh-tw/about/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-contact-desktop.png",
+      "url": "http://127.0.0.1:4321/zh-tw/contact/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-home-tablet.png",
+      "url": "http://127.0.0.1:4321/zh-tw/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-projects-tablet.png",
+      "url": "http://127.0.0.1:4321/zh-tw/projects/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-date-article-tablet.png",
+      "url": "http://127.0.0.1:4321/zh-tw/notes/date-contracts/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-404-tablet.png",
+      "url": "http://127.0.0.1:4321/zh-tw/404/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-assetflow-tablet.png",
+      "url": "http://127.0.0.1:4321/zh-tw/projects/assetflow/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-bookflow-tablet.png",
+      "url": "http://127.0.0.1:4321/zh-tw/projects/bookflow/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-notes-tablet.png",
+      "url": "http://127.0.0.1:4321/zh-tw/notes/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-article-tablet.png",
+      "url": "http://127.0.0.1:4321/zh-tw/notes/booking-consistency/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-about-tablet.png",
+      "url": "http://127.0.0.1:4321/zh-tw/about/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-contact-tablet.png",
+      "url": "http://127.0.0.1:4321/zh-tw/contact/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-home-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-projects-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/projects/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-date-article-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/notes/date-contracts/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-404-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/404/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-assetflow-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/projects/assetflow/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-assetflow-result-mobile.png",
+      "result": "A · 成功 / B · 409 衝突",
+      "detail": "A 提交後，B 取鎖重新讀到 ASSIGNED，重複領用回傳 409。部分唯一索引另保護有效領用。",
+      "scenario": "conflict"
+    },
+    {
+      "file": "zh-tw-bookflow-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/projects/bookflow/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-bookflow-result-mobile.png",
+      "result": "A · 成功 / B · 409 衝突",
+      "detail": "A 成功。B 取得鎖後重新讀到已提交占用，時段不可用，回傳 409；GiST 仍是獨立的資料庫防線。",
+      "scenario": "conflict"
+    },
+    {
+      "file": "zh-tw-notes-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/notes/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-article-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/notes/booking-consistency/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-about-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/about/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-contact-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/contact/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-home-small-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-projects-small-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/projects/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-date-article-small-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/notes/date-contracts/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-404-small-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/404/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-assetflow-small-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/projects/assetflow/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-bookflow-small-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/projects/bookflow/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-notes-small-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/notes/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-article-small-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/notes/booking-consistency/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-about-small-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/about/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "zh-tw-contact-small-mobile.png",
+      "url": "http://127.0.0.1:4321/zh-tw/contact/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-home-desktop.png",
+      "url": "http://127.0.0.1:4321/en/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-projects-desktop.png",
+      "url": "http://127.0.0.1:4321/en/projects/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-date-article-desktop.png",
+      "url": "http://127.0.0.1:4321/en/notes/date-contracts/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-404-desktop.png",
+      "url": "http://127.0.0.1:4321/en/404/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-assetflow-desktop.png",
+      "url": "http://127.0.0.1:4321/en/projects/assetflow/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-assetflow-result-desktop.png",
+      "result": "A · success / B · 409 conflict",
+      "detail": "A commits. B locks and rereads ASSIGNED, so its repeated checkout receives 409. A partial unique index also protects active assignments.",
+      "scenario": "conflict"
+    },
+    {
+      "file": "en-bookflow-desktop.png",
+      "url": "http://127.0.0.1:4321/en/projects/bookflow/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-bookflow-result-desktop.png",
+      "result": "A · success / B · 409 conflict",
+      "detail": "A succeeds. B acquires the lock and rereads committed occupancy: the slot is unavailable, so B receives 409. GiST remains a separate database defense.",
+      "scenario": "conflict"
+    },
+    {
+      "file": "en-notes-desktop.png",
+      "url": "http://127.0.0.1:4321/en/notes/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-article-desktop.png",
+      "url": "http://127.0.0.1:4321/en/notes/booking-consistency/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-about-desktop.png",
+      "url": "http://127.0.0.1:4321/en/about/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-contact-desktop.png",
+      "url": "http://127.0.0.1:4321/en/contact/",
+      "width": 1440,
+      "height": 1000,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-home-tablet.png",
+      "url": "http://127.0.0.1:4321/en/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-projects-tablet.png",
+      "url": "http://127.0.0.1:4321/en/projects/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-date-article-tablet.png",
+      "url": "http://127.0.0.1:4321/en/notes/date-contracts/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-404-tablet.png",
+      "url": "http://127.0.0.1:4321/en/404/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-assetflow-tablet.png",
+      "url": "http://127.0.0.1:4321/en/projects/assetflow/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-bookflow-tablet.png",
+      "url": "http://127.0.0.1:4321/en/projects/bookflow/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-notes-tablet.png",
+      "url": "http://127.0.0.1:4321/en/notes/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-article-tablet.png",
+      "url": "http://127.0.0.1:4321/en/notes/booking-consistency/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-about-tablet.png",
+      "url": "http://127.0.0.1:4321/en/about/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-contact-tablet.png",
+      "url": "http://127.0.0.1:4321/en/contact/",
+      "width": 768,
+      "height": 1024,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-home-mobile.png",
+      "url": "http://127.0.0.1:4321/en/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-projects-mobile.png",
+      "url": "http://127.0.0.1:4321/en/projects/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-date-article-mobile.png",
+      "url": "http://127.0.0.1:4321/en/notes/date-contracts/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-404-mobile.png",
+      "url": "http://127.0.0.1:4321/en/404/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-assetflow-mobile.png",
+      "url": "http://127.0.0.1:4321/en/projects/assetflow/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-assetflow-result-mobile.png",
+      "result": "A · success / B · 409 conflict",
+      "detail": "A commits. B locks and rereads ASSIGNED, so its repeated checkout receives 409. A partial unique index also protects active assignments.",
+      "scenario": "conflict"
+    },
+    {
+      "file": "en-bookflow-mobile.png",
+      "url": "http://127.0.0.1:4321/en/projects/bookflow/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-bookflow-result-mobile.png",
+      "result": "A · success / B · 409 conflict",
+      "detail": "A succeeds. B acquires the lock and rereads committed occupancy: the slot is unavailable, so B receives 409. GiST remains a separate database defense.",
+      "scenario": "conflict"
+    },
+    {
+      "file": "en-notes-mobile.png",
+      "url": "http://127.0.0.1:4321/en/notes/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-article-mobile.png",
+      "url": "http://127.0.0.1:4321/en/notes/booking-consistency/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-about-mobile.png",
+      "url": "http://127.0.0.1:4321/en/about/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-contact-mobile.png",
+      "url": "http://127.0.0.1:4321/en/contact/",
+      "width": 390,
+      "height": 844,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-home-small-mobile.png",
+      "url": "http://127.0.0.1:4321/en/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-projects-small-mobile.png",
+      "url": "http://127.0.0.1:4321/en/projects/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-date-article-small-mobile.png",
+      "url": "http://127.0.0.1:4321/en/notes/date-contracts/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-404-small-mobile.png",
+      "url": "http://127.0.0.1:4321/en/404/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-assetflow-small-mobile.png",
+      "url": "http://127.0.0.1:4321/en/projects/assetflow/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-bookflow-small-mobile.png",
+      "url": "http://127.0.0.1:4321/en/projects/bookflow/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-notes-small-mobile.png",
+      "url": "http://127.0.0.1:4321/en/notes/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-article-small-mobile.png",
+      "url": "http://127.0.0.1:4321/en/notes/booking-consistency/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-about-small-mobile.png",
+      "url": "http://127.0.0.1:4321/en/about/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    },
+    {
+      "file": "en-contact-small-mobile.png",
+      "url": "http://127.0.0.1:4321/en/contact/",
+      "width": 320,
+      "height": 760,
+      "kind": "actual Astro V2 production output"
+    }
+  ]
+}

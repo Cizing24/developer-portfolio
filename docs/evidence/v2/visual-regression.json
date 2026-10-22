@@ -1,0 +1,104 @@
+{
+  "platform": "win32",
+  "browser": "156.0.8078.4",
+  "threshold": 0.001,
+  "channelTolerance": 12,
+  "results": [
+    {
+      "file": "zh-tw-home-desktop.png",
+      "differentChannels": 0,
+      "totalChannels": 23336640,
+      "ratio": 0
+    },
+    {
+      "file": "zh-tw-assetflow-desktop.png",
+      "differentChannels": 0,
+      "totalChannels": 32758560,
+      "ratio": 0
+    },
+    {
+      "file": "zh-tw-bookflow-desktop.png",
+      "differentChannels": 0,
+      "totalChannels": 31907520,
+      "ratio": 0
+    },
+    {
+      "file": "zh-tw-article-desktop.png",
+      "differentChannels": 0,
+      "totalChannels": 12921120,
+      "ratio": 0
+    },
+    {
+      "file": "zh-tw-home-mobile.png",
+      "differentChannels": 0,
+      "totalChannels": 6722820,
+      "ratio": 0
+    },
+    {
+      "file": "zh-tw-assetflow-mobile.png",
+      "differentChannels": 0,
+      "totalChannels": 10263240,
+      "ratio": 0
+    },
+    {
+      "file": "zh-tw-bookflow-mobile.png",
+      "differentChannels": 0,
+      "totalChannels": 10032750,
+      "ratio": 0
+    },
+    {
+      "file": "zh-tw-article-mobile.png",
+      "differentChannels": 0,
+      "totalChannels": 3899610,
+      "ratio": 0
+    },
+    {
+      "file": "en-home-desktop.png",
+      "differentChannels": 0,
+      "totalChannels": 23569920,
+      "ratio": 0
+    },
+    {
+      "file": "en-assetflow-desktop.png",
+      "differentChannels": 0,
+      "totalChannels": 34892640,
+      "ratio": 0
+    },
+    {
+      "file": "en-bookflow-desktop.png",
+      "differentChannels": 0,
+      "totalChannels": 34521120,
+      "ratio": 0
+    },
+    {
+      "file": "en-article-desktop.png",
+      "differentChannels": 0,
+      "totalChannels": 13608000,
+      "ratio": 0
+    },
+    {
+      "file": "en-home-mobile.png",
+      "differentChannels": 0,
+      "totalChannels": 7223580,
+      "ratio": 0
+    },
+    {
+      "file": "en-assetflow-mobile.png",
+      "differentChannels": 0,
+      "totalChannels": 11688300,
+      "ratio": 0
+    },
+    {
+      "file": "en-bookflow-mobile.png",
+      "differentChannels": 0,
+      "totalChannels": 11593530,
+      "ratio": 0
+    },
+    {
+      "file": "en-article-mobile.png",
+      "differentChannels": 0,
+      "totalChannels": 4585230,
+      "ratio": 0
+    }
+  ]
+}

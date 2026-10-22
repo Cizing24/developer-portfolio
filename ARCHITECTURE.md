@@ -1,53 +1,55 @@
 # 系統架構
 
-Developer Portfolio 是 Astro 7 的純靜態內容網站。執行時不需要 Node server、資料庫、登入、付費 API 或 CMS；Node 24 僅用於開發與建置。
+V2 是 Astro 7 的純靜態內容網站。Node 24 僅用於開發／建置；訪客不需要 server、資料庫、登入或付費 API。
 
 ```mermaid
 flowchart LR
-  MD[Markdown / MDX] --> Loader[glob loader]
-  Loader --> Schema[Zod schema]
-  Schema --> Collections[Typed Content Collections]
-  Config[profile / SITE_URL] --> Pages[Astro pages + layouts]
-  Collections --> Pages
-  Pages --> Dist[Static HTML / CSS / small JS]
-  Images[Reviewed synthetic screenshots] --> Optimize[Astro Image / WebP srcset]
-  Optimize --> Dist
-  Dist --> Host[Vercel static hosting]
+  MD[Localized Markdown / MDX] --> Loader[glob + Zod]
+  Loader --> Content[locale + translationKey]
+  Dictionary[Typed translation dictionaries] --> Pages[Astro static routes]
+  Content --> Pages
+  Images[Reviewed synthetic screenshots] --> Image[Astro Image / WebP]
+  Image --> Pages
+  Pages --> HTML[Static HTML + CSS]
+  TS[Native TypeScript simulations] --> JS[Small browser scripts]
+  HTML --> Browser[Browser]
+  JS --> Browser
 ```
 
-## 模組
+## 主要模組
 
-| 路徑                     | 責任                                       |
-| ------------------------ | ------------------------------------------ |
-| `src/config.ts`          | 唯一個人資訊來源、導覽、語系               |
-| `src/content.config.ts`  | Content Layer `glob()` loader、圖片 schema |
-| `src/lib/schemas.ts`     | 型別化 frontmatter 欄位、日期與公開邊界    |
-| `src/lib/content.ts`     | 篩選、排序、日期、中文閱讀時間             |
-| `src/lib/metadata.ts`    | title、canonical、JSON-LD escaping         |
-| `src/lib/site-url.mjs`   | 驗證真實 HTTPS origin                      |
-| `src/layouts/Base.astro` | HTML、metadata、導覽、主題與 footer        |
-| `src/components/`        | ProjectCard、ContactCTA、TableOfContents   |
-| `src/pages/`             | 靜態路由與 robots endpoint                 |
-| `src/content/`           | 專案案例、技術文章                         |
-| `src/assets/`            | 經檢查的原始截圖，由 Astro 生成多尺寸圖片  |
-| `public/`                | favicon 與 OG social card                  |
-| `tests/`、`e2e/`         | 單元契約與正式靜態伺服器測試               |
-| `scripts/`               | 可重現截圖、SEO fixture 與 Lighthouse      |
+| 位置                                          | 職責                                            |
+| --------------------------------------------- | ----------------------------------------------- |
+| `src/config.ts`                               | 公開身分與選填聯絡資訊                          |
+| `src/lib/i18n.ts`                             | Locale 型別、字典、路徑 helper                  |
+| `src/content/{projects,notes}/{zh-tw,en}/`    | 完整本地化內容，translationKey 配對             |
+| `src/content.config.ts`、`src/lib/schemas.ts` | 內容型別、圖片、日期、來源版本與私人來源 guard  |
+| `src/pages/[locale]/`                         | 兩語首頁、列表、案例、文章、About、Contact、404 |
+| `src/layouts/Base.astro`                      | 語言導覽、metadata、hreflang、footer、少量互動  |
+| `src/components/FlowSimulation.astro`         | 可及性控制、合成流程與狀態呈現                  |
+| `src/lib/simulations.ts`                      | 純函式情境與步驟，不是業務後端                  |
+| `src/components/LegacyRedirect.astro`         | 舊網址的靜態／無 JS 回退                        |
+| `scripts/check-content.mjs`                   | 配對唯一性、完整翻譯、章節與證據一致性          |
+| `scripts/check-seo.mjs`                       | 預覽／正式 fixture SEO 契約                     |
 
-## 資料流
+## 多語系與資料流
 
-內容在建置時經 Zod 驗證，缺欄位、無效日期、私人來源連結或缺圖片會失敗。`getStaticPaths()` 依 collection entry ID 產生詳細頁，`render()` 同時提供 Markdown headings 作為目錄。草稿文章不會產生頁面，也不出現在列表或 sitemap。
+Astro 原生 `i18n` 設定 `defaultLocale: zh-tw`、`locales: [zh-tw,en]`、`prefixDefaultLocale: true`。`getStaticPaths` 在建置時生成明確語系路徑，不以瀏覽器偏好覆寫 URL。
 
-主題、手機選單與列表篩選是少量原生 TypeScript；Astro 在建置時打包。不引入 Vue／React runtime，沒有 hydration island。篩選不影響靜態可讀內容，停用 JavaScript 仍可閱讀所有頁面與案例；手機選單與主題切換需 JavaScript。
+Collections 保留兩種型別，依 locale 過濾列表，translationKey 尋找對應內容。案例與文章只有存在且可發布的配對才提供切換。缺譯不建立假翻譯。現有正式內容以內容契約要求兩語完整。草稿不輸出路由。
 
-## 語言擴充
+`render()` 取得 Content 與 headings。各語章節保持相同順序，語言切換透過該次建置的 heading slug 配對保留章節；共用 overview、deep-dive、evidence、simulation anchors 穩定不變。未知 hash 移除，避免把不成立的錨點帶入目的頁。query 保留；流程模擬重新載入時重設。
 
-第一版只有完整的 `zh-TW`，沒有空白英文入口。顯示身分與 locale 集中設定。未來加入英文時，以語系目錄拆分 collections 與 route，補齊翻譯後再加入 hreflang；目前不提前引入翻譯依賴。
+## 互動與降級
 
-## 安全邊界
+原生 TypeScript 處理選單、語言 hash、篩選及兩種流程。狀態由目前步驟和情境決定；沒有計時器、自動播放、rAF、Canvas、第三方動畫套件或 hydration runtime。重播回到第一步，再由訪客步進；重設恢復預設衝突情境與 0/6。
 
-內容作者是受信任的 repository 維護者，MDX 能執行元件，不接受匿名內容。對外無資料寫入端點；未建立聯絡表單。GitHub workflow 只授予 contents read。`.local`、`.env` 與測試產物不追蹤。Vercel headers 設定為靜態站適用的基本防護；正式 TLS、平台與網域仍需部署後驗證。
+沒有 JS 時完整文章、案例與技術順序仍可讀；手機主要導覽直接顯示，流程 details 提供靜態文字等價。沒有真實請求、持久化或後端安全驗證。
 
-## 網址與索引
+## URL、安全與部署邊界
 
-未設定 SITE_URL：不產生 canonical、og:url 或 sitemap，robots Disallow 且頁面 noindex。設定真實 HTTPS origin 後，產生 canonical、PNG Open Graph、structured data、robots 與 sitemap；404 永遠 noindex 且不列入 sitemap。測試中的 `portfolio.test` 僅為保留測試 origin，產物放 ignored `.local`，不作為網站預設網址。
+未知 SITE_URL 不生成 canonical／sitemap，robots Disallow、全頁 noindex；真實 HTTPS origin 啟用雙語 metadata、hreflang 與 sitemap，404／legacy 不納入 sitemap。SEO fixture 只用 reserved `.test`，輸出 ignored `.local`，不作正式身分。
+
+靜態 host 通常只有一個 `404.html`；本機 fallback 依明確 `/en/` 前綴切換英語回復介面，無 JS 回退保留雙語入口。語系 `/en/404/`、`/zh-tw/404/` 為完整靜態本地化文件。正式 host 的 404／HTTP redirect 必須部署後再驗證。
+
+MDX 作者需受信任，不接受外部匿名內容。私人來源不公開連結或程式碼；圖片為已審查合成資料。Workflow 僅授予 contents read，沒有 deployment job。來源 AssetFlow／BookFlow repository 僅唯讀，不改其程式。

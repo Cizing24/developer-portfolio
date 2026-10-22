@@ -1,42 +1,50 @@
-# 設計系統
+# V2 設計系統
 
-定位是工程師作品集，以完整案例與設計理由建立辨識度。不是 SaaS dashboard，也不以裝飾動畫取代內容。
+以 A：Editorial Engineering Lab 為主要語言（70%），將 B 的系統步驟與狀態展示（30%）納入同一套暖紙／酒紅 token，不混合 B 的藍色或 C 的工作室風格。
 
-## 色彩
+## Design Tokens
 
-所有語意 token 位於 `src/styles/global.css`。
+定義在 `src/styles/global.css`。
 
-| Token   | Dark      | Light     | 用途             |
-| ------- | --------- | --------- | ---------------- |
-| bg      | `#101310` | `#f5f5ee` | 主背景           |
-| surface | `#191d18` | `#e9ece2` | 次層背景         |
-| text    | `#f0f0e8` | `#172015` | 主要文字         |
-| muted   | `#a8afa4` | `#52604c` | 次要文字         |
-| line    | `#343b32` | `#c6cdbd` | 分隔線           |
-| accent  | `#c4f178` | `#385b1a` | 重點、focus、CTA |
+| Token      | 值        | 語意                        |
+| ---------- | --------- | --------------------------- |
+| bg         | `#f3efe5` | Warm paper 全站背景         |
+| paper      | `#faf7ef` | 實驗與閱讀面板              |
+| text       | `#202722` | 主要文字                    |
+| muted      | `#576052` | 次要文字與說明              |
+| accent     | `#982d36` | Burgundy 強調、連結與 focus |
+| accent-ink | `#fff9f0` | 酒紅按鈕文字                |
+| surface    | `#e5e7d9` | 實驗區與產品畫面底色        |
+| line       | `#b8bbae` | 分隔、資訊邊界              |
 
-深色為預設，使用者選擇保存在 localStorage；讀寫失敗時仍能切換當頁，不阻止內容。載入 head 的小型 inline script 在繪製前套用已選主題。
+這次以暖紙作唯一品牌底色，移除 V1 的深／淺主題控制及其 localStorage 狀態，避免視覺語言分裂。BookFlow 圖片底色使用低飽和紙棕，仍屬同一紙張系統。
 
-## 字體與尺度
+字體：Georgia、Noto Serif TC、PMingLiU、serif 作 display；Segoe UI／Microsoft JhengHei 作正文；Consolas／Cascadia Code 僅供小型技術標籤。全部為系統 fallback，沒有遠端字型，跨 OS 排版會不同。
 
-採系統字體 Segoe UI、Noto Sans TC、Microsoft JhengHei，不載入外部字型。中文以易讀為優先；英文 eyebrow 與 metadata 採 Consolas monospace。標題使用 clamp 隨視窗縮放；正文約 16px、行高 1.8，長文限制閱讀寬度約 790px。
+Spacing scale：4、8、12、24、40、64、104px。桌面 section 104px，手機 60px；容器最大 1320px，桌面 gutter 56px，平板 32px，手機 20px，320px 縮為 16px。正文最大 850px。
 
-首頁以大標題、留白、細線與雙欄作品建立編輯節奏。ProjectCard 以經核對截圖呈現內容，底色區分兩個作品；完整案例不裁切成假產品 UI。
+Hero 桌面 clamp 48–91px（寬螢幕 96px）、手機約 38–61px，320px 34px；H2 約 32–52px；正文 16px／1.85–1.95。長文與中文標題優先可讀，不把英文強行限制單行。
 
-## 版面與元件
+## 版面
 
-- 主內容最大寬度 1240px，桌面雙欄、手機單欄。
-- 1000px 調整間距，760px 切換手機導覽與單欄文章。
-- 768px 平板保留完整導覽；390px 手機以選單開合。
-- Base layout 統一導覽、footer、metadata；ProjectCard、ContactCTA、TableOfContents 可重用。
-- 按鈕主要路徑為「作品 → 案例 → 原始碼／聯絡」，避免不必要的選擇。
+首頁：報頭、品牌主張與編輯旁註、60／40 作品與高低落差、互動實驗、工程方法、筆記、聯絡。24 是 Cizing24 的身分旁註，不是工作年資或成果數字。
 
-## 互動與無障礙
+案例：Quick Overview、實際產品畫面、流程模擬、完整 13 章 Deep Dive、Evidence。章節目錄桌面 sticky，手機移至正文前，320px 單欄。兩張產品圖維持比例，不斜放、不捏造 UI。
 
-有 skip link、語意標題、原生 select、明確 label、aria-expanded、aria-current、圖片 alt 與 focus-visible。Escape 關閉手機選單並歸還焦點；不使用 modal focus trap，因選單是文件流中的展開導覽。
+Breakpoint：1100px 調整欄寬與流程 3 欄；760px 改手機導覽、單欄作品與 2 欄流程；350px 微調文字、邊界與目錄。手機清除作品落差，重排閱讀順序。
 
-Hover 僅有輕微位移與截圖角度變化；prefers-reduced-motion 關閉轉場、動畫與 smooth scroll。篩選結果有 aria-live 計數與空狀態。無障礙以 WCAG 2.2 AA 為目標，實測範圍見 TESTING；自動化零問題不等於完整合規認證。
+## 禁止裝飾箭頭
 
-## 資產
+普通連結與按鈕不得附加無功能意義的箭頭，包括 `↗`、`→`、ArrowUpRight／ArrowRight icon、CSS `::after`、hover 才出現的箭頭或等效方向 SVG。請以清楚文字、字重、底線、邊框、背景、hover 與 focus 表達互動。
 
-截圖由 Astro Image 輸出多寬度 WebP、srcset、sizes，列表 lazy loading，案例主圖 eager。OG 提供 1200×630 PNG，原始向量版也保留；`npm run og` 可重建。所有圖片自本機提供，不依賴遠端影像服務。
+有實際方向意義的返回、前後步進或輪播可用具名方向圖示；目前 V2 這些操作也使用純文字。技術內文的資料流與關係箭頭是資訊，不是普通連結裝飾，不應刪除其工程意義。E2E 逐頁檢查連結與按鈕；內容檢查亦防止新增 UI icon／偽元素箭頭。
+
+## 可及性與動態
+
+至少 44px 的主要操作、skip link、focus-visible、語意 landmarks、aria-current、aria-expanded、原生 select/details、aria-live 結果。Escape 關閉手機導覽並還原焦點，不作 modal trap。非互動狀態也用文字說明，不只靠顏色。
+
+圖片 hover／focus-within 最多上移 5px、180ms。Reduced Motion 停用 transition、transform 與 smooth scroll。沒有自動播放或先隱藏正文。無 JS 主要閱讀與導航仍可用。
+
+Shiki github-dark 的註解原色在正文小字下不足 AA，建置 transformer 將該註解 token 提升至 `#aab3bd`，不關閉 axe 對比檢查。
+
+圖片沿用 Astro Image WebP、srcset 與尺寸。實際產品畫面、合成資料、前端模擬、來源測試紀錄分別標示。自動 axe 零問題仍不代表完整 WCAG 合規；範圍見 TESTING。
