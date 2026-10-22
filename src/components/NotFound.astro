@@ -1,0 +1,91 @@
+---
+import Base from '../layouts/Base.astro';
+import { localizedPath, type Locale } from '../lib/i18n';
+interface Props {
+  locale?: Locale;
+}
+const locale = Astro.props.locale ?? 'zh-tw';
+const en = locale === 'en';
+---
+
+<Base
+  title={en ? 'Page not found' : '找不到頁面'}
+  noindex
+  locale={locale}
+  alternate={null}
+>
+  <section class="wrap error-page">
+    <p class="eyebrow">404 / AN UNWRITTEN PAGE</p>
+    <h1 data-error-title>
+      {en ? 'This page is still unwritten.' : '這一頁，還沒有寫進地圖。'}
+    </h1>
+    <p data-error-copy>
+      {en
+        ? 'The address may have changed. Continue with the projects or the journal.'
+        : '這個網址可能已變更。從作品與筆記，繼續探索工程故事。'}
+    </p>
+    <a class="button" data-error-home href={localizedPath(locale)}>
+      {en ? 'Back to home' : '回到首頁'}
+    </a>
+    <p>
+      <a class="text-link" href="/zh-tw/">
+        繁體中文
+      </a>{' '}
+      ·{' '}
+      <a class="text-link" href="/en/">
+        English
+      </a>
+    </p>
+  </section>
+</Base>
+<script>
+  // A static host serves one 404.html for every unknown path. Adapt that document to the explicit URL prefix.
+  if (location.pathname.startsWith('/en/')) {
+    document.documentElement.lang = 'en';
+    document.title = 'Page not found — Cizing24 / Software Engineer';
+    const title = document.querySelector('[data-error-title]');
+    if (title) title.textContent = 'This page is still unwritten.';
+    const copy = document.querySelector('[data-error-copy]');
+    if (copy)
+      copy.textContent =
+        'The address may have changed. Continue with the projects or the journal.';
+    document.querySelector<HTMLMetaElement>(
+      'meta[name="description"]',
+    )!.content =
+      'Page not found. Continue with the projects or the engineering journal.';
+    document
+      .querySelectorAll<HTMLAnchorElement>('a[href^="/zh-tw/"]:not([lang])')
+      .forEach((a) => {
+        if (a.closest('.error-page') && !a.hasAttribute('data-error-home'))
+          return;
+        a.href = a.href.replace('/zh-tw/', '/en/');
+      });
+    const home = document.querySelector<HTMLAnchorElement>('[data-error-home]');
+    if (home) {
+      home.href = '/en/';
+      home.textContent = 'Back to home';
+    }
+    const labels: Record<string, string> = {
+      跳到主要內容: 'Skip to main content',
+      作品: 'Projects',
+      技術筆記: 'Notes',
+      關於我: 'About',
+      聯絡: 'Contact',
+      回到頂部: 'Back to top',
+      選單: 'Menu',
+      '把思考寫進設計，把可靠留在細節。':
+        'Thoughtful decisions. Reliability in the details.',
+    };
+    document.querySelectorAll('a,button,p').forEach((el) => {
+      el.childNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent?.trim() ?? '';
+          if (labels[text]) node.textContent = labels[text];
+        }
+      });
+    });
+    document
+      .querySelector('#navigation')
+      ?.setAttribute('aria-label', 'Main navigation');
+  }
+</script>

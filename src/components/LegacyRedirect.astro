@@ -1,0 +1,32 @@
+---
+interface Props {
+  to: string;
+}
+const { to } = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta http-equiv="refresh" content={`0;url=${to}`} />
+    <meta name="robots" content="noindex,follow" />
+    <title>頁面已移至 V2 — Cizing24</title>
+  </head>
+  <body>
+    <main>
+      <h1>頁面已移至 V2</h1>
+      <a id="redirect" href={to}>
+        繼續前往新頁面
+      </a>
+    </main>
+    <script is:inline>
+      const link = document.getElementById('redirect');
+      if (link)
+        location.replace(
+          link.getAttribute('href') + location.search + location.hash,
+        );
+    </script>
+  </body>
+</html>

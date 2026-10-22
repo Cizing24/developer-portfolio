@@ -1,13 +1,15 @@
 ---
 import type { MarkdownHeading } from 'astro';
+import { localeFromPath, t } from '../lib/i18n';
 interface Props {
   headings: MarkdownHeading[];
 }
+const copy = t(localeFromPath(Astro.url.pathname));
 const headings = Astro.props.headings.filter((heading) => heading.depth === 2);
 ---
 
-<aside class="toc" aria-label="文章目錄">
-  <h2>ON THIS PAGE / 目錄</h2>
+<aside class="toc" aria-label={copy.toc}>
+  <h2>{copy.toc}</h2>
   <ol>
     {headings.map((heading) => (
       <li>

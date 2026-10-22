@@ -6,11 +6,4 @@ export const profile = {
   email: '',
   linkedin: '',
   resume: '',
-  locale: 'zh-TW',
 };
-export const navigation = [
-  { href: '/projects/', label: '作品' },
-  { href: '/notes/', label: '技術筆記' },
-  { href: '/about/', label: '關於我' },
-  { href: '/contact/', label: '聯絡' },
-];

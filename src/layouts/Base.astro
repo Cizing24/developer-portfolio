@@ -1,52 +1,69 @@
 ---
 import '../styles/global.css';
-import { profile, navigation } from '../config';
+import { profile } from '../config';
 import { canonicalUrl, pageTitle, safeJsonLd } from '../lib/metadata';
+import { localeFromPath, localizedPath, t, type Locale } from '../lib/i18n';
 interface Props {
   title: string;
   description?: string;
   noindex?: boolean;
   type?: 'website' | 'article';
+  locale?: Locale;
+  alternate?: string | null;
+  anchorMap?: Record<string, string>;
 }
 const {
   title,
-  description = profile.description,
+  locale = localeFromPath(Astro.url.pathname),
   noindex = false,
   type = 'website',
+  anchorMap = {},
 } = Astro.props;
+const copy = t(locale);
+const description = Astro.props.description ?? copy.description;
+const other = locale === 'en' ? 'zh-tw' : 'en';
+const alternate =
+  Astro.props.alternate === undefined
+    ? Astro.url.pathname.replace(`/${locale}/`, `/${other}/`)
+    : Astro.props.alternate;
 const canonical = canonicalUrl(Astro.url.pathname, Astro.site);
 const image = canonicalUrl('/og.png', Astro.site);
 const entity = {
   '@type': 'Person',
   name: profile.name,
   sameAs: [profile.github],
-  description: profile.description,
+  description: copy.description,
 };
 const structuredData = {
   '@context': 'https://schema.org',
   '@type':
     type === 'article'
       ? 'Article'
-      : Astro.url.pathname === '/about/'
+      : Astro.url.pathname.endsWith('/about/')
         ? 'ProfilePage'
-        : Astro.url.pathname === '/'
+        : Astro.url.pathname === localizedPath(locale)
           ? 'WebSite'
           : 'WebPage',
   ...(canonical ? { url: canonical } : {}),
   name: title,
   description,
+  inLanguage: locale === 'zh-tw' ? 'zh-TW' : 'en',
   ...(type === 'article'
     ? { headline: title, author: entity, ...(image ? { image } : {}) }
     : { about: entity }),
-  ...(Astro.url.pathname === '/about/' ? { mainEntity: entity } : {}),
+  ...(Astro.url.pathname.endsWith('/about/') ? { mainEntity: entity } : {}),
 };
 const indexable = !!Astro.site && !noindex;
+const navigation = ['projects', 'notes', 'about', 'contact'] as const;
 ---
 
 <!doctype html>
-<html lang={profile.locale}>
+<html lang={locale === 'zh-tw' ? 'zh-TW' : 'en'}>
   <head>
     <meta charset="utf-8" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle(title, profile.name)}</title>
     <meta name="description" content={description} />
@@ -54,66 +71,99 @@ const indexable = !!Astro.site && !noindex;
       name="robots"
       content={indexable ? 'index,follow' : 'noindex,follow'}
     />
-    <meta name="theme-color" content="#101310" />
+    <meta name="theme-color" content="#f3efe5" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     {canonical && <link rel="canonical" href={canonical} />}
+    {Astro.site && !noindex && (
+      <link
+        rel="alternate"
+        hreflang={locale === 'zh-tw' ? 'zh-TW' : 'en'}
+        href={canonical}
+      />
+    )}
+    {Astro.site && alternate && !noindex && (
+      <link
+        rel="alternate"
+        hreflang={other === 'zh-tw' ? 'zh-TW' : 'en'}
+        href={canonicalUrl(alternate, Astro.site)}
+      />
+    )}
+    {Astro.site && !noindex && (
+      <link
+        rel="alternate"
+        hreflang="x-default"
+        href={canonicalUrl(
+          locale === 'zh-tw'
+            ? Astro.url.pathname
+            : (alternate ?? localizedPath('zh-tw')),
+          Astro.site,
+        )}
+      />
+    )}
     <meta property="og:title" content={pageTitle(title, profile.name)} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content={type} />
-    <meta property="og:locale" content="zh_TW" />
+    <meta property="og:locale" content={locale === 'en' ? 'en_US' : 'zh_TW'} />
     {canonical && <meta property="og:url" content={canonical} />}
     {image && <meta property="og:image" content={image} />}
     <meta name="twitter:card" content="summary_large_image" />
     <script type="application/ld+json" set:html={safeJsonLd(structuredData)} />
-    <script is:inline>
-      try {
-        document.documentElement.dataset.theme =
-          localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
-      } catch {
-        /* Dark is the default when storage is unavailable. */
-      }
-    </script>
   </head>
   <body>
     <a class="skip-link" href="#main">
-      跳到主要內容
+      {copy.skip}
     </a>
     <header class="site-header wrap">
-      <a class="wordmark" href="/">
+      <a class="wordmark" href={localizedPath(locale)}>
         <span class="brand-mark">
           c<span>.</span>
         </span>
-        {profile.name}
-        <span class="wordmark-role"> / ENGINEER</span>
-        <span class="sr-only">首頁</span>
+        <span>
+          {profile.name}
+          <small>SOFTWARE ENGINEER</small>
+        </span>
+        <span class="sr-only">{copy.home}</span>
       </a>
       <div class="header-actions">
-        <button class="theme-toggle" aria-label="切換淺色主題" type="button">
-          <span aria-hidden="true">◐</span>
-        </button>
+        {alternate && (
+          <a
+            class="locale-switch"
+            data-locale
+            data-anchor-map={JSON.stringify(anchorMap)}
+            href={alternate}
+            lang={other === 'en' ? 'en' : 'zh-TW'}
+            hreflang={other === 'en' ? 'en' : 'zh-TW'}
+            aria-label={other === 'en' ? 'Switch to English' : '切換繁體中文'}
+          >
+            {other === 'en' ? 'EN' : '繁中'}
+          </a>
+        )}
         <button
           class="menu-toggle"
           aria-expanded="false"
           aria-controls="navigation"
           type="button"
         >
-          選單 <span aria-hidden="true">＋</span>
+          {copy.menu}
+          <span aria-hidden="true">＋</span>
         </button>
       </div>
-      <nav id="navigation" aria-label="主要導覽">
-        {navigation.map((item) => (
+      <nav id="navigation" aria-label={copy.navigation}>
+        {navigation.map((key, index) => (
           <a
-            href={item.href}
+            href={localizedPath(locale, key)}
             aria-current={
-              Astro.url.pathname.startsWith(item.href) ? 'page' : undefined
+              Astro.url.pathname.startsWith(localizedPath(locale, key))
+                ? 'page'
+                : undefined
             }
           >
-            {item.label}
+            <span class="nav-number" aria-hidden="true">
+              0{index + 1}
+            </span>
+            {copy[key]}
           </a>
         ))}
-        <a href={profile.github} class="nav-github">
-          GitHub <span aria-hidden="true">↗</span>
-        </a>
       </nav>
     </header>
     <main id="main" tabindex="-1">
@@ -121,23 +171,20 @@ const indexable = !!Astro.site && !noindex;
     </main>
     <footer class="wrap site-footer">
       <div>
-        <a class="footer-brand" href="/">
-          {profile.name}
-          <span>.</span>
+        <a class="footer-brand" href={localizedPath(locale)}>
+          Cizing24<span>.</span>
         </a>
-        <p>把思考寫進設計，把可靠留在細節。</p>
+        <p>{copy.footer}</p>
       </div>
       <div class="footer-links">
-        <a href="/projects/">瀏覽作品 ↗</a>
-        <a href={profile.github}>GitHub ↗</a>
-        <a href="/contact/">保持聯繫 ↗</a>
+        <a href={localizedPath(locale, 'projects')}>{copy.projects}</a>
+        <a href={profile.github}>GitHub</a>
+        <a href={localizedPath(locale, 'contact')}>{copy.contact}</a>
       </div>
       <div class="footer-bottom">
-        <span>
-          © {new Date().getUTCFullYear()} {profile.name}
-        </span>
-        <span>BUILT WITH ASTRO · DESIGNED WITH INTENT</span>
-        <a href="#main">回到頂部 ↑</a>
+        <span>© {new Date().getUTCFullYear()} Cizing24</span>
+        <span>AN INDEPENDENT ENGINEERING JOURNAL · VOL. 02</span>
+        <a href="#main">{locale === 'en' ? 'Back to top' : '回到頂部'}</a>
       </div>
     </footer>
     <script>
@@ -162,27 +209,26 @@ const indexable = !!Astro.site && !noindex;
         }
       });
       matchMedia('(min-width: 761px)').addEventListener('change', closeMenu);
-      const theme = document.querySelector<HTMLButtonElement>('.theme-toggle');
-      function updateThemeLabel() {
-        theme?.setAttribute(
-          'aria-label',
-          document.documentElement.dataset.theme === 'light'
-            ? '切換深色主題'
-            : '切換淺色主題',
-        );
-      }
-      updateThemeLabel();
-      theme?.addEventListener('click', () => {
-        const next =
-          document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-        document.documentElement.dataset.theme = next;
+      const switcher =
+        document.querySelector<HTMLAnchorElement>('[data-locale]');
+      function updateLanguageLink() {
+        if (!switcher) return;
+        const target = new URL(switcher.href);
+        target.search = location.search;
+        const mapping = JSON.parse(
+          switcher.dataset.anchorMap ?? '{}',
+        ) as Record<string, string>;
+        let hash = '';
         try {
-          localStorage.setItem('theme', next);
+          hash = decodeURIComponent(location.hash.slice(1));
         } catch {
-          /* Theme still works without storage. */
+          /* Invalid URL fragment has no translated target. */
         }
-        updateThemeLabel();
-      });
+        target.hash = hash ? (mapping[hash] ?? '') : '';
+        switcher.href = target.href;
+      }
+      updateLanguageLink();
+      window.addEventListener('hashchange', updateLanguageLink);
     </script>
   </body>
 </html>

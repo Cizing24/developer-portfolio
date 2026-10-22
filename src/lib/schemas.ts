@@ -14,12 +14,19 @@ const dateOnly = z
     );
   }, 'Invalid calendar date');
 export const projectFields = {
+  locale: z.enum(['zh-tw', 'en']),
+  translationKey: z.string().regex(/^[a-z0-9-]+$/),
   title: z.string().min(1),
   description: z.string().min(20).max(200),
   category: z.string(),
   tags: z.array(z.string()).min(1),
   highlights: z.array(z.string()).min(1),
-  status: z.enum(['已實作・隔離展示', '持續開發']),
+  status: z.enum([
+    '已實作・隔離展示',
+    '持續開發',
+    'Implemented · isolated showcase',
+    'In progress',
+  ]),
   visibility: z.enum(['public', 'private']),
   repository: httpsUrl.optional(),
   demo: httpsUrl.optional(),
@@ -41,6 +48,8 @@ export const projectSchema = z
     }
   });
 export const noteSchema = z.object({
+  locale: z.enum(['zh-tw', 'en']),
+  translationKey: z.string().regex(/^[a-z0-9-]+$/),
   title: z.string().min(1),
   description: z.string().min(20).max(200),
   publishedAt: dateOnly,

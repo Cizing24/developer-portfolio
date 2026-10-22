@@ -8,3 +8,6 @@ dist/
 playwright-report/
 test-results/
 coverage/
+.work/
+
+debug.log

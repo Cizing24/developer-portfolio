@@ -1,0 +1,160 @@
+---
+import { simulationSteps, type System } from '../lib/simulations';
+import { localeFromPath } from '../lib/i18n';
+interface Props {
+  system: System;
+}
+const { system } = Astro.props;
+const locale = localeFromPath(Astro.url.pathname);
+const en = locale === 'en';
+const steps = simulationSteps(system, 'conflict', locale);
+const id = `flow-${system}`;
+---
+
+<section
+  class="flow-lab"
+  data-simulation={system}
+  data-language={locale}
+  aria-labelledby={`${id}-title`}
+>
+  <div class="lab-caption mono">
+    <span>INTERACTIVE SPECIMEN / {system === 'bookflow' ? '01' : '02'}</span>
+    <span>{en ? 'BROWSER SIMULATION' : '瀏覽器流程模擬'}</span>
+  </div>
+  <h3 id={`${id}-title`}>
+    {system === 'bookflow'
+      ? en
+        ? 'Two requests. One slot.'
+        : '同一時段，同時預約？'
+      : en
+        ? 'One asset. A controlled lifecycle.'
+        : '每一次領用，都有邊界。'}
+  </h3>
+  <p class="simulation-disclaimer">
+    {en
+      ? 'Interactive flow simulation · synthetic scenario · no backend or database requests. Results explain rules and do not prove concurrency safety.'
+      : '互動式流程模擬・合成情境・不連線後端或資料庫。結果用於解釋規則，不作為並行安全證明。'}
+  </p>
+  <div class="scenario-control">
+    <label for={`${id}-scenario`}>{en ? 'Scenario' : '展示情境'}</label>
+    <select id={`${id}-scenario`} data-scenario>
+      <option value="conflict">
+        {en ? 'Competing requests (409)' : '並行請求衝突（409）'}
+      </option>
+      <option value="success">{en ? 'Successful request' : '成功請求'}</option>
+      {system === 'assetflow' && (
+        <option value="denied">
+          {en ? 'VIEWER denied (403)' : 'VIEWER 權限拒絕（403）'}
+        </option>
+      )}
+    </select>
+  </div>
+  <ol class="flow-steps">
+    {steps.map((step, index) => (
+      <li>
+        <button type="button" data-node={index + 1} aria-pressed="false">
+          <span class="mono">0{index + 1}</span>
+          <strong>{step.title}</strong>
+          <span class="node-state">{en ? 'Pending' : '尚未執行'}</span>
+        </button>
+      </li>
+    ))}
+  </ol>
+  <div class="flow-controls">
+    <button type="button" class="button" data-next>
+      {en ? 'Next step' : '下一步'}
+    </button>
+    <button type="button" data-replay>
+      {en ? 'Replay' : '重新播放'}
+    </button>
+    <button type="button" data-reset>
+      {en ? 'Reset' : '重新設定'}
+    </button>
+    <span class="step-count mono">0 / 6</span>
+  </div>
+  <div class="flow-result" role="status" aria-live="polite" aria-atomic="true">
+    <strong data-state>{en ? 'Ready to explore' : '尚未開始'}</strong>
+    <p data-detail>
+      {en
+        ? 'Choose a scenario, then select a step or use Next step. Replay returns to the first step; Reset clears the scenario.'
+        : '選擇情境後，點選任一步驟或使用下一步。重新播放回到第一步；重新設定清空情境。'}
+    </p>
+  </div>
+  <details class="flow-explanation">
+    <summary>
+      {en ? 'Read the complete technical sequence' : '閱讀完整技術流程'}
+    </summary>
+    <ol>
+      {steps.map((step) => (
+        <li>
+          <strong>{step.title}</strong> — {step.detail}
+        </li>
+      ))}
+    </ol>
+    <p>
+      {en
+        ? 'The selected scenario updates the interactive result above. This static sequence describes competing requests. No timers or automatic playback run.'
+        : '所選情境會更新上方互動結果。此靜態文字描述並行請求情境，沒有計時器或自動播放。'}
+    </p>
+  </details>
+</section>
+<script>
+  import {
+    simulationSteps,
+    nextStep,
+    type System,
+    type Scenario,
+  } from '../lib/simulations';
+  import type { Locale } from '../lib/i18n';
+  document.querySelectorAll<HTMLElement>('[data-simulation]').forEach((lab) => {
+    const system = lab.dataset.simulation as System;
+    const locale = lab.dataset.language as Locale;
+    const en = locale === 'en';
+    const scenario = lab.querySelector<HTMLSelectElement>('[data-scenario]')!;
+    const nodes = [...lab.querySelectorAll<HTMLButtonElement>('[data-node]')];
+    const next = lab.querySelector<HTMLButtonElement>('[data-next]')!;
+    let current = 0;
+    function update(step: number) {
+      const steps = simulationSteps(system, scenario.value as Scenario, locale);
+      current = step;
+      lab.dataset.step = String(step);
+      nodes.forEach((node, index) => {
+        const done = index < current;
+        node.dataset.active = String(done);
+        node.setAttribute('aria-pressed', String(index + 1 === current));
+        node.querySelector('.node-state')!.textContent = done
+          ? steps[index]!.state
+          : en
+            ? 'Pending'
+            : '尚未執行';
+      });
+      lab.querySelector('.step-count')!.textContent =
+        `${step} / ${steps.length}`;
+      lab.querySelector('[data-state]')!.textContent = step
+        ? steps[step - 1]!.state
+        : en
+          ? 'Ready to explore'
+          : '尚未開始';
+      lab.querySelector('[data-detail]')!.textContent = step
+        ? steps[step - 1]!.detail
+        : en
+          ? 'Choose a scenario, then select a step or use Next step.'
+          : '選擇情境後，點選任一步驟或使用下一步。';
+      next.disabled = current === steps.length;
+    }
+    nodes.forEach((node, index) =>
+      node.addEventListener('click', () => update(index + 1)),
+    );
+    next.addEventListener('click', () =>
+      update(nextStep(current, nodes.length)),
+    );
+    lab
+      .querySelector('[data-replay]')!
+      .addEventListener('click', () => update(1));
+    lab.querySelector('[data-reset]')!.addEventListener('click', () => {
+      scenario.value = 'conflict';
+      update(0);
+    });
+    scenario.addEventListener('change', () => update(0));
+  });
+</script>

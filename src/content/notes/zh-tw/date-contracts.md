@@ -1,4 +1,6 @@
 ---
+locale: zh-tw
+translationKey: date-contracts
 title: 日期不是時間點：把業務日期與事件時間分開
 description: 以 AssetFlow 的離職交接為例，說明純日期、實際離職日與完成時間的資料契約，以及台灣午夜的邊界。
 publishedAt: '2026-10-22'
@@ -43,4 +45,4 @@ const display = new Intl.DateTimeFormat('zh-TW', {
 
 原專案記錄涵蓋日期轉換、台灣午夜與交接流程回歸。本網站未重新執行私人專案測試，也不推定歷史錯填的日期可以自動修正；那需要外部人事事實。
 
-[閱讀 AssetFlow 案例](/projects/assetflow/)
+[閱讀 AssetFlow 案例](/zh-tw/projects/assetflow/)

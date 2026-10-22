@@ -1,18 +1,5 @@
 ---
-import Base from '../layouts/Base.astro';
+import NotFound from '../components/NotFound.astro';
 ---
 
-<Base title="找不到頁面" noindex>
-  <section class="wrap error-page">
-    <p class="eyebrow">404 / ROUTE NOT FOUND</p>
-    <h1>
-      這條路，
-      <br />
-      <span class="accent">還沒有寫進地圖。</span>
-    </h1>
-    <p>頁面可能已移動，或連結有誤。回到首頁，繼續探索作品與技術筆記。</p>
-    <a class="button" href="/">
-      回到首頁 ↗
-    </a>
-  </section>
-</Base>
+<NotFound />

@@ -1,64 +1,58 @@
 ---
 import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
+import { entrySlug, localizedPath, t } from '../lib/i18n';
 interface Props {
   project: CollectionEntry<'projects'>;
   index: number;
 }
 const { project, index } = Astro.props;
 const { data } = project;
+const copy = t(data.locale);
+const slug = entrySlug(project.id);
+const href = localizedPath(data.locale, `projects/${slug}`);
 ---
 
 <article class="project-card" data-tags={JSON.stringify(data.tags)}>
+  <div class="project-top mono">
+    <span>FIELD STUDY / 0{index + 1}</span>
+    <span>{data.visibility === 'private' ? copy.private : copy.public}</span>
+  </div>
   <a
-    href={`/projects/${project.id}/`}
-    class:list={['project-visual', project.id]}
+    href={href}
+    class:list={['project-visual', slug]}
     tabindex="-1"
     aria-hidden="true"
   >
-    <div class="visual-caption">
-      <span>{data.category}</span>
-      <span>0{index + 1} / CASE STUDY</span>
-    </div>
-    <div class="screen-frame">
-      <div class="screen-bar">
-        <i></i>
-        <i></i>
-        <i></i>
-        <span>{data.title} / WORKSPACE</span>
-      </div>
-      <Image
-        src={data.cover}
-        alt=""
-        widths={[480, 800, 1200]}
-        sizes="(max-width: 760px) 90vw, 46vw"
-        loading="lazy"
-      />
-    </div>
-    <span class="visual-arrow" aria-hidden="true">
-      ↗
+    <Image
+      src={data.cover}
+      alt=""
+      widths={[480, 800, 1200]}
+      sizes="(max-width: 760px) 90vw, 55vw"
+      loading="lazy"
+    />
+    <span class="picture-stamp mono">
+      {slug === 'assetflow' ? 'ASSET LIFECYCLE' : 'MULTI-TENANT BOOKING'}
     </span>
   </a>
   <div class="project-meta">
-    <span class="eyebrow">
-      0{index + 1} — {data.category}
-    </span>
-    <span class="status">
-      <span></span>
-      {data.visibility === 'private' ? 'PRIVATE SOURCE' : 'PUBLIC SOURCE'}
-    </span>
+    <span class="eyebrow">{data.category}</span>
+    <span class="mono">0{index + 1}</span>
   </div>
   <h3>
-    <a href={`/projects/${project.id}/`}>
-      {data.title}
-      <span aria-hidden="true">↗</span>
-    </a>
+    <a href={href}>{data.title}</a>
   </h3>
   <p>{data.description}</p>
-  <ul class="tags" aria-label="使用技術">
+  <ul
+    class="tags"
+    aria-label={data.locale === 'en' ? 'Technologies' : '使用技術'}
+  >
     {data.tags.map((tag) => (
       <li>{tag}</li>
     ))}
   </ul>
-  <p class="project-note">{data.status} · 未公開部署</p>
+  <a class="text-link" href={href}>
+    {copy.case}
+  </a>
+  <p class="project-note">{copy.notDeployed}</p>
 </article>
