@@ -1,0 +1,102 @@
+.project-introduction > section {
+  padding-block: 28px;
+}
+.project-introduction > section + section {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+}
+.project-introduction h2 {
+  font-size: clamp(1.7rem, 3vw, 2.3rem);
+  margin-bottom: 24px;
+}
+.project-introduction p {
+  line-height: 1.95;
+  font-size: 0.95rem;
+}
+.project-introduction .intro-statement {
+  font: 1.45rem/1.6 var(--display);
+  color: var(--accent);
+  margin-bottom: 24px;
+}
+.intro-audience {
+  margin-top: 24px;
+  color: var(--muted);
+}
+.intro-features article {
+  display: flex;
+  gap: 22px;
+  padding: 22px 0;
+}
+.intro-features article + article {
+  border-top: 1px solid var(--line);
+}
+.intro-features .mono {
+  color: var(--accent);
+  margin-top: 7px;
+}
+.project-introduction h3 {
+  font: 500 1.25rem/1.5 var(--body);
+  margin-bottom: 10px;
+  letter-spacing: -0.02em;
+}
+.intro-features p,
+.intro-architecture p {
+  color: var(--muted);
+}
+.intro-architecture {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.intro-architecture li {
+  display: flex;
+  gap: 24px;
+  position: relative;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  background: #e8e9da;
+}
+.intro-architecture li + li {
+  margin-top: 24px;
+}
+.intro-architecture li + li::before {
+  content: '';
+  position: absolute;
+  height: 24px;
+  width: 1px;
+  background: var(--muted);
+  top: -25px;
+  left: 36px;
+}
+.intro-layer-number {
+  color: var(--accent);
+  padding-top: 7px;
+}
+.intro-architecture .mono:not(.intro-layer-number) {
+  display: inline-block;
+  font-size: 0.63rem;
+  padding-bottom: 14px;
+  color: #3c5f53;
+}
+.intro-status {
+  padding: 18px 22px;
+  background: #e9e9db;
+  color: var(--muted);
+  margin-top: 32px;
+  font-size: 0.8rem !important;
+}
+@media (max-width: 540px) {
+  .intro-features article {
+    gap: 14px;
+  }
+  .intro-architecture li {
+    padding: 18px 16px;
+    gap: 16px;
+  }
+  .intro-architecture li + li::before {
+    left: 28px;
+  }
+  .project-introduction p {
+    font-size: 0.87rem;
+  }
+}

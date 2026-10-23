@@ -1,0 +1,272 @@
+---
+import { localeFromPath, localizedPath } from '../lib/i18n';
+import {
+  islands,
+  dayPhases,
+  phaseName,
+  islandItems,
+} from '../lib/world-config';
+import StudioReader from './StudioReader.astro';
+import WorldIcon from './WorldIcon.astro';
+import '../styles/studio.css';
+const locale = localeFromPath(Astro.url.pathname);
+const en = locale === 'en';
+---
+
+<div
+  id="studio"
+  class="studio"
+  data-studio
+  data-language={locale}
+  data-mode="overview"
+  data-phase="noon"
+  data-menu="closed"
+  data-traveling="false"
+>
+  <header class="world-header">
+    <h1>
+      <span class="world-brand">CIZING24</span>
+    </h1>
+    <div
+      class="world-time"
+      role="group"
+      aria-label={en ? 'Time of day' : '場景時段'}
+    >
+      {dayPhases.map((phase) => (
+        <button
+          type="button"
+          data-phase-choice={phase}
+          aria-pressed={phase === 'noon' ? 'true' : 'false'}
+          aria-label={phaseName(phase, locale)}
+          title={phaseName(phase, locale)}
+        >
+          <WorldIcon name={phase} />
+        </button>
+      ))}
+    </div>
+    <a
+      class="world-language"
+      data-world-locale
+      href={`/${en ? 'zh-tw' : 'en'}/`}
+      lang={en ? 'zh-TW' : 'en'}
+      aria-label={en ? '繁中 — 切換繁體中文' : 'EN — Switch to English'}
+    >
+      {en ? '繁中' : 'EN'}
+    </a>
+  </header>
+  <div class="studio-world">
+    <div class="studio-viewport" data-viewport>
+      <div class="studio-fallback" aria-hidden="true">
+        {islands.map((_, index) => (
+          <span class={`fallback-island island-${index}`}></span>
+        ))}
+      </div>
+      <div
+        class="world-portals"
+        role="group"
+        aria-label={en ? 'Islands' : '島嶼'}
+      >
+        {islands.map((island, index) => (
+          <button type="button" class="world-portal" data-portal={island.id}>
+            <span class="island-number" aria-hidden="true">
+              0{index + 1}
+            </span>
+            <span>{en ? island.en : island.zh}</span>
+          </button>
+        ))}
+      </div>
+      <div
+        class="studio-labels"
+        role="group"
+        aria-label={en ? 'Island contents' : '島嶼內容'}
+      >
+        {[0, 1, 2].map((index) => (
+          <button
+            type="button"
+            class="studio-node"
+            data-station={index}
+            hidden={index === 2}
+          >
+            <span class="hotspot-dot" aria-hidden="true"></span>
+            <span data-node-title>
+              {islandItems('portfolio', locale)[index]?.title ?? ''}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+  <button
+    type="button"
+    class="world-menu-toggle"
+    data-menu-toggle
+    aria-expanded="false"
+    aria-controls="island-index"
+    aria-label={en ? 'Island menu' : '島嶼選單'}
+    title={en ? 'Island menu' : '島嶼選單'}
+  >
+    <WorldIcon name="menu" />
+  </button>
+  <aside
+    class="world-index"
+    id="island-index"
+    data-index
+    aria-label={en ? 'Island menu' : '島嶼選單'}
+    aria-hidden="true"
+    inert
+  >
+    <div class="index-heading">
+      <h2>{en ? 'Islands' : '島嶼清單'}</h2>
+      <button
+        type="button"
+        data-menu-close
+        aria-label={en ? 'Close menu' : '關閉選單'}
+      >
+        <WorldIcon name="close" />
+      </button>
+    </div>
+    <label class="sr-only" for="island-search">
+      {en ? 'Search islands or contents' : '搜尋島嶼或內容'}
+    </label>
+    <input
+      id="island-search"
+      data-island-search
+      type="search"
+      placeholder={en ? 'Search islands or contents…' : '搜尋島嶼或內容…'}
+      autocomplete="off"
+    />
+    <nav aria-label={en ? 'World navigation' : '世界導覽'}>
+      {islands.map((island, index) => (
+        <div
+          class="index-row"
+          data-index-row={island.id}
+          data-search={`${island.zh} ${island.en} ${islandItems(
+            island.id,
+            locale,
+          )
+            .map((item) => item.title)
+            .join(' ')}`}
+        >
+          <button
+            type="button"
+            class="index-island"
+            data-island-go={island.id}
+            aria-expanded="false"
+          >
+            <span class="mono">0{index + 1}</span>
+            <span>{en ? island.en : island.zh}</span>
+            <span class="index-count">
+              {islandItems(island.id, locale).length}
+            </span>
+          </button>
+          <div class="index-details" data-index-details={island.id} hidden>
+            <button
+              type="button"
+              class="index-overview"
+              data-open={island.view}
+            >
+              {en ? 'View contents' : '查看內容'}
+            </button>
+            {islandItems(island.id, locale).map((item) =>
+              item.view ? (
+                <button
+                  type="button"
+                  class="index-content"
+                  data-open={item.view}
+                >
+                  {item.title}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  class="index-content"
+                  data-island-link={item.island}
+                >
+                  {item.title}
+                </button>
+              ),
+            )}
+          </div>
+        </div>
+      ))}
+    </nav>
+    <p class="index-empty" data-index-empty hidden>
+      {en ? 'No matching islands' : '找不到符合的島嶼'}
+    </p>
+  </aside>
+  <div
+    class="world-tools"
+    role="group"
+    aria-label={en ? 'Scene controls' : '場景控制'}
+  >
+    <button
+      type="button"
+      data-overview
+      aria-label={en ? 'All islands' : '群島全景'}
+      title={en ? 'All islands' : '群島全景'}
+    >
+      <WorldIcon name="home" />
+    </button>
+    <button
+      type="button"
+      data-zoom="in"
+      aria-label={en ? 'Zoom in' : '拉近視角'}
+      title={en ? 'Zoom in' : '拉近視角'}
+    >
+      <WorldIcon name="zoom-in" />
+    </button>
+    <button
+      type="button"
+      data-zoom="out"
+      aria-label={en ? 'Zoom out' : '拉遠視角'}
+      title={en ? 'Zoom out' : '拉遠視角'}
+    >
+      <WorldIcon name="zoom-out" />
+    </button>
+    <button
+      type="button"
+      data-motion
+      aria-pressed="true"
+      aria-label={en ? 'Pause motion' : '暫停動態'}
+      title={en ? 'Pause motion' : '暫停動態'}
+    >
+      <span data-motion-pause>
+        <WorldIcon name="pause" />
+      </span>
+      <span data-motion-play hidden>
+        <WorldIcon name="play" />
+      </span>
+    </button>
+    <button
+      type="button"
+      data-avatar-focus
+      aria-label={en ? 'Find Cizing24' : '找到 Cizing24'}
+      title={en ? 'Find Cizing24' : '找到 Cizing24'}
+    >
+      <WorldIcon name="user" />
+    </button>
+    <button
+      type="button"
+      data-open="help"
+      aria-label={en ? 'Help' : '操作說明'}
+      title={en ? 'Help' : '操作說明'}
+    >
+      <WorldIcon name="info" />
+    </button>
+  </div>
+  <p class="sr-only" role="status" data-scene-status></p>
+  <StudioReader />
+  <noscript>
+    <div class="world-nojs">
+      <h2>{en ? 'Portfolio' : '作品集'}</h2>
+      <a href={localizedPath(locale, 'projects')}>{en ? 'Projects' : '作品'}</a>
+      <a href={localizedPath(locale, 'notes')}>{en ? 'Notes' : '筆記'}</a>
+      <a href={localizedPath(locale, 'about')}>{en ? 'About' : '關於'}</a>
+      <a href={localizedPath(locale, 'contact')}>{en ? 'Contact' : '聯絡'}</a>
+    </div>
+  </noscript>
+</div>
+<script>
+  import { initStudio } from '../lib/studio';
+  document.querySelectorAll<HTMLElement>('[data-studio]').forEach(initStudio);
+</script>

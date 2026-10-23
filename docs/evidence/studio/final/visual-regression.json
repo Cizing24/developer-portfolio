@@ -1,0 +1,101 @@
+{
+  "kind": "Current V3 mobile image comparisons against existing post-landscape-fix captures; original files retained",
+  "platform": "win32",
+  "browser": "156.0.8078.4",
+  "baselineManifest": "docs/evidence/studio/mobile/visual-checks.json",
+  "baselineBrowserMetadata": "Not recorded in original manifest; reproduced using the same Playwright installation and Chromium channel",
+  "threshold": 0.001,
+  "channelTolerance": 12,
+  "results": [
+    {
+      "path": "docs/screenshots/studio/phone-844-390-home.png",
+      "width": 844,
+      "height": 390,
+      "state": "home",
+      "differentChannels": 0,
+      "totalChannels": 987480,
+      "ratio": 0,
+      "passed": true
+    },
+    {
+      "path": "docs/screenshots/studio/phone-844-390-menu.png",
+      "width": 844,
+      "height": 390,
+      "state": "menu",
+      "differentChannels": 0,
+      "totalChannels": 987480,
+      "ratio": 0,
+      "passed": true
+    },
+    {
+      "path": "docs/screenshots/studio/phone-844-390-reader.png",
+      "width": 844,
+      "height": 390,
+      "state": "reader",
+      "differentChannels": 0,
+      "totalChannels": 987480,
+      "ratio": 0,
+      "passed": true
+    },
+    {
+      "path": "docs/screenshots/studio/phone-667-375-home.png",
+      "width": 667,
+      "height": 375,
+      "state": "home",
+      "differentChannels": 0,
+      "totalChannels": 750375,
+      "ratio": 0,
+      "passed": true
+    },
+    {
+      "path": "docs/screenshots/studio/phone-667-375-menu.png",
+      "width": 667,
+      "height": 375,
+      "state": "menu",
+      "differentChannels": 0,
+      "totalChannels": 750375,
+      "ratio": 0,
+      "passed": true
+    },
+    {
+      "path": "docs/screenshots/studio/phone-667-375-reader.png",
+      "width": 667,
+      "height": 375,
+      "state": "reader",
+      "differentChannels": 0,
+      "totalChannels": 750375,
+      "ratio": 0,
+      "passed": true
+    },
+    {
+      "path": "docs/screenshots/studio/phone-320-568-home.png",
+      "width": 320,
+      "height": 568,
+      "state": "home",
+      "differentChannels": 0,
+      "totalChannels": 545280,
+      "ratio": 0,
+      "passed": true
+    },
+    {
+      "path": "docs/screenshots/studio/phone-320-568-menu.png",
+      "width": 320,
+      "height": 568,
+      "state": "menu",
+      "differentChannels": 0,
+      "totalChannels": 545280,
+      "ratio": 0,
+      "passed": true
+    },
+    {
+      "path": "docs/screenshots/studio/phone-320-568-reader.png",
+      "width": 320,
+      "height": 568,
+      "state": "reader",
+      "differentChannels": 0,
+      "totalChannels": 545280,
+      "ratio": 0,
+      "passed": true
+    }
+  ]
+}

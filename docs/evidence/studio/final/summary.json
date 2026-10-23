@@ -1,0 +1,85 @@
+{
+  "kind": "Final complete local automated verification after landscape fix",
+  "browser": {
+    "startTime": "2026-10-23T15:56:21.960Z",
+    "duration": 419780.894,
+    "expected": 96,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "unitTests": {
+    "passed": 33
+  },
+  "visual": {
+    "passed": 9,
+    "total": 9,
+    "threshold": 0.001,
+    "channelTolerance": 12
+  },
+  "staticChecks": {
+    "lint": "passed",
+    "format": "passed",
+    "astro": {
+      "errors": 0,
+      "warnings": 0,
+      "hints": 0
+    },
+    "typecheck": "passed",
+    "contentContracts": "passed",
+    "build": {
+      "staticPages": 30
+    },
+    "seo": {
+      "localizedPages": 18
+    }
+  },
+  "packageAudit": {
+    "command": "npm audit --audit-level=moderate --json",
+    "exitCode": 0,
+    "totalKnownVulnerabilities": 0
+  },
+  "publicScan": "public-scan.json",
+  "performance": [
+    {
+      "name": "home-mobile",
+      "scores": {
+        "performance": 73,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 63
+      },
+      "lcp": "2.6 s",
+      "cls": "0"
+    },
+    {
+      "name": "home-desktop",
+      "scores": {
+        "performance": 97,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 63
+      },
+      "lcp": "0.6 s",
+      "cls": "0.008"
+    },
+    {
+      "name": "case-mobile",
+      "scores": {
+        "performance": 97,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 66
+      },
+      "lcp": "1.2 s",
+      "cls": "0"
+    }
+  ],
+  "limits": [
+    "Chromium emulation, not physical device testing",
+    "No Safari or Firefox run",
+    "No production deployment or CI execution",
+    "Three.js chunk warning and initial scene main-thread work remain",
+    "Old V2 pixel baselines are historical; current V3 comparisons saved separately"
+  ]
+}

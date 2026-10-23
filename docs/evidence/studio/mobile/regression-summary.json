@@ -1,0 +1,48 @@
+{
+  "kind": "Post-fix mobile and small-mobile regression, Chromium emulation only",
+  "command": "npx playwright test --project=mobile --project=small-mobile",
+  "stats": {
+    "startTime": "2026-10-23T15:45:02.126Z",
+    "duration": 187708.738,
+    "expected": 48,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "orientationViewports": [
+    [
+      320,
+      568
+    ],
+    [
+      360,
+      640
+    ],
+    [
+      430,
+      932
+    ],
+    [
+      844,
+      390
+    ],
+    [
+      667,
+      375
+    ],
+    [
+      390,
+      620
+    ],
+    [
+      390,
+      844
+    ]
+  ],
+  "fixes": [
+    "Dynamic viewport height instead of 480px minimum",
+    "Short landscape controls and scrollable menu",
+    "Landscape island layout and camera fit",
+    "16px mobile search input to avoid focus zoom"
+  ]
+}

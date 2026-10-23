@@ -1,0 +1,66 @@
+---
+import {
+  projectIntroduction,
+  topicTitle,
+  type ProjectId,
+  type ProjectTopic,
+} from '../lib/project-introductions';
+import { localeFromPath, type Locale } from '../lib/i18n';
+import '../styles/project-introduction.css';
+interface Props {
+  project: ProjectId;
+  locale?: Locale;
+  topic?: ProjectTopic;
+}
+const {
+  project,
+  locale = localeFromPath(Astro.url.pathname),
+  topic,
+} = Astro.props;
+const data = projectIntroduction(project, locale);
+---
+
+<div class="project-introduction">
+  {(!topic || topic === 'purpose') && (
+    <section id={`${project}-purpose`} class="intro-purpose">
+      <h2>{topicTitle('purpose', locale)}</h2>
+      <p class="intro-statement">{data.tagline}</p>
+      <p>{data.purpose}</p>
+      <p class="intro-audience">{data.audience}</p>
+    </section>
+  )}
+  {(!topic || topic === 'features') && (
+    <section id={`${project}-features`}>
+      <h2>{topicTitle('features', locale)}</h2>
+      <div class="intro-features">
+        {data.features.map((feature, index) => (
+          <article>
+            <span class="mono">0{index + 1}</span>
+            <div>
+              <h3>{feature.title}</h3>
+              <p>{feature.text}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  )}
+  {(!topic || topic === 'architecture') && (
+    <section id={`${project}-architecture`}>
+      <h2>{topicTitle('architecture', locale)}</h2>
+      <ol class="intro-architecture">
+        {data.architecture.map((layer, index) => (
+          <li>
+            <span class="intro-layer-number mono">0{index + 1}</span>
+            <div>
+              <h3>{layer.title}</h3>
+              <span class="mono">{layer.tech}</span>
+              <p>{layer.text}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
+  {!topic && <p class="intro-status">{data.status}</p>}
+</div>

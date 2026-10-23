@@ -1,0 +1,5 @@
+{
+  "scope": "git tracked plus non-ignored untracked files; excludes binary media; bounded common-pattern scan only",
+  "files": 280,
+  "findings": []
+}

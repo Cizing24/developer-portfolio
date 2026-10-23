@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-23T11:55:54.344Z",
+  "count": 25,
+  "results": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "locale": "zh-tw",
+      "renderer": "ready",
+      "errors": [],
+      "overflow": false
+    },
+    {
+      "name": "tablet",
+      "width": 768,
+      "height": 1024,
+      "locale": "zh-tw",
+      "renderer": "ready",
+      "errors": [],
+      "overflow": false
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "locale": "zh-tw",
+      "renderer": "ready",
+      "errors": [],
+      "overflow": false
+    },
+    {
+      "name": "english",
+      "width": 1440,
+      "height": 1000,
+      "locale": "en",
+      "renderer": "ready",
+      "errors": [],
+      "overflow": false
+    },
+    {
+      "name": "small-mobile",
+      "width": 320,
+      "height": 760,
+      "locale": "en",
+      "renderer": "ready",
+      "errors": [],
+      "overflow": false
+    }
+  ]
+}

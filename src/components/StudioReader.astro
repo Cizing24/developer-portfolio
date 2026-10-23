@@ -1,0 +1,251 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import { localeFromPath, entrySlug, localizedPath } from '../lib/i18n';
+import { sortProjects, publishedNotes } from '../lib/content';
+import { profile } from '../config';
+import ProjectIntroduction from './ProjectIntroduction.astro';
+import {
+  projectTopics,
+  topicTitle,
+  type ProjectId,
+} from '../lib/project-introductions';
+const locale = localeFromPath(Astro.url.pathname);
+const en = locale === 'en';
+const projects = await Promise.all(
+  sortProjects(
+    await getCollection('projects', (p) => p.data.locale === locale),
+  ).map(async (entry) => ({ entry, ...(await render(entry)) })),
+);
+const notes = await Promise.all(
+  publishedNotes(
+    await getCollection('notes', (n) => n.data.locale === locale),
+  ).map(async (entry) => ({ entry, ...(await render(entry)) })),
+);
+---
+
+<dialog class="studio-reader" data-reader aria-labelledby="reader-title">
+  <div class="reader-bar">
+    <p class="mono" id="reader-title" data-reader-title>
+      {en ? 'The reading room' : '工程閱覽室'}
+    </p>
+    <div>
+      <a
+        data-reader-locale
+        href={`/${en ? 'zh-tw' : 'en'}/`}
+        lang={en ? 'zh-TW' : 'en'}
+      >
+        {en ? '繁中' : 'EN'}
+      </a>
+      <button type="button" data-reader-close autofocus>
+        {en ? 'Close' : '關閉'}
+      </button>
+    </div>
+  </div>
+  <div
+    class="reader-scroll"
+    data-reader-scroll
+    tabindex="0"
+    role="region"
+    aria-labelledby="reader-title"
+  >
+    <section
+      data-view-panel="help"
+      data-title={en ? 'How to explore' : '探索操作說明'}
+      hidden
+    >
+      <h2>{en ? 'Controls' : '操作說明'}</h2>
+      <div class="prose">
+        <p>
+          {en
+            ? 'Select an island label, or open the menu on the right to search islands and their contents. Choose a topic to read it here.'
+            : '點選島名，或開啟右側選單搜尋島嶼與內容。選擇主題後，就會在這裡開啟閱讀框。'}
+        </p>
+        <p>
+          {en
+            ? 'Drag to rotate. Use two fingers to rotate on touch screens. The bottom controls return to all islands, zoom, pause movement and find Cizing24.'
+            : '拖曳旋轉視角，觸控螢幕也可使用雙指旋轉。底部按鈕可返回全景、縮放、暫停動態，以及找到 Cizing24 小人。'}
+        </p>
+        <p>
+          {en
+            ? 'The four icons at the top switch between dawn, noon, sunset and night. Your selected island and time are kept in the link.'
+            : '上方四個圖示可切換清晨、中午、夕陽與晚上，連結會保留目前的島嶼與時段。'}
+        </p>
+        <p>
+          {en
+            ? 'Keyboard controls and reduced-motion preferences are supported. If 3D is unavailable, the map and all reading panels remain usable.'
+            : '支援鍵盤與減少動態效果設定。無法使用 3D 時，仍可操作地圖與所有閱讀框。'}
+        </p>
+      </div>
+    </section>
+    <section
+      data-view-panel="projects"
+      data-title={en ? 'Selected projects' : '作品索引'}
+      hidden
+    >
+      <h2>{en ? 'Portfolio' : '作品集'}</h2>
+
+      <div class="reader-project-grid">
+        {projects.map(({ entry }) => (
+          <article>
+            <Image
+              src={entry.data.cover}
+              alt={entry.data.coverAlt}
+              width={680}
+              loading="lazy"
+            />
+            <p class="eyebrow">{entry.data.category}</p>
+            <h3>{entry.data.title}</h3>
+            <p>{entry.data.description}</p>
+            <div class="reader-actions">
+              <button type="button" data-enter-world={entrySlug(entry.id)}>
+                {en ? 'Enter the world' : '進入專案場景'}
+              </button>
+              <a
+                class="text-link"
+                data-open={`project-${entrySlug(entry.id)}`}
+                href={localizedPath(locale, `projects/${entrySlug(entry.id)}`)}
+              >
+                {en ? 'Read case study' : '閱讀完整案例'}
+              </a>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+    {projects.map(({ entry, Content }) => (
+      <article
+        data-view-panel={`project-${entrySlug(entry.id)}`}
+        data-title={entry.data.title}
+        hidden
+      >
+        <p class="eyebrow">PROJECT / {entry.data.category}</p>
+        <h2>{entry.data.title}</h2>
+        <p class="reader-lead">{entry.data.description}</p>
+        <Image
+          src={entry.data.cover}
+          alt={entry.data.coverAlt}
+          width={1200}
+          loading="lazy"
+        />
+        <p class="reader-evidence">
+          {en
+            ? 'Actual product screen with synthetic test data. No live service is connected.'
+            : '實際產品畫面，使用合成測試資料；此網站不連線正式服務。'}
+        </p>
+        <div class="reader-prose">
+          <Content />
+        </div>
+        <button type="button" class="text-link" data-reader-share>
+          {en ? 'Copy link to this case study' : '複製此案例連結'}
+        </button>
+      </article>
+    ))}
+    {projects.flatMap(({ entry }) =>
+      projectTopics.map((topic) => (
+        <article
+          data-view-panel={`project-${entrySlug(entry.id)}-${topic}`}
+          data-title={`${entry.data.title} / ${topicTitle(topic, locale)}`}
+          hidden
+        >
+          <p class="eyebrow">{entry.data.title}</p>
+          <ProjectIntroduction
+            project={entrySlug(entry.id) as ProjectId}
+            locale={locale}
+            topic={topic}
+          />
+          <button
+            type="button"
+            class="text-link"
+            data-open={`project-${entrySlug(entry.id)}`}
+          >
+            {en ? 'View the project overview' : '查看專案總覽'}
+          </button>
+        </article>
+      )),
+    )}
+    <section
+      data-view-panel="journal"
+      data-title={en ? 'Engineering notes' : '工程筆記'}
+      hidden
+    >
+      <h2>{en ? 'Notes' : '筆記'}</h2>
+
+      {notes.map(({ entry }) => (
+        <a
+          class="reader-note"
+          href={localizedPath(locale, `notes/${entrySlug(entry.id)}`)}
+          data-open={`note-${entrySlug(entry.id)}`}
+        >
+          <span class="eyebrow">{entry.data.category}</span>
+          <h3>{entry.data.title}</h3>
+          <p>{entry.data.description}</p>
+        </a>
+      ))}
+    </section>
+    {notes.map(({ entry, Content }) => (
+      <article
+        data-view-panel={`note-${entrySlug(entry.id)}`}
+        data-title={entry.data.title}
+        hidden
+      >
+        <p class="eyebrow">FIELD NOTE / {entry.data.category}</p>
+        <h2>{entry.data.title}</h2>
+        <p class="reader-lead">{entry.data.description}</p>
+        <div class="prose reader-prose">
+          <Content />
+        </div>
+      </article>
+    ))}
+    <section
+      data-view-panel="about"
+      data-title={en ? 'About Cizing24' : '關於 Cizing24'}
+      hidden
+    >
+      <h2>Cizing24</h2>
+      <p class="reader-lead">
+        {en
+          ? 'Full-stack developer. My projects include BookFlow, a booking system, and AssetFlow, an IT asset management system.'
+          : '全端開發者。作品包含預約系統 BookFlow，以及 IT 資產管理系統 AssetFlow。'}
+      </p>
+      <div class="reader-actions">
+        <button type="button" data-open="projects">
+          {en ? 'Portfolio' : '查看作品'}
+        </button>
+        <button type="button" data-open="contact">
+          {en ? 'Contact' : '聯絡方式'}
+        </button>
+      </div>
+    </section>
+    <section
+      data-view-panel="contact"
+      data-title={en ? 'Start a conversation' : '聯絡與交流'}
+      hidden
+    >
+      <h2>{en ? 'Contact' : '聯絡方式'}</h2>
+      <p class="reader-lead">
+        {en
+          ? 'For project discussions, technical conversations and software engineering opportunities.'
+          : '歡迎交流作品、技術，以及軟體工程的工作機會。'}
+      </p>
+      <div class="reader-contact-links">
+        {profile.email && (
+          <a href={`mailto:${profile.email}`}>
+            <span>Email</span>
+            <strong>{profile.email}</strong>
+          </a>
+        )}
+        <a href={profile.github}>
+          <span>GitHub</span>
+          <strong>Cizing24</strong>
+        </a>
+        {profile.linkedin && (
+          <a href={profile.linkedin}>
+            <span>LinkedIn</span>
+            <strong>{en ? 'Professional profile' : '專業經歷'}</strong>
+          </a>
+        )}
+      </div>
+    </section>
+  </div>
+</dialog>

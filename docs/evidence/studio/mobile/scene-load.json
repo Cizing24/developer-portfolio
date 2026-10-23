@@ -1,0 +1,26 @@
+{
+  "kind": "Local Chromium mobile emulation; software WebGL; synthetic network and CPU limits; not physical device speed",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "limits": {
+    "cpuSlowdown": 4,
+    "latencyMs": 150,
+    "downloadBytesPerSecond": 200000,
+    "uploadBytesPerSecond": 80000
+  },
+  "ready": 2567.2999999523163,
+  "longTasks": [
+    {
+      "start": 1659.1999999284744,
+      "duration": 908
+    },
+    {
+      "start": 2568.0999999046326,
+      "duration": 58
+    }
+  ],
+  "resourceTransferBytes": 164395,
+  "errors": []
+}
