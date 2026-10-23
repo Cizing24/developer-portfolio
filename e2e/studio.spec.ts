@@ -303,41 +303,107 @@ test('camera travel and reader transitions run smoothly and allow rapid interrup
   await expect(page.locator('[data-station="0"]')).toBeFocused();
 });
 
-test('autonomous people, birds, boats and water move, pause and respect reduced motion', async ({
+test('motion button pauses and resumes through real pointer clicks', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.goto('/en/');
   await ready(page);
-  await expect(page.locator('[data-studio]')).toHaveAttribute(
-    'data-ambient',
-    'playing',
-  );
-  await page.waitForTimeout(850);
-  const canvas = page.locator('canvas');
-  const first = await canvas.screenshot();
-  await page.waitForTimeout(600);
-  expect((await canvas.screenshot()).equals(first)).toBe(false);
-  await page.locator('[data-motion]').click();
-  await expect(page.locator('[data-studio]')).toHaveAttribute(
-    'data-ambient',
-    'paused',
-  );
-  // The screenshot includes HTML controls over the canvas. Let the pause button's
-  // hover transition settle before checking that the world stays pixel-still.
-  await page.mouse.move(2, 2);
-  await page.locator('[data-motion]').evaluate(async (button) => {
+
+  const studio = page.locator('[data-studio]');
+  const motion = page.locator('[data-motion]');
+  await expect(motion).toBeEnabled();
+  await expect(motion).toHaveAttribute('aria-pressed', 'true');
+  await expect(studio).toHaveAttribute('data-ambient', 'playing');
+  await motion.click();
+  await expect(motion).toHaveAttribute('aria-pressed', 'false');
+  await expect(studio).toHaveAttribute('data-ambient', 'paused');
+  await motion.click();
+  await expect(motion).toHaveAttribute('aria-pressed', 'true');
+  await expect(studio).toHaveAttribute('data-ambient', 'playing');
+});
+
+test('autonomous people, birds, boats and water move, pause and respect reduced motion', async ({
+  page,
+}, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/en/');
+  await ready(page);
+  const studio = page.locator('[data-studio]');
+  const motion = page.locator('[data-motion]');
+  await expect(studio).toHaveAttribute('data-ambient', 'playing');
+  await expect(motion).toHaveAttribute('aria-pressed', 'true');
+  // Wait for the initial canvas fade, so a fade alone cannot prove animation.
+  await page.locator('canvas').evaluate(async (canvas) => {
     await Promise.all(
-      button
-        .getAnimations({ subtree: true })
-        .map((animation) => animation.finished),
+      canvas.getAnimations().map((animation) => animation.finished),
     );
   });
-  const paused = await canvas.screenshot();
+
+  // Sample the actual rendered islands, outside the header and bottom controls.
+  // Three CSS-scale crops reduce captured pixels and PNG encoding work. Page
+  // captures also avoid the element screenshot's scroll/stability checks.
+  const viewport = page.viewportSize()!;
+  const width = Math.min(640, Math.floor(viewport.width * 0.8));
+  const height = Math.min(480, Math.floor(viewport.height * 0.6));
+  const frame = () =>
+    page.screenshot({
+      clip: {
+        x: Math.floor((viewport.width - width) / 2),
+        y: Math.floor((viewport.height - height) / 2),
+        width,
+        height,
+      },
+      scale: 'css',
+      animations: 'allow',
+    });
+  const first = await test.step('Capture a playing scene frame', frame);
+  await testInfo.attach('playing-frame', {
+    body: first,
+    contentType: 'image/png',
+  });
+  await page.waitForTimeout(600);
+
+  // Real pointer actionability is covered separately above. This test exercises
+  // the real click handler without competing for extra animation frames in CI.
+  await motion.dispatchEvent('click');
+  await expect(motion).toHaveAttribute('aria-pressed', 'false');
+  await expect(studio).toHaveAttribute('data-ambient', 'paused');
+  const paused = await test.step(
+    'Capture the final frame after pausing',
+    frame,
+  );
+  await testInfo.attach('paused-frame', {
+    body: paused,
+    contentType: 'image/png',
+  });
+  // Pausing only cancels future frames; it does not reset or repaint the scene.
+  // The final frame must differ from the earlier playing frame.
+  expect(paused.equals(first)).toBe(false);
   await page.waitForTimeout(250);
-  expect((await canvas.screenshot()).equals(paused)).toBe(true);
+  const later = await test.step(
+    'Capture the scene while it remains paused',
+    frame,
+  );
+  await testInfo.attach('still-paused-frame', {
+    body: later,
+    contentType: 'image/png',
+  });
+  expect(later.equals(paused)).toBe(true);
+
+  // Reduced motion must stop an actively playing scene, not just keep a scene
+  // paused by the user. It must also restore that choice when switched back.
+  await motion.dispatchEvent('click');
+  await expect(motion).toHaveAttribute('aria-pressed', 'true');
+  await expect(studio).toHaveAttribute('data-ambient', 'playing');
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await expect(page.locator('[data-motion]')).toBeDisabled();
+  await expect(motion).toBeDisabled();
+  await expect(motion).toHaveAttribute('aria-pressed', 'false');
+  await expect(studio).toHaveAttribute('data-ambient', 'paused');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expect(motion).toBeEnabled();
+  await expect(motion).toHaveAttribute('aria-pressed', 'true');
+  await expect(studio).toHaveAttribute('data-ambient', 'playing');
 });
 
 test('WebGL fallback retains all six islands, topics, search and reading controls', async ({
