@@ -2,11 +2,15 @@
 locale: en
 translationKey: assetflow
 title: AssetFlow ITAM
-description: An enterprise asset lifecycle system connecting checkout, returns and offboarding through transaction safety, authorization and an auditable history.
+description: An internal IT workspace for equipment records, employee assignments, returns and offboarding handovers.
 category: IT ASSET MANAGEMENT
 tags: [Vue 3, TypeScript, Fastify, PostgreSQL, Prisma]
 highlights:
-  [Transaction consistency, Asset lifecycle, Server-side authorization]
+  [
+    'Maintain an equipment register',
+    'Handle checkout & return',
+    'Complete employee handovers',
+  ]
 status: Implemented · isolated showcase
 visibility: private
 featured: true
@@ -17,94 +21,6 @@ cover: ../../../assets/assetflow.png
 coverAlt: AssetFlow dashboard with synthetic employees and equipment; actual application screenshot
 ---
 
-## Project overview
+import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
 
-AssetFlow is an IT asset management system for a single organization. Equipment, employees, assignments, maintenance and offboarding share one traceable lifecycle rather than separate spreadsheets. This is a portfolio enterprise scenario; it makes no claims about real clients, operating volume or cost savings.
-
-**The local application is implemented and demonstrated in isolation. The source repository is private and there is no public deployment.** This case publishes reviewed summaries and screenshots with synthetic data, not credentials or private source code.
-
-## Problem and motivation
-
-A catalog alone cannot explain who holds a device, whether it can be reassigned or what must happen before an employee leaves. Concurrent operations can also turn a seemingly valid checkout into a duplicate assignment. The goal is explicit business transitions with durable history.
-
-## Core requirements
-
-- Track assets, employees, current assignments and historical returns.
-- Allow checkout only to active employees and only for available assets.
-- Coordinate returns, maintenance, retirement and offboarding.
-- Enforce permissions on the server and record changes in the same transaction.
-- Preserve history and distinguish business dates from event timestamps.
-
-## System architecture
-
-```text
-Vue pages / dialogs / Pinia
-          |
-Typed API client / AbortController
-          |
-Fastify / Session / Origin / CSRF / RBAC / Zod
-          |
-Lifecycle service / read repositories
-          |
-PostgreSQL transaction + row locks + audit
-```
-
-Pinia holds authentication state; pages manage their read results locally. AbortController cancels obsolete requests so a stale search or route response does not overwrite the current view. The compiled SPA can be served from Fastify on the same origin, using a separate asset path to avoid collisions with business routes.
-
-## Technology choices
-
-| Layer     | Choice                                | Purpose                                      |
-| --------- | ------------------------------------- | -------------------------------------------- |
-| Interface | Vue 3, TypeScript, Vite, Tailwind CSS | Components, forms and management screens     |
-| API       | Fastify, Zod                          | HTTP boundaries, validation and permissions  |
-| Data      | PostgreSQL, Prisma Pg adapter         | Transactions, locks, indexes and integrity   |
-| Quality   | Vitest, Playwright, GitHub Actions    | Unit, real database and browser verification |
-
-One database is sufficient for these consistency requirements. Redis, microservices and distributed locks were not added.
-
-## Data model
-
-The central relationship is Employee, AssetAssignment and Asset. AssetAssignment preserves each checkout and return; MaintenanceRecord tracks repairs, Offboarding tracks handover and AuditLog tracks operations. A login User is separate from an Employee so personnel identity does not imply access rights.
-
-Partial unique indexes protect active assignments, open maintenance and active offboarding. Restrict foreign keys preserve history. CHECK constraints require completion fields to be present together; frontend required fields are insufficient.
-
-Business DATE values use the `YYYY-MM-DD` API contract; event timestamps use UTC ISO strings. Planned departure, actual departure and handover completion have different meanings and must not substitute for one another.
-
-## Implemented features
-
-Asset and employee search, combined filters, sorting, pagination and detail views; checkout, normal or damaged returns; maintenance and retirement; employee offboarding; dashboard and audit log are implemented. Forms update only after API success and retain inputs and errors on failure.
-
-A shared native dialog handles focus containment, Escape and focus restoration, avoiding separate implementations on each page.
-
-## Engineering challenges
-
-**Checking availability before writing cannot prevent concurrent checkout.** Writes use a Serializable transaction and acquire Employee then Asset row locks in a fixed order. They recheck state after locking, conditionally update the asset, create an assignment and append audit. A partial unique index is an additional database defense.
-
-Offboarding completion and new checkout share the Employee lock. Only after a transaction-local recount finds zero active assignments can employee status and handover be updated together. Serialization failures and deadlocks use bounded retries and return 409 when exhausted.
-
-## Technical decisions
-
-- Server-side sessions: an HttpOnly cookie carries a random token; the database stores its hash. Each request reads the current role so deactivation and revocation have clear effects.
-- Atomic audit: if audit writing fails, the business operation rolls back as well.
-- No routine hard deletion: retirement and deactivation retain traceability.
-- Small shared contracts: the Prisma client and complete database models are not shipped to the browser.
-
-## Security and reliability
-
-The backend enforces Session, Origin, CSRF, RBAC and Zod validation. Sort fields use an allowlist and database queries are parameterized. AuditLog triggers block UPDATE and DELETE; this is **not** WORM storage resistant to a database owner.
-
-Production still requires HTTPS, a least-privilege runtime database role, backups and monitoring. Synthetic seeding requires explicit opt-in and is rejected in production.
-
-## Testing and quality
-
-The original case was written after a read-only review on 2026-10-22 of documents, lifecycle services, database helpers and migrations. The source TESTING document records 26 unit, 43 API integration, 6 development-server E2E and 6 compiled-server E2E tests passing. Eight concurrent checkout attempts produced one success; injected audit failure verified complete rollback.
-
-**These are historical results recorded by the source project. This portfolio build does not rerun AssetFlow tests.** Portfolio checks are reported separately.
-
-## Tradeoffs and limitations
-
-This is a single-organization workspace. Multi-tenancy, SSO, email, password recovery, file uploads and QR codes are not implemented. VIEWER has workspace-wide read access without department isolation. Search has no full-text index and no large-organization capacity SLA has been measured.
-
-## Future improvements
-
-Measure query latency and lock waits at realistic scale before changing indexes or pagination. Public operation would require account recovery, production monitoring, backup restoration drills and finer access control. These are future directions, not completed work.
+<ProjectIntroduction project="assetflow" locale="en" />

@@ -18,26 +18,25 @@ const routes = ['zh-tw', 'en'].flatMap((locale) =>
 test('localized homes, keyboard skip and main navigation', async ({ page }) => {
   await page.goto('/zh-tw/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
-    '可靠的軟體',
+    'CIZING24',
   );
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: '跳到主要內容' })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('main')).toBeFocused();
-  const menu = page.getByRole('button', { name: '選單' });
-  if (await menu.isVisible()) await menu.click();
+  await page.locator('[data-menu-toggle]').click();
+  await page.locator('[data-island-go="portfolio"]').click();
   await page
-    .getByRole('navigation', { name: '主要導覽' })
-    .getByRole('link', { name: '作品', exact: true })
+    .locator('[data-index-details="portfolio"] [data-open="projects"]')
     .click();
-  await expect(page).toHaveURL('/zh-tw/projects/');
+  await expect(page.locator('[data-view-panel="projects"]')).toBeVisible();
   await page.goto('/en/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText(
-    'Reliable software',
+    'CIZING24',
   );
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
-test('project filtering, 13 source sections, private boundary and public source', async ({
+test('project filtering, readable introductions, private boundary and public source', async ({
   page,
 }) => {
   await page.goto('/zh-tw/projects/');
@@ -47,14 +46,12 @@ test('project filtering, 13 source sections, private boundary and public source'
     .getByRole('heading', { name: 'AssetFlow ITAM' })
     .getByRole('link')
     .click();
-  await expect(page.locator('.prose > h2')).toHaveCount(13);
+  await expect(page.locator('.project-introduction > section')).toHaveCount(3);
   await expect(page.locator('a[href*="assetflow-itam"]')).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Live Demo' })).toHaveCount(0);
-  await page.locator('.toc').getByRole('link', { name: '工程難點' }).click();
-  await expect(page).toHaveURL(/#/);
   await page.goto('/en/projects/bookflow/');
-  await expect(page.locator('.prose > h2')).toHaveCount(13);
-  await expect(page.locator('.case-facts a')).toHaveAttribute(
+  await expect(page.locator('.project-introduction > section')).toHaveCount(3);
+  await expect(page.locator('.simple-project-source a')).toHaveAttribute(
     'href',
     'https://github.com/Cizing24/bookflow-saas',
   );
@@ -87,11 +84,12 @@ test('language switch preserves case, query and translated chapter anchor', asyn
   page,
 }) => {
   for (const slug of ['assetflow', 'bookflow']) {
-    await page.goto(`/zh-tw/projects/${slug}/?from=review`);
-    await page.locator('.toc a').nth(7).click();
+    await page.goto(
+      `/zh-tw/projects/${slug}/?from=review#${slug}-architecture`,
+    );
     await page.getByRole('link', { name: 'Switch to English' }).click();
     await expect(page).toHaveURL(
-      new RegExp(`/en/projects/${slug}/\\?from=review#engineering-challenges`),
+      new RegExp(`/en/projects/${slug}/\\?from=review#${slug}-architecture`),
     );
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     expect(
@@ -113,7 +111,7 @@ test('language switch preserves case, query and translated chapter anchor', asyn
   expect(new URL(page.url()).hash).toBe('');
 });
 test('mobile menu keyboard, Escape and focus return', async ({ page }) => {
-  await page.goto('/en/');
+  await page.goto('/en/projects/');
   const menu = page.getByRole('button', { name: 'Menu' });
   if (await menu.isVisible()) {
     await menu.focus();
@@ -159,44 +157,23 @@ test('invalid language and route return actual 404 with localized recovery', asy
     );
   }
 });
-test('BookFlow and AssetFlow scenarios, click steps, keyboard replay and reset', async ({
+test('both projects explain purpose, practical features and a three-layer architecture', async ({
   page,
 }) => {
   for (const locale of ['zh-tw', 'en'])
-    for (const system of ['bookflow', 'assetflow']) {
-      await page.goto(`/${locale}/projects/${system}/#simulation`);
-      const lab = page.locator('[data-simulation]');
-      await lab.locator('[data-node="6"]').focus();
-      await page.keyboard.press('Enter');
-      await expect(lab.locator('[data-state]')).toContainText('409');
-      await lab.locator('[data-replay]').focus();
-      await page.keyboard.press('Space');
-      await expect(lab.locator('.step-count')).toHaveText('1 / 6');
-      await lab.locator('[data-reset]').click();
-      await expect(lab.locator('.step-count')).toHaveText('0 / 6');
-      for (let i = 0; i < 6; i++) await lab.locator('[data-next]').click();
-      await expect(lab.locator('[data-next]')).toBeDisabled();
-      await expect(lab.locator('[data-state]')).toContainText('409');
-      await lab.locator('[data-scenario]').selectOption('success');
-      await lab.locator('[data-node="6"]').click();
-      await expect(lab.locator('[data-state]')).toContainText(
-        locale === 'en' ? 'success' : '成功',
+    for (const project of ['bookflow', 'assetflow']) {
+      await page.goto(`/${locale}/projects/${project}/`);
+      await expect(page.locator('.project-introduction > section')).toHaveCount(
+        3,
       );
-      if (system === 'assetflow') {
-        await lab.locator('[data-scenario]').selectOption('denied');
-        await lab.locator('[data-node="3"]').click();
-        await expect(lab.locator('[data-state]')).toContainText('403');
-        await lab.locator('[data-node="6"]').click();
-        await expect(lab.locator('[data-state]')).toContainText('AVAILABLE');
-        await expect(lab.locator('[data-detail]')).toContainText(
-          locale === 'en' ? 'No assignment' : '不建立領用',
-        );
-      }
-      await lab.locator('[data-reset]').focus();
-      await page.keyboard.press('Enter');
-      await expect(lab.locator('.step-count')).toHaveText('0 / 6');
+      await expect(page.locator('.intro-features article')).toHaveCount(3);
+      await expect(page.locator('.intro-architecture li')).toHaveCount(3);
+      await expect(page.locator('.intro-purpose')).toContainText(
+        locale === 'en' ? 'Project purpose' : '專案目的',
+      );
     }
 });
+
 test('all pages: no overflow, broken links, broken anchors, image or console errors, decorative arrows', async ({
   page,
   request,
@@ -283,8 +260,7 @@ test('reduced motion, contact boundaries and readable content without JavaScript
       .locator('html')
       .evaluate((el) => getComputedStyle(el).scrollBehavior),
   ).toBe('auto');
-  await page.locator('[data-node="6"]').click();
-  await expect(page.locator('.step-count')).toHaveText('6 / 6');
+  await expect(page.locator('.intro-architecture li')).toHaveCount(3);
   await page.goto('/en/contact/');
 
   await expect(page.locator('form')).toHaveCount(0);
@@ -308,8 +284,7 @@ test('reduced motion, contact boundaries and readable content without JavaScript
   const context = await browser.newContext({ javaScriptEnabled: false });
   const plain = await context.newPage();
   await plain.goto('http://127.0.0.1:4321/en/projects/bookflow/');
-  await expect(plain.locator('.prose > h2')).toHaveCount(13);
-  await plain.locator('.flow-explanation summary').click();
-  await expect(plain.locator('.flow-explanation ol')).toBeVisible();
+  await expect(plain.locator('.project-introduction > section')).toHaveCount(3);
+  await expect(plain.locator('.intro-architecture')).toBeVisible();
   await context.close();
 });

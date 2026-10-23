@@ -15,10 +15,11 @@ for (const collection of ['projects', 'notes']) {
       assert.ok(!pairs.has(id), `Duplicate translation: ${id}`);
       pairs.set(id, body);
       if (collection === 'projects')
-        assert.equal(
-          (body.match(/^## /gm) ?? []).length,
-          13,
-          `${id}: preserve all 13 engineering sections`,
+        assert.ok(
+          body.includes(
+            `<ProjectIntroduction project="${key}" locale="${locale}" />`,
+          ),
+          `${id}: use the shared localized product introduction`,
         );
       if (locale === 'en')
         assert.doesNotMatch(
@@ -45,5 +46,5 @@ for (const collection of ['projects', 'notes']) {
   }
 }
 console.log(
-  'Content contracts: complete locale pairs, unique keys, matching evidence, 13 case sections, no untranslated English body.',
+  'Content contracts: complete locale pairs, unique keys, matching evidence, shared product introductions, no untranslated English body.',
 );

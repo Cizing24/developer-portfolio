@@ -1,0 +1,61 @@
+{
+  "kind": "Full regression after mobile landscape fix",
+  "command": "npm run verify",
+  "stats": {
+    "startTime": "2026-10-23T15:56:21.960Z",
+    "duration": 419780.894,
+    "expected": 96,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "viewports": [
+    [
+      1440,
+      1000
+    ],
+    [
+      768,
+      1024
+    ],
+    [
+      390,
+      844
+    ],
+    [
+      320,
+      760
+    ]
+  ],
+  "additionalRotationSizes": [
+    [
+      320,
+      568
+    ],
+    [
+      360,
+      640
+    ],
+    [
+      430,
+      932
+    ],
+    [
+      844,
+      390
+    ],
+    [
+      667,
+      375
+    ],
+    [
+      390,
+      620
+    ],
+    [
+      390,
+      844
+    ]
+  ],
+  "browserScope": "Playwright Chromium; mobile includes touch emulation; not physical device verification"
+}

@@ -1,0 +1,60 @@
+{
+  "kind": "complete six-island and four-time-of-day regression",
+  "command": "npm run verify",
+  "stats": {
+    "startTime": "2026-10-23T11:47:23.900Z",
+    "duration": 445398.111,
+    "expected": 92,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "name": "tablet",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "name": "small-mobile",
+      "width": 320,
+      "height": 760
+    }
+  ],
+  "additionalChecks": {
+    "lint": "passed",
+    "format": "passed",
+    "astro": {
+      "errors": 0,
+      "warnings": 0,
+      "hints": 0
+    },
+    "typecheck": "passed",
+    "vitest": {
+      "passed": 33
+    },
+    "content": "passed",
+    "build": {
+      "staticPages": 30
+    },
+    "seo": {
+      "localizedPages": 18
+    }
+  },
+  "limits": [
+    "Local Chromium evidence only",
+    "No production deployment or CI run",
+    "No real-device GPU or battery measurement",
+    "Three.js chunk size warning remains"
+  ]
+}

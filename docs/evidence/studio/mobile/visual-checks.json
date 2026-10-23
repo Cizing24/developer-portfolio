@@ -1,0 +1,137 @@
+{
+  "date": "2026-10-23T15:51:35.137Z",
+  "kind": "Chromium touch emulation; not physical Safari or Android testing",
+  "results": [
+    {
+      "width": 844,
+      "height": 390,
+      "errors": [],
+      "overflow": false,
+      "states": [
+        {
+          "state": "home",
+          "violations": []
+        },
+        {
+          "state": "menu",
+          "violations": []
+        },
+        {
+          "state": "reader",
+          "violations": []
+        }
+      ]
+    },
+    {
+      "width": 667,
+      "height": 375,
+      "errors": [],
+      "overflow": false,
+      "states": [
+        {
+          "state": "home",
+          "violations": []
+        },
+        {
+          "state": "menu",
+          "violations": []
+        },
+        {
+          "state": "reader",
+          "violations": []
+        }
+      ]
+    },
+    {
+      "width": 320,
+      "height": 568,
+      "errors": [],
+      "overflow": false,
+      "states": [
+        {
+          "state": "home",
+          "violations": []
+        },
+        {
+          "state": "menu",
+          "violations": []
+        },
+        {
+          "state": "reader",
+          "violations": []
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "path": "docs/screenshots/studio/phone-844-390-home.png",
+      "width": 844,
+      "height": 390,
+      "state": "home",
+      "sha256": "9840ef2ed26ccf9769be1a60adfe65b3a900f57e5c9e360d7b1450b36b2f970b"
+    },
+    {
+      "path": "docs/screenshots/studio/phone-844-390-menu.png",
+      "width": 844,
+      "height": 390,
+      "state": "menu",
+      "sha256": "5ae099acdc66ab5e97a54e8971701d5f7eb91be15a8ab16c83345a3c9b17df3a"
+    },
+    {
+      "path": "docs/screenshots/studio/phone-844-390-reader.png",
+      "width": 844,
+      "height": 390,
+      "state": "reader",
+      "sha256": "b29b42586248c751326a8d06f3825e3028910f2721cf4b3c5988de19620b48ee"
+    },
+    {
+      "path": "docs/screenshots/studio/phone-667-375-home.png",
+      "width": 667,
+      "height": 375,
+      "state": "home",
+      "sha256": "d01f0ef5af16b8948e9a8175bc297d9beb9483ae0e9e118602e03921950c5a64"
+    },
+    {
+      "path": "docs/screenshots/studio/phone-667-375-menu.png",
+      "width": 667,
+      "height": 375,
+      "state": "menu",
+      "sha256": "376e0e64a47495806437ba36d061850bbe2c8774e7626e62b69f66bcba70a13d"
+    },
+    {
+      "path": "docs/screenshots/studio/phone-667-375-reader.png",
+      "width": 667,
+      "height": 375,
+      "state": "reader",
+      "sha256": "9d20ad6d9c63bafae8a144edff7fcd067daf599121f7625618669ed4dca2ed35"
+    },
+    {
+      "path": "docs/screenshots/studio/phone-320-568-home.png",
+      "width": 320,
+      "height": 568,
+      "state": "home",
+      "sha256": "957c48071f5fd3e790f97648c5beda582f5c47f87772fe196919164330e6d28c"
+    },
+    {
+      "path": "docs/screenshots/studio/phone-320-568-menu.png",
+      "width": 320,
+      "height": 568,
+      "state": "menu",
+      "sha256": "eded4360f269c22dd79bca49e14b7207810f3cfb34e6dedfbc90b2fe961a5f0a"
+    },
+    {
+      "path": "docs/screenshots/studio/phone-320-568-reader.png",
+      "width": 320,
+      "height": 568,
+      "state": "reader",
+      "sha256": "367ff512cc2b7dcb3e556873b91d9bf84df45bdb69e324b2a87df397099d73e2"
+    }
+  ],
+  "lan": {
+    "httpStatus": 200,
+    "secureContext": false,
+    "clipboardFallbackVisible": true,
+    "clipboardFallbackHasView": true
+  }
+}

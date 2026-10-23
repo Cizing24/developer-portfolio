@@ -2,10 +2,11 @@
 locale: en
 translationKey: bookflow
 title: BookFlow SaaS
-description: A multi-tenant booking platform connecting authorization, real availability and transaction safety to handle conflicts, rescheduling and retries after lost responses.
+description: A booking system where customers find services and available times, and businesses manage staff schedules and appointments.
 category: MULTI-TENANT BOOKING
 tags: [Next.js, TypeScript, PostgreSQL, Prisma]
-highlights: [Tenant isolation, GiST exclusion constraint, Transactional outbox]
+highlights:
+  ['Book an appointment', 'Manage the working day', 'Keep businesses separate']
 status: Implemented · isolated showcase
 visibility: public
 repository: https://github.com/Cizing24/bookflow-saas
@@ -17,91 +18,6 @@ cover: ../../../assets/bookflow.png
 coverAlt: BookFlow calendar with synthetic business and bookings; actual application screenshot
 ---
 
-## Project overview
+import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
 
-BookFlow is a multi-tenant booking platform for studios, beauty care and individual services. Businesses manage services, staff, opening hours and calendars. Customers use tenant-specific routes to query real availability, book and manage their appointments.
-
-**The complete local workflow and public source are implemented. There is no public deployment or production email delivery.** SaaS describes the multi-tenant product shape, not a live paid business or service commitment.
-
-## Problem and motivation
-
-Manual scheduling can overlook staff qualifications, absences and service buffers. Two customers may see the same available slot before either submits. The goal is a consistent, verifiable definition of availability, with authorization and isolation enforced at server and database boundaries.
-
-## Core requirements
-
-- Isolate each tenant's services, staff, customers and bookings.
-- Calculate slots from opening hours, schedules, absences, qualifications, buffers and existing bookings.
-- Prevent overlapping active occupancy for a staff member and release it on cancellation.
-- Avoid duplicate creation after lost responses and reject stale rescheduling updates.
-- Keep administrators, staff, customer capability links and platform administrators within separate permission boundaries.
-
-## System architecture
-
-```text
-Management / public booking / customer self-service / platform
-                         |
-             Next.js Route Handlers / Session / Zod
-                         |
-             Application services / availability engine
-                         |
- PostgreSQL: tenant lock / composite FK / GiST exclusion
-                         |
- Booking + BookingEvent + Notification in one transaction
-                         |
-               Lease-based worker / email gateway
-```
-
-Next.js App Router integrates management views and HTTP routes. A pure scheduling engine is independent of HTTP, allowing timezone and boundary tests. Application services coordinate authorization, transactions and real data. Frontend-generated time lists are not authoritative.
-
-## Technology choices
-
-Next.js, React, strict TypeScript, PostgreSQL, Prisma, Better Auth, Zod, Luxon and Tailwind CSS. Vitest verifies domain and service logic; Playwright verifies the production build. Containers and GitHub Actions support reproducible delivery.
-
-PostgreSQL was chosen for composite foreign keys, CHECK constraints, triggers and GiST exclusion, not simply storage.
-
-## Data model
-
-Tenant relates to Membership, Service, Staff, Customer and Booking. Membership connects login users with tenant roles. StaffService describes qualifications, while StaffSchedule and StaffAbsence describe working patterns and time off.
-
-Bookings snapshot service names, prices and buffers so later settings do not rewrite history. Composite foreign keys include tenantId to prevent cross-tenant relationships. PlatformAdmin is an independent permission source; a tenant Owner does not automatically gain platform access.
-
-## Implemented features
-
-Tenants and memberships, services, staff, weekly hours, schedules, absences, anonymous booking, capability-link cancellation and rescheduling, day/week calendars, customer management, statistics, audit and outbox are implemented. Platform administration can activate or suspend tenants without gaining unrestricted customer access.
-
-## Engineering challenges
-
-**Competition cannot be prevented by the interface alone.** Creation, rescheduling, cancellation and settings changes share a Tenant row lock and reread and revalidate after acquiring it. A partial GiST exclusion constraint additionally rejects intersecting buffered occupancy for CONFIRMED bookings of the same tenant and staff member.
-
-Half-open ranges `[start, end)` allow adjacent occupancy. Cancellation leaves the active constraint set. Revisions reject stale updates and a trigger prevents terminal states from being revived.
-
-Slots are calculated in the tenant's IANA timezone and stored as UTC instants. Nonexistent DST local times are omitted; repeated times are distinguished by UTC instant. The frontend does not guess availability.
-
-## Technical decisions
-
-- Tenant-level locks make the ordering of settings and bookings understandable, at the cost of serializing same-tenant writes.
-- Idempotency keys and request hashes return the previous result for identical retries and 409 for a changed payload with the same key.
-- A transactional outbox creates bookings, events and notification work together.
-- Customer capability tokens authorize one booking; an anonymous email address is not authentication.
-
-## Security and reliability
-
-Every management request resolves Session and Membership. A tenantId in a URL is not authorization. HTTP boundaries enforce Origin, Zod, shared database rate limits and body-size limits. Management tokens are hashed; notification payloads still contain private links and remain sensitive.
-
-Workers use SKIP LOCKED and lease-based retries. Email delivery is **at-least-once**, not exactly-once: a crash after provider acceptance but before database acknowledgement can cause redelivery. The gateway needs durable deduplication. SENT means provider acceptance, not confirmed delivery.
-
-## Testing and quality
-
-The source review covered README, architecture, Technical Deep Dive, STATUS, booking services and repositories, notification workers and SQL migrations. Source documentation dated 2026-10-22 records 30 unit, 28 PostgreSQL integration and 15 production-server E2E tests passing. Desktop, tablet and mobile each sent 20 competing requests, yielding one success and 19 conflicts.
-
-Independent database connections test constraints; lost HTTP responses test idempotent retries; six migrations were tested by clean reconstruction. **These are source-project recorded results, not tests rerun by this portfolio.** Twenty concurrent requests do not establish a capacity SLA.
-
-## Tradeoffs and limitations
-
-Subscription billing, email verification, recovery and invitations, Owner transfer, capability-link rotation and complete privacy deletion are not implemented. There is no production deployment or production email. This is not PostgreSQL RLS or a complete nonce CSP.
-
-Tenant locking simplifies correctness; holding a lock during notification-provider calls affects latency. Calendar queries have range and row limits; large aggregations need optimization. Source STATUS also records unresolved development-tool advisories, distinct from production dependency audit results.
-
-## Future improvements
-
-Measure lock waits, SQL and provider latency before narrowing lock granularity. Before payments, define pending occupancy, timeout release and webhook idempotency. Public operation requires production email, monitoring, backup restoration and account-governance acceptance.
+<ProjectIntroduction project="bookflow" locale="en" />

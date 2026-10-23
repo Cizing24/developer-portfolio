@@ -2,10 +2,10 @@
 locale: zh-tw
 translationKey: assetflow
 title: AssetFlow ITAM
-description: 從領用、歸還到離職交接，以資料庫交易與可追溯稽核，讓企業設備的每一次流轉都有依據。
+description: 集中管理公司設備、員工領用、歸還與離職交接，讓每一台設備的去向清楚可查。
 category: IT ASSET MANAGEMENT
 tags: [Vue 3, TypeScript, Fastify, PostgreSQL, Prisma]
-highlights: [交易一致性, 資產生命週期, 伺服器端授權]
+highlights: ['整理設備清冊', '辦理領用與歸還', '追蹤離職交接']
 status: 已實作・隔離展示
 visibility: private
 featured: true
@@ -16,96 +16,6 @@ cover: ../../../assets/assetflow.png
 coverAlt: AssetFlow 工作總覽實際截圖，顯示合成設備統計與操作紀錄
 ---
 
-## 專案概覽
+import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
 
-AssetFlow 是供中小型企業 IT 團隊使用的資產生命週期管理系統。Vue 3 介面透過 Fastify REST API 操作 PostgreSQL，串起設備、員工、領還、維修與離職交接。
-
-**展示範圍：已實作，可在本機隔離環境執行；沒有公開部署。** 原始碼為私人 repository，此頁只公開經檢查的技術摘要與合成資料截圖，不複製原始碼、環境設定或登入憑證。
-
-## 問題與動機
-
-設備清單可以回答「有哪些設備」，卻不一定能回答「誰拿走了它、歸還時是否故障、離職交接是否真的完成」。系統把這些操作視為連續的業務狀態轉換，讓資產當前狀態與歷史保持一致。
-
-這是作品集中的企業管理情境，沒有以真實客戶、營運量或節省成本作為成果宣稱。
-
-## 核心需求
-
-- 同一設備最多一筆有效領用，交接中的員工不能新增領用。
-- 故障歸還同時建立維修；修復與除役只能來自允許的來源狀態。
-- 離職結案需要零未歸還設備，並明確確認實際離職日期。
-- ADMIN、IT_STAFF 與 VIEWER 由後端授權，不能只靠隱藏按鈕。
-- 業務寫入與稽核事件必須共同提交或共同回滾。
-
-## 系統架構
-
-採用 npm workspaces 的**模組化單體**：web、api 與小型 shared 契約分開管理，但業務共用一個 PostgreSQL 交易邊界。
-
-```text
-Vue Pages → API Client → Origin / Session / CSRF
-                              ↓
-                    Fastify Routes + Zod + RBAC
-                              ↓
-                  Lifecycle Service / Read Repository
-                              ↓
-                PostgreSQL transaction + locks + audit
-```
-
-Pinia 保存認證狀態，頁面本地管理讀取結果。前端使用 AbortController 取消舊請求，避免搜尋與路由切換時，過期回應覆蓋新畫面。編譯後的 SPA 可由 Fastify 同源提供，靜態資源使用獨立路徑以避免與資產業務路由衝突。
-
-## 技術選型
-
-| 層次 | 選擇                                  | 用途                       |
-| ---- | ------------------------------------- | -------------------------- |
-| 介面 | Vue 3、TypeScript、Vite、Tailwind CSS | 元件、表單與管理介面       |
-| API  | Fastify、Zod                          | HTTP 邊界、輸入驗證與權限  |
-| 資料 | PostgreSQL、Prisma Pg adapter         | 交易、鎖、索引與資料完整性 |
-| 品質 | Vitest、Playwright、GitHub Actions    | 單元、真實 DB 與瀏覽器驗證 |
-
-一個資料庫已足以表達這個系統的一致性需求，因此未增加 Redis、微服務或分散式鎖。
-
-## 資料模型
-
-核心關係為 **Employee → AssetAssignment ← Asset**。AssetAssignment 保留每次領用與歸還；MaintenanceRecord 記錄維修；Offboarding 保存交接程序；AuditLog 保存操作軌跡。登入使用者 User 與員工 Employee 分開，避免把人事身分等同登入權限。
-
-有效領用、未結案維修與有效交接分別以部分唯一索引保護。外鍵採 Restrict 保留歷史，CHECK 約束要求完成欄位成套存在；不能只依賴前端必填。
-
-業務 DATE 使用 `YYYY-MM-DD` API 契約；事件 timestamp 保留 UTC ISO。預計離職日、實際離職日與交接完成時間有不同語意，不能互相代填。
-
-## 主要功能
-
-已實作資產與員工搜尋、組合篩選、排序、分頁及詳情；領用、正常／故障歸還；維修與除役；離職交接；Dashboard 與 Audit Log。表單等待 API 成功再更新畫面，失敗時保留輸入與錯誤訊息。
-
-共用原生 dialog 處理焦點限制、Escape 與關閉後焦點還原，避免各頁重複實作對話框行為。
-
-## 工程難點
-
-**「先查可借出，再寫入」無法防止並行領用。** 寫入使用 Serializable transaction，依固定 Employee → Asset 順序取得 row lock，鎖後重新驗證狀態，再條件更新設備、建立領用與追加稽核。資料庫部分唯一索引提供另一層防線。
-
-離職結案與新增領用共用 Employee lock；只有交易內重新計算有效領用為零，才一起更新員工狀態與交接紀錄。序列化衝突與 deadlock 由有限重試處理，耗盡後回傳 409。
-
-## 技術決策
-
-- **伺服器端 Session**：HttpOnly cookie 保存隨機 token，資料庫保存 hash。每次請求讀回目前角色，讓停用與撤權有明確語意。
-- **同交易稽核**：避免業務成功卻遺失歷史。稽核失敗必須讓整筆操作回滾。
-- **不提供一般硬刪除**：透過除役與停用保留追溯關係。
-- **少量共享契約**：不將 Prisma client 與資料庫模型整包送入瀏覽器。
-
-## 安全與可靠性
-
-後端執行 Session、Origin、CSRF、RBAC 與 Zod 驗證；排序欄位採 allowlist，資料庫查詢使用參數化條件。Audit Log 的 trigger 阻止 UPDATE／DELETE，但這**不是**防資料庫 owner 竄改的 WORM 儲存。
-
-正式環境仍需 HTTPS、最小權限 runtime DB role、備份與監控。合成 Seed 有明確 opt-in，production 拒絕執行。
-
-## 測試與品質
-
-本頁根據 2026-10-22 唯讀檢查的文件、交易服務、資料庫 helper 與 migration 撰寫。原專案 TESTING 記錄：26 單元、43 API 整合、6 開發伺服器 E2E 與 6 編譯伺服器 E2E 通過。並行案例驗證 8 次搶領只有一筆成功；另以稽核寫入失敗驗證整筆回滾。
-
-**這是原專案既有的驗證紀錄，本網站建置流程沒有重新執行 AssetFlow 測試。** 本網站本身的品質檢查與上述數字分開報告。
-
-## 取捨與限制
-
-單一企業工作空間，尚無多租戶、SSO、郵件、忘記密碼、檔案上傳或 QR Code。VIEWER 為工作空間共用唯讀權限，未實作部門級隔離。搜尋未導入全文索引；未量測大型組織的容量 SLA。
-
-## 後續改善
-
-先依真實使用規模量測查詢與鎖等待，再評估索引及分頁改善。若要公開營運，需補齊帳號復原、正式監控、備份還原演練與更細權限。這些是後續方向，尚未列為完成項目。
+<ProjectIntroduction project="assetflow" locale="zh-tw" />
