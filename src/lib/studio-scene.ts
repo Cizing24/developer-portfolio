@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { type IslandId, type DayPhase } from './world-config';
 import type { ProjectId } from './project-introductions';
+import { createWander, ellipseArea, rectangleArea } from './wander';
 
 export interface StudioScene {
   focusIsland(id: IslandId, animated?: boolean): Promise<void>;
@@ -590,15 +591,30 @@ export function createStudioScene(
   const walkers: {
     model: ReturnType<typeof person>;
     offset: number;
-    radius: number;
+    motion: ReturnType<typeof createWander>;
   }[] = [];
   for (const [id, island] of roots) {
-    for (let i = 0; i < (id === 'about' ? 2 : 4); i++)
+    for (let i = 0; i < (id === 'about' ? 2 : 4); i++) {
+      const project = id === 'bookflow' || id === 'assetflow';
+      const motion = createWander(
+        // Project visitors use the open lane between the two building rows.
+        // Utility visitors stay outside the buildings and inside the trees.
+        project ? rectangleArea(4.6, 0.28) : ellipseArea(2.08, 2.38),
+        {
+          speed: 0.35 + Math.random() * 0.18,
+          pause: 2.8,
+          maxDistance: project ? 4 : 2.2,
+        },
+      );
+      const model = person(island);
+      model.group.position.set(motion.position.x, 0.1, motion.position.z);
+      model.group.rotation.y = motion.heading;
       walkers.push({
-        model: person(island),
+        model,
         offset: i * 1.6,
-        radius: id === 'bookflow' || id === 'assetflow' ? 4.9 : 2.1,
+        motion,
       });
+    }
     for (let i = 0; i < 5; i++) {
       const angle = (i / 5) * Math.PI * 2;
       const radius = id === 'bookflow' || id === 'assetflow' ? 5.5 : 2.7;
@@ -846,6 +862,34 @@ export function createStudioScene(
     fireflies.push(point);
   }
   const leaves: THREE.Object3D[] = [];
+  const boatMotion = boats.map((boat) => {
+    const motion = createWander(ellipseArea(16, 22, 0.8), {
+      speed: 0.5,
+      pause: 1.2,
+      maxDistance: 10,
+    });
+    boat.position.set(motion.position.x, -0.76, motion.position.z);
+    boat.rotation.y = motion.heading;
+    return motion;
+  });
+  const birdMotion = birds.map(({ group }) => {
+    const motion = createWander(rectangleArea(18, 14), {
+      speed: 1.5,
+      pause: 0,
+      maxDistance: 18,
+    });
+    group.position.set(motion.position.x, 4.5, motion.position.z);
+    group.rotation.y = motion.heading;
+    return motion;
+  });
+  const fireflyMotion = fireflies.map((fly) => ({
+    origin: fly.position.clone(),
+    motion: createWander(rectangleArea(1.2, 1.2), {
+      speed: 0.18,
+      pause: 1,
+      maxDistance: 1.4,
+    }),
+  }));
   const pointLights: THREE.PointLight[] = [];
   scene.traverse((object) => {
     if (object.userData.canopy) leaves.push(object);
@@ -1092,25 +1136,29 @@ export function createStudioScene(
     if (!ambientLast) ambientLast = now;
     const elapsed = now - ambientLast;
     if (elapsed >= 1000 / 30) {
-      ambientTime += Math.min(elapsed, 70) / 1000;
+      const delta = Math.min(elapsed, 70) / 1000;
+      ambientTime += delta;
       ambientLast = now;
-      walkers.forEach(({ model, offset, radius }) => {
-        const t = ambientTime * 0.13 + offset;
+      walkers.forEach(({ model, offset, motion }) => {
+        motion.update(delta);
+        const stride = motion.moving ? 1 : 0;
         model.group.position.set(
-          Math.cos(t) * radius,
-          0.1 + Math.abs(Math.sin(ambientTime * 5 + offset)) * 0.025,
-          Math.sin(t) * radius * 0.59,
+          motion.position.x,
+          0.1 + Math.abs(Math.sin(ambientTime * 5 + offset)) * 0.025 * stride,
+          motion.position.z,
         );
-        model.group.rotation.y = -t;
+        model.group.rotation.y = motion.heading;
         model.legs.forEach(
           (leg, i) =>
             (leg.rotation.x =
-              Math.sin(ambientTime * 5 + offset + i * Math.PI) * 0.38),
+              Math.sin(ambientTime * 5 + offset + i * Math.PI) * 0.38 * stride),
         );
         model.arms.forEach(
           (arm, i) =>
             (arm.rotation.x =
-              -Math.sin(ambientTime * 5 + offset + i * Math.PI) * 0.28),
+              -Math.sin(ambientTime * 5 + offset + i * Math.PI) *
+              0.28 *
+              stride),
         );
       });
       creator.group.position.y = 0.08 + Math.sin(ambientTime * 1.3) * 0.02;
@@ -1118,22 +1166,24 @@ export function createStudioScene(
       creator.arms[0]!.rotation.x = Math.sin(ambientTime * 0.9) * 0.12;
       creator.group.rotation.y = 0.2 + Math.sin(ambientTime * 0.35) * 0.16;
       boats.forEach((boat, i) => {
-        const t = ambientTime * 0.035 + i * Math.PI * 0.5;
+        const motion = boatMotion[i]!;
+        motion.update(delta);
         boat.position.set(
-          Math.cos(t) * 18,
+          motion.position.x,
           -0.73 + Math.sin(ambientTime + i) * 0.04,
-          Math.sin(t) * 15,
+          motion.position.z,
         );
-        boat.rotation.y = -t;
+        boat.rotation.y = motion.heading;
       });
       birds.forEach(({ group, wings }, i) => {
-        const t = ambientTime * 0.09 + i;
+        const motion = birdMotion[i]!;
+        motion.update(delta);
         group.position.set(
-          Math.sin(t) * 16,
-          4 + Math.sin(t * 2) * 0.8,
-          Math.cos(t) * 13,
+          motion.position.x,
+          4.5 + Math.sin(ambientTime * 0.3 + i) * 0.8,
+          motion.position.z,
         );
-        group.rotation.y = t;
+        group.rotation.y = motion.heading;
         wings.forEach(
           (wing, j) =>
             (wing.rotation.z =
@@ -1150,6 +1200,10 @@ export function createStudioScene(
           (ripple.scale.y = 1 + Math.sin(ambientTime * 0.7 + i) * 0.16),
       );
       fireflies.forEach((fly, i) => {
+        const { motion, origin } = fireflyMotion[i]!;
+        motion.update(delta);
+        fly.position.x = origin.x + motion.position.x;
+        fly.position.z = origin.z + motion.position.z;
         fly.position.y = 0.9 + Math.sin(ambientTime + i) * 0.4;
         fly.scale.setScalar(0.6 + Math.sin(ambientTime * 2 + i) * 0.35);
       });

@@ -103,12 +103,17 @@
   place-items: center;
   width: 44px;
   height: 44px;
+  padding: 0;
+  line-height: 1;
   border: 0;
   background: var(--world-glass);
   border-radius: 50%;
   transition:
     background 0.3s,
     color 0.3s;
+}
+.world-time button svg {
+  display: block;
 }
 .world-time button[aria-pressed='true'] {
   color: #8c2933;
