@@ -43,6 +43,14 @@
     "passed": 116,
     "unresolvedFailures": 0
   },
+  "bridgeAndCrowdFollowup": {
+    "unitTestsPassed": 50,
+    "navigationTestsPassed": 11,
+    "browserTestsPassed": 12,
+    "browserScope": "world-expansion.spec.ts across four viewports; remote full regression is tracked on the latest PR commit.",
+    "crowdSimulation": "26 pedestrians for one minute; no overlaps and each pedestrian advances during the final 20 seconds.",
+    "oncomingTraffic": "Six pedestrians from opposite ends all pass through without overlap."
+  },
   "screenshots": [
     "desktop-overview.png",
     "desktop-harbor.png",

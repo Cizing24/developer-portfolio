@@ -13,7 +13,7 @@ import {
   islandLayout,
   islandRadii,
   bridgePairs,
-  bridgeRoutes,
+  bridgeDecks,
   isAccessLane,
   createWorldDomain,
   createSeaDomain,
@@ -789,33 +789,38 @@ export function createStudioScene(
       );
     }
     disposeGeometry(bridgeRoot);
-    for (const { from, to, fromIsland: a, toIsland: b } of bridgeRoutes(map)) {
-      const start = new THREE.Vector3(from.x, 0, from.z),
-        end = new THREE.Vector3(to.x, 0, to.z);
-      const delta = end.clone().sub(start);
-      const direction = delta.clone().normalize();
-      const reach = (id: IslandId | undefined) => {
-        if (!id) return 0;
-        const [rx, rz] = islandRadii(id);
-        return 1 / Math.hypot(direction.x / rx, direction.z / rz) - 0.25;
-      };
-      const bankA = start.clone().addScaledVector(direction, reach(a));
-      const bankB = end.clone().addScaledVector(direction, -reach(b));
-      const length = bankA.distanceTo(bankB);
-      if (length < 0.2) continue;
-      const bridge = new THREE.Group();
-      bridgeRoot.add(bridge);
-      bridge.position.copy(bankA.add(bankB).multiplyScalar(0.5));
-      bridge.position.y = -0.05;
-      bridge.rotation.y = Math.atan2(delta.x, delta.z);
-      box(bridge, 1.6, 0.12, length, 0xb69874);
-      for (const x of [-0.83, 0.83])
-        box(bridge, 0.035, 0.035, length, cream, x, 0.5);
-      for (const z of [-length * 0.4, 0, length * 0.4])
-        for (const x of [-0.83, 0.83]) {
-          box(bridge, 0.045, 0.55, 0.045, ink, x, 0.22, z);
-          pane(bridge, 0.045, 0.04, 0.16, x, 0.53, z);
+    for (const { outline, left, right } of bridgeDecks(map)) {
+      const shape = new THREE.Shape(
+        outline.map((p) => new THREE.Vector2(p.x, -p.z)),
+      );
+      const deck = mesh(
+        bridgeRoot,
+        new THREE.ExtrudeGeometry(shape, {
+          depth: 0.12,
+          bevelEnabled: false,
+        }),
+        0xb69874,
+      );
+      deck.rotation.x = -Math.PI / 2;
+      deck.position.y = -0.11;
+      for (const edge of [left, right]) {
+        for (let i = 1; i < edge.length; i++) {
+          const from = edge[i - 1]!,
+            to = edge[i]!;
+          const length = Math.hypot(to.x - from.x, to.z - from.z);
+          const rail = new THREE.Group();
+          bridgeRoot.add(rail);
+          rail.position.set((from.x + to.x) / 2, -0.05, (from.z + to.z) / 2);
+          rail.rotation.y = Math.atan2(to.x - from.x, to.z - from.z);
+          box(rail, 0.035, 0.035, length, cream, 0, 0.5);
+          const posts = Math.max(1, Math.ceil(length / 1.25));
+          for (let j = 0; j <= posts; j++) {
+            const z = length * (j / posts - 0.5);
+            box(rail, 0.045, 0.55, 0.045, ink, 0, 0.22, z);
+            pane(rail, 0.045, 0.04, 0.16, 0, 0.53, z);
+          }
         }
+      }
     }
     const domain = createWorldDomain(map);
     pedestrianNavigation = createNavigation(domain, 0.17);
@@ -844,6 +849,12 @@ export function createStudioScene(
         pedestrianNavigation,
         start,
         0.4 + Math.random() * 0.2,
+        Math.random,
+        pedestrianNavigation.nodes.flatMap((node, index) =>
+          Math.hypot((node.x - center.x) / rx, (node.z - center.z) / rz) < 0.85
+            ? [index]
+            : [],
+        ),
       );
       occupied.push(walker.motion);
       const p = walker.motion.position;

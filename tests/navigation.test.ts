@@ -9,9 +9,24 @@ import {
   createWorldDomain,
   createSeaDomain,
   bridgePairs,
+  bridgeDecks,
 } from '../src/lib/world-map';
 
 describe.each([false, true])('world navigation, portrait=%s', (portrait) => {
+  it('shares both deck edges at the project-island bends', () => {
+    const decks = bridgeDecks(islandLayout(portrait));
+    for (const deck of decks.slice(0, 2)) {
+      expect(deck.points).toHaveLength(3);
+      expect(deck.outline).toHaveLength(6);
+      for (const side of [deck.left, deck.right])
+        expect(
+          Math.hypot(
+            side[1]!.x - deck.points[1]!.x,
+            side[1]!.z - deck.points[1]!.z,
+          ),
+        ).toBeLessThan(1.2);
+    }
+  });
   it('connects every main island by walkable bridges and leaves the harbor island isolated', () => {
     const centers = islandLayout(portrait);
     const nav = createNavigation(createWorldDomain(centers), 0.17);
@@ -46,7 +61,14 @@ describe.each([false, true])('world navigation, portrait=%s', (portrait) => {
       person.update(1 / 30, []);
       expect(nav.domain.contains(person.position, person.radius)).toBe(true);
     }
-    expect(person.arrived).toBe(true);
+    expect(
+      person.arrived,
+      JSON.stringify({
+        position: person.position,
+        distance: person.distance,
+        target: nav.nodes[to],
+      }),
+    ).toBe(true);
     expect(person.distance).toBeGreaterThan(3);
   }, 20000);
 
@@ -101,26 +123,35 @@ it('keeps a group of pedestrians separated from one another and from scenery ove
     return seed / 4294967296;
   };
   const people: ReturnType<typeof createPedestrian>[] = [];
-  for (const id of [
-    'about',
-    'about',
-    'portfolio',
-    'portfolio',
-    'journal',
-    'contact',
-    'bookflow',
-    'assetflow',
-  ] as const) {
+  for (const id of (
+    [
+      'about',
+      'portfolio',
+      'journal',
+      'contact',
+      'bookflow',
+      'assetflow',
+      'zailongchang',
+    ] as const
+  ).flatMap((id) => Array.from({ length: id === 'about' ? 2 : 4 }, () => id))) {
     const start = nav.nearest(centers[id], (n) =>
       people.every(
         (p) => Math.hypot(n.x - p.position.x, n.z - p.position.z) > 0.6,
       ),
     );
-    const person = createPedestrian(nav, start, 0.5, random);
-    person.goTo(nav.nearest(centers[id === 'about' ? 'contact' : 'about']));
+    const local = nav.nodes.flatMap((node, index) =>
+      Math.hypot(node.x - centers[id].x, node.z - centers[id].z) < 2.3
+        ? [index]
+        : [],
+    );
+    const person = createPedestrian(nav, start, 0.5, random, local);
+    if (id !== 'zailongchang')
+      person.goTo(nav.nearest(centers[id === 'about' ? 'contact' : 'about']));
     people.push(person);
   }
+  let before: number[] = [];
   for (let i = 0; i < 1800; i++) {
+    if (i === 1200) before = people.map((p) => p.distance);
     people.forEach((person) => person.update(1 / 30, people));
     people.forEach((person, a) => {
       expect(nav.domain.contains(person.position, person.radius)).toBe(true);
@@ -137,4 +168,57 @@ it('keeps a group of pedestrians separated from one another and from scenery ove
     });
   }
   expect(people.reduce((sum, p) => sum + p.distance, 0)).toBeGreaterThan(20);
+  people.forEach((p, i) =>
+    expect(
+      p.distance - before[i]!,
+      `person ${i} should keep making progress`,
+    ).toBeGreaterThan(0.2),
+  );
+}, 40000);
+
+it('lets oncoming groups find room to pass without overlaps or a persistent queue', () => {
+  const nav = createNavigation(
+    {
+      contains: ({ x, z }, r) => Math.abs(x) < 4 - r && Math.abs(z) < 1.2 - r,
+      height: () => 0,
+    },
+    0.17,
+  );
+  let seed = 17;
+  const random = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const people = [-1, 1].flatMap((side) =>
+    [0, 1, 2].map((i) => {
+      const person = createPedestrian(
+        nav,
+        nav.nearest({ x: side * (2 + i * 0.48), z: 0 }),
+        0.6,
+        random,
+      );
+      person.goTo(nav.nearest({ x: -side * 3, z: 0 }));
+      return { person, side, crossed: false };
+    }),
+  );
+  for (let frame = 0; frame < 1800; frame++) {
+    people.forEach(({ person }) =>
+      person.update(
+        1 / 30,
+        people.map((p) => p.person),
+      ),
+    );
+    people.forEach((entry, i) => {
+      if (entry.person.position.x * entry.side < -1) entry.crossed = true;
+      for (const other of people.slice(i + 1))
+        expect(
+          Math.hypot(
+            entry.person.position.x - other.person.position.x,
+            entry.person.position.z - other.person.position.z,
+          ),
+        ).toBeGreaterThanOrEqual(0.365 - 1e-8);
+    });
+    if (people.every((entry) => entry.crossed)) break;
+  }
+  expect(people.map((entry) => entry.crossed)).toEqual(Array(6).fill(true));
 }, 20000);

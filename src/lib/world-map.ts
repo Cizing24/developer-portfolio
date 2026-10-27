@@ -89,11 +89,77 @@ export function bridgeRoutes(centers: Record<IslandId, Point>) {
     },
   );
 }
+
+// Adjacent deck pieces share the same mitered edge at each bend. The same
+// outline drives rendering and navigation, including the inside railing.
+export function bridgeDecks(centers: Record<IslandId, Point>) {
+  return bridgePairs.map(([a, b]) => {
+    const points: Point[] = [{ ...centers[a] }];
+    if (b === 'bookflow' || b === 'assetflow')
+      points.push({
+        x: centers[b].x + (centers[a].x > centers[b].x ? 5.2 : -5.2),
+        z: centers[b].z,
+      });
+    points.push({ ...centers[b] });
+    for (const [index, neighbor, id] of [
+      [0, 1, a],
+      [points.length - 1, points.length - 2, b],
+    ] as const) {
+      const p = points[index]!,
+        q = points[neighbor]!;
+      const length = Math.hypot(q.x - p.x, q.z - p.z);
+      const dx = (q.x - p.x) / length,
+        dz = (q.z - p.z) / length;
+      const [rx, rz] = islandRadii(id);
+      const reach = 1 / Math.hypot(dx / rx, dz / rz) - 1.2;
+      points[index] = { x: p.x + dx * reach, z: p.z + dz * reach };
+    }
+    const normals = points.slice(1).map((p, i) => {
+      const q = points[i]!,
+        length = Math.hypot(p.x - q.x, p.z - q.z);
+      return { x: -(p.z - q.z) / length, z: (p.x - q.x) / length };
+    });
+    const side = (sign: number) =>
+      points.map((p, i) => {
+        const before = normals[Math.max(0, i - 1)]!,
+          after = normals[Math.min(i, normals.length - 1)]!;
+        const denominator = 1 + before.x * after.x + before.z * after.z;
+        return {
+          x: p.x + (sign * 0.8 * (before.x + after.x)) / denominator,
+          z: p.z + (sign * 0.8 * (before.z + after.z)) / denominator,
+        };
+      });
+    const left = side(1),
+      right = side(-1);
+    return { points, left, right, outline: [...left, ...right.toReversed()] };
+  });
+}
+
+function insideDeck(point: Point, outline: Point[], radius: number) {
+  let inside = false;
+  for (let i = 0, j = outline.length - 1; i < outline.length; j = i++) {
+    const a = outline[i]!,
+      b = outline[j]!;
+    if (segmentDistance(point, a, b) < radius) return false;
+    if (
+      a.z > point.z !== b.z > point.z &&
+      point.x < ((b.x - a.x) * (point.z - a.z)) / (b.z - a.z) + a.x
+    )
+      inside = !inside;
+  }
+  return inside;
+}
 export function createWorldDomain(
   centers: Record<IslandId, Point>,
 ): NavigationDomain {
   const ids = Object.keys(centers) as IslandId[];
-  const routes = bridgeRoutes(centers);
+  const decks = bridgeDecks(centers).map((deck) => ({
+    ...deck,
+    minX: Math.min(...deck.outline.map((p) => p.x)),
+    maxX: Math.max(...deck.outline.map((p) => p.x)),
+    minZ: Math.min(...deck.outline.map((p) => p.z)),
+    maxZ: Math.max(...deck.outline.map((p) => p.z)),
+  }));
   function onIsland(p: Point, id: IslandId, radius: number) {
     const c = centers[id],
       [rx, rz] = islandRadii(id);
@@ -102,8 +168,13 @@ export function createWorldDomain(
     );
   }
   function onBridge(p: Point, radius: number) {
-    return routes.some(
-      ({ from, to }) => segmentDistance(p, from, to) <= 0.78 - radius,
+    return decks.some(
+      ({ outline, minX, maxX, minZ, maxZ }) =>
+        p.x >= minX &&
+        p.x <= maxX &&
+        p.z >= minZ &&
+        p.z <= maxZ &&
+        insideDeck(p, outline, radius),
     );
   }
   function blocked(p: Point, id: IslandId, radius: number) {

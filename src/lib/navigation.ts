@@ -35,7 +35,7 @@ export function createNavigation(
   const validSegment = (a: Point, b: Point) => {
     const steps = Math.max(
       1,
-      Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / (step / 3)),
+      Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / (step / 16)),
     );
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
@@ -65,20 +65,30 @@ export function createNavigation(
     const [x, z] = key.split(',').map(Number) as [number, number];
     for (const [dx, dz] of [
       [1, 0],
-      [-1, 0],
       [0, 1],
-      [0, -1],
       [1, 1],
-      [-1, -1],
       [1, -1],
-      [-1, 1],
     ]) {
       const other = grid.get(`${x + dx!},${z + dz!}`);
-      if (other !== undefined && validSegment(nodes[index]!, nodes[other]!))
+      if (other !== undefined && validSegment(nodes[index]!, nodes[other]!)) {
         nodes[index]!.links.push(other);
+        nodes[other]!.links.push(index);
+      }
     }
   }
   const components: number[][] = [];
+  const directionOrder = new Map(
+    ['1,0', '-1,0', '0,1', '0,-1', '1,1', '-1,-1', '1,-1', '-1,1'].map(
+      (key, index) => [key, index],
+    ),
+  );
+  for (const node of nodes) {
+    const rank = (index: number) =>
+      directionOrder.get(
+        `${Math.sign(nodes[index]!.x - node.x)},${Math.sign(nodes[index]!.z - node.z)}`,
+      )!;
+    node.links.sort((a, b) => rank(a) - rank(b));
+  }
   nodes.forEach((node, index) => {
     if (node.component !== -1) return;
     const component = components.length;
@@ -108,7 +118,11 @@ export function createNavigation(
     });
     return best;
   }
-  function route(start: number, target: number) {
+  function route(
+    start: number,
+    target: number,
+    clear: (a: number, b: number) => boolean = () => true,
+  ) {
     if (
       !nodes[start] ||
       !nodes[target] ||
@@ -119,11 +133,12 @@ export function createNavigation(
     const parents = new Map<number, number>([[start, -1]]);
     for (let i = 0; i < queue.length && !parents.has(target); i++) {
       for (const next of nodes[queue[i]!]!.links)
-        if (!parents.has(next)) {
+        if (!parents.has(next) && clear(queue[i]!, next)) {
           parents.set(next, queue[i]!);
           queue.push(next);
         }
     }
+    if (!parents.has(target)) return [];
     const path = [target];
     while (path[0] !== start) path.unshift(parents.get(path[0]!)!);
     return path;
@@ -140,6 +155,7 @@ export function createPedestrian(
   start: number,
   speed: number,
   random: () => number = Math.random,
+  localDestinations?: number[],
 ) {
   const initial = nav.nodes[start];
   if (!initial) throw new Error('A pedestrian needs a walkable starting point');
@@ -148,10 +164,13 @@ export function createPedestrian(
     path: number[] = [],
     waiting = random() * 2,
     blocked = 0,
-    heading = 0;
+    heading = 0,
+    destination = start,
+    detourCooldown = 0;
   let moving = false,
     distance = 0;
   function goTo(target: number) {
+    destination = target;
     path = nav.route(node, target).slice(1);
     waiting = 0;
   }
@@ -177,12 +196,16 @@ export function createPedestrian(
     update(delta: number, peers: Pedestrian[]) {
       moving = false;
       if (delta <= 0 || !Number.isFinite(delta)) return;
+      detourCooldown = Math.max(0, detourCooldown - delta);
       if (waiting > 0) {
         waiting = Math.max(0, waiting - delta);
         return;
       }
       if (!path.length) {
-        const candidates = nav.components[nav.nodes[node]!.component]!;
+        const candidates =
+          localDestinations?.length && random() < 0.75
+            ? localDestinations
+            : nav.components[nav.nodes[node]!.component]!;
         goTo(candidates[Math.floor(random() * candidates.length)]!);
         if (!path.length) {
           waiting = 0.5;
@@ -208,17 +231,61 @@ export function createPedestrian(
         )
       ) {
         blocked += delta;
-        if (blocked > 1.2) {
-          // Yield and back out of a narrow crossing before choosing another trip.
-          path = nav.route(nav.nearest(position), node).slice(1);
-          if (!path.length) {
-            const exits = nav.nodes[node]!.links;
-            path = exits.length
-              ? [exits[Math.floor(random() * exits.length)]!]
-              : [];
+        if (blocked > 0.35 && detourCooldown === 0) {
+          // Reconnect from the actual position, then route around people rather
+          // than repeatedly choosing an adjacent cell behind the same obstacle.
+          const nearby = peers.filter(
+            (peer) =>
+              peer.position !== position &&
+              Math.hypot(
+                peer.position.x - position.x,
+                peer.position.z - position.z,
+              ) < 4,
+          );
+          const free = (a: Point, b: Point) =>
+            nearby.every(
+              (peer) =>
+                segmentDistance(peer.position, a, b) >=
+                nav.radius + peer.radius + 0.025,
+            );
+          const start = nav.nearest(
+            position,
+            (n) =>
+              n.component === nav.nodes[node]!.component &&
+              Math.hypot(n.x - position.x, n.z - position.z) < 0.8 &&
+              free(position, n) &&
+              nav.validSegment(position, n),
+          );
+          if (start !== -1) {
+            const clear = (a: number, b: number) =>
+              free(nav.nodes[a]!, nav.nodes[b]!);
+            let alternative = nav.route(start, destination, clear);
+            if (!alternative.length) {
+              // A short retreat opens space for oncoming traffic. Keep this
+              // choice for a while so both sides do not reverse every frame.
+              const exits = nav.components[nav.nodes[start]!.component]!.filter(
+                (index) => {
+                  const n = nav.nodes[index]!;
+                  const d = Math.hypot(n.x - position.x, n.z - position.z);
+                  return d > 1 && d < 2.2 && free(n, n);
+                },
+              );
+              for (
+                let attempt = 0;
+                attempt < Math.min(8, exits.length);
+                attempt++
+              ) {
+                alternative = nav.route(
+                  start,
+                  exits[Math.floor(random() * exits.length)]!,
+                  clear,
+                );
+                if (alternative.length) break;
+              }
+            }
+            if (alternative.length) path = alternative;
           }
-          blocked = 0;
-          waiting = random() * 0.6;
+          detourCooldown = 0.9 + random() * 0.6;
         }
         return;
       }

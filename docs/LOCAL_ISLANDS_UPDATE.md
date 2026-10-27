@@ -37,3 +37,11 @@
 - 合併每個測試情境的最新結果，共涵蓋 116 項，沒有未解決失敗。這不是宣稱修正後又完整重跑一次 116 項。可核對 [驗證摘要](evidence/islands-update/validation.json)。
 
 截圖：[全景](screenshots/islands-update/desktop-overview.png)、[人物過橋](screenshots/islands-update/bridge-motion.png)、[獨立港口](screenshots/islands-update/desktop-harbor.png)、[手機全景](screenshots/islands-update/mobile-overview.png)、[手機筆記島](screenshots/islands-update/mobile-notes-island.png)、[分類筆記](screenshots/islands-update/notes.png)、[政府計畫筆記](screenshots/islands-update/government-note.png)。
+
+## 橋面接合與人群通行追加修正
+
+依瀏覽器標註，BookFlow 與 AssetFlow 的橋面轉折改成共用斜接邊界，兩側欄杆沿完整輪廓連接。橋面模型與人物通行範圍使用同一份多邊形；岸邊保留足夠重疊，路段採樣加密，避免較大人物在接岸處反覆轉向。
+
+人物受阻後從實際位置重新接上路徑，將附近人物當作臨時障礙繞行；無法通過時短暫退讓。日常目的地以原島散步為主，保留跨島行程，降低所有人頻繁通過主島的集中流量。
+
+追加回歸涵蓋兩種版面的橋面轉角、六人對向通行，以及 26 人一分鐘模擬；同時驗證無重疊與最後 20 秒每個人物持續有移動進展。追加修正之後的遠端 CI 需以最新提交結果為準。
