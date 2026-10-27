@@ -37,6 +37,38 @@ async function open(page: Page, id: string, view: string) {
     .click();
 }
 
+test('time icons are centered inside their circular buttons', async ({
+  page,
+}) => {
+  await page.goto('/zh-tw/');
+  const buttons = page.locator('[data-phase-choice]');
+  await expect(buttons).toHaveCount(4);
+  const offsets = await buttons.evaluateAll((nodes) =>
+    nodes.map((button) => {
+      const svg = button.querySelector('svg')!;
+      const outer = button.getBoundingClientRect();
+      const icon = svg.getBoundingClientRect();
+      const drawing = svg.getBBox();
+      return {
+        x: icon.x + icon.width / 2 - (outer.x + outer.width / 2),
+        y: icon.y + icon.height / 2 - (outer.y + outer.height / 2),
+        drawingX: ((drawing.x + drawing.width / 2 - 12) * icon.width) / 24,
+        drawingY: ((drawing.y + drawing.height / 2 - 12) * icon.height) / 24,
+        width: icon.width,
+        height: icon.height,
+      };
+    }),
+  );
+  for (const offset of offsets) {
+    expect(Math.abs(offset.x)).toBeLessThan(0.5);
+    expect(Math.abs(offset.y)).toBeLessThan(0.5);
+    expect(Math.abs(offset.drawingX)).toBeLessThan(1);
+    expect(Math.abs(offset.drawingY)).toBeLessThan(1);
+    expect(offset.width).toBe(20);
+    expect(offset.height).toBe(20);
+  }
+});
+
 test('six fixed islands have small labels, no slogans and useful project topics', async ({
   page,
 }) => {
