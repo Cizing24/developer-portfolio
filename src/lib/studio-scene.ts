@@ -3,12 +3,28 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { type IslandId, type DayPhase } from './world-config';
 import type { ProjectId } from './project-introductions';
-import { createWander, ellipseArea, rectangleArea } from './wander';
+import { createWander, rectangleArea } from './wander';
+import {
+  createNavigation,
+  createPedestrian,
+  type Navigation,
+} from './navigation';
+import {
+  islandLayout,
+  islandRadii,
+  bridgePairs,
+  bridgeRoutes,
+  isAccessLane,
+  createWorldDomain,
+  createSeaDomain,
+  reefIslands,
+} from './world-map';
 
 export interface StudioScene {
   focusIsland(id: IslandId, animated?: boolean): Promise<void>;
   overview(animated?: boolean): Promise<void>;
   zoom(factor: number): void;
+  focusAvatar(): Promise<void>;
   setPhase(phase: DayPhase, animated?: boolean): void;
   setVisible(value: boolean): void;
   setReducedMotion(value: boolean): void;
@@ -324,6 +340,7 @@ export function createStudioScene(
     world.add(line);
     // Forested ridges, small workshops and a harbor give the system a landscape.
     for (let i = 0; i < 22; i++) {
+      if (i === 0 || i === 11) continue; // Clear landings on both sides.
       const angle = (i / 22) * Math.PI * 2;
       const x = Math.cos(angle) * 5.8;
       const z = Math.sin(angle) * 3.6;
@@ -395,15 +412,24 @@ export function createStudioScene(
   function utility(id: IslandId) {
     const group = new THREE.Group();
     group.userData.island = id;
-    cylinder(group, 3.3, 0.5, 0xb8b69d, 0, -0.55, 0, 10);
-    cylinder(group, 3.15, 0.18, 0xe3d4b3, 0, -0.23, 0, 10);
-    cylinder(group, 2.95, 0.16, 0xb4c297, 0, -0.06, 0, 10);
-    for (let i = 0; i < 9; i++) {
-      const angle = (i / 9) * Math.PI * 2;
+    const extra = id === 'portfolio' ? 0.8 : id === 'journal' ? 0.65 : 0;
+    cylinder(group, 3.3 + extra, 0.5, 0xb8b69d, 0, -0.55, 0, 10);
+    cylinder(group, 3.15 + extra, 0.18, 0xe3d4b3, 0, -0.23, 0, 10);
+    cylinder(group, 2.95 + extra, 0.16, 0xb4c297, 0, -0.06, 0, 10);
+    for (let i = 0; i < 4; i++) {
+      const angle = Math.PI / 4 + (i / 4) * Math.PI * 2;
+      if (
+        isAccessLane(
+          id,
+          Math.cos(angle) * (2.85 + extra),
+          Math.sin(angle) * (2.85 + extra),
+        )
+      )
+        continue;
       plant(
         group,
-        Math.cos(angle) * 2.65,
-        Math.sin(angle) * 2.65,
+        Math.cos(angle) * (2.85 + extra),
+        Math.sin(angle) * (2.85 + extra),
         0.65 + (i % 3) * 0.15,
       );
     }
@@ -586,43 +612,58 @@ export function createStudioScene(
     return { group, arms, legs };
   }
   const creator = person(about, true);
+  creator.group.scale.setScalar(0.9);
   creator.group.position.set(-0.9, 0.08, 0.6);
   creator.group.rotation.y = 0.2;
   const walkers: {
     model: ReturnType<typeof person>;
     offset: number;
-    motion: ReturnType<typeof createWander>;
+    home: IslandId;
+    motion?: ReturnType<typeof createPedestrian>;
   }[] = [];
+  const localIsland = utility('zailongchang');
+  localIsland.scale.setScalar(1.35);
+  const village = new THREE.Group();
+  village.userData.hotspot = 0;
+  localIsland.add(village);
+  box(village, 2.2, 1.3, 1.5, cream, 0, 0.65, -0.5);
+  box(village, 2.5, 0.12, 1.8, wine, 0, 1.38, -0.5);
+  box(village, 0.45, 0.85, 0.05, ink, 0, 0.45, 0.27);
+  pane(village, 0.42, 0.5, 0.05, -0.7, 0.8, 0.28);
+  pane(village, 0.42, 0.5, 0.05, 0.7, 0.8, 0.28);
+  box(village, 0.8, 0.8, 1, 0xb59a75, -1.7, 0.4, -1);
+  // A shore-side pier with two arms leaves an open berth for boats.
+  for (const z of [-0.7, 0.7]) {
+    box(localIsland, 1.8, 0.12, 0.3, 0xb69874, 3.3, -0.35, z);
+    for (const x of [2.65, 3.95])
+      cylinder(localIsland, 0.06, 0.6, ink, x, -0.25, z, 6);
+  }
+  box(localIsland, 0.3, 0.12, 1.7, 0xb69874, 2.55, -0.35, 0);
   for (const [id, island] of roots) {
     for (let i = 0; i < (id === 'about' ? 2 : 4); i++) {
-      const project = id === 'bookflow' || id === 'assetflow';
-      const motion = createWander(
-        // Project visitors use the open lane between the two building rows.
-        // Utility visitors stay outside the buildings and inside the trees.
-        project ? rectangleArea(4.6, 0.28) : ellipseArea(2.08, 2.38),
-        {
-          speed: 0.35 + Math.random() * 0.18,
-          pause: 2.8,
-          maxDistance: project ? 4 : 2.2,
-        },
-      );
       const model = person(island);
-      model.group.position.set(motion.position.x, 0.1, motion.position.z);
-      model.group.rotation.y = motion.heading;
       walkers.push({
         model,
         offset: i * 1.6,
-        motion,
+        home: id,
       });
     }
     for (let i = 0; i < 5; i++) {
-      const angle = (i / 5) * Math.PI * 2;
-      const radius = id === 'bookflow' || id === 'assetflow' ? 5.5 : 2.7;
+      const angle = (i / 5) * Math.PI * 2 + 0.3;
+      const radius =
+        id === 'bookflow' || id === 'assetflow'
+          ? 5.5
+          : id === 'portfolio'
+            ? 3.85
+            : id === 'journal'
+              ? 3.7
+              : 3.05;
       const x = Math.cos(angle) * radius,
         z =
           Math.sin(angle) *
           radius *
           (id === 'bookflow' || id === 'assetflow' ? 0.61 : 1);
+      if (isAccessLane(id, x, z)) continue;
       cylinder(island, 0.035, 0.8, ink, x, 0.4, z, 6);
       const lamp = mesh(
         island,
@@ -723,13 +764,14 @@ export function createStudioScene(
   }
   const bridgeRoot = new THREE.Group();
   scene.add(bridgeRoot);
-  const bridgePairs: [IslandId, IslandId][] = [
-    ['portfolio', 'bookflow'],
-    ['portfolio', 'assetflow'],
-    ['portfolio', 'journal'],
-    ['portfolio', 'contact'],
-    ['portfolio', 'about'],
-  ];
+  let pedestrianNavigation: Navigation;
+  let creatorMotion: ReturnType<typeof createPedestrian>;
+  let seaNavigation: Navigation;
+  let boatMotion: ReturnType<typeof createPedestrian>[] = [];
+  let dock = -1,
+    dockOutbound = false;
+  let bridgeCrossings = 0,
+    harborVisits = 0;
   function disposeGeometry(group: THREE.Group) {
     group.traverse((object) => {
       if (object instanceof THREE.Mesh) object.geometry.dispose();
@@ -737,25 +779,9 @@ export function createStudioScene(
     group.clear();
   }
   function layout(width: number, height: number) {
-    const wide: Record<IslandId, [number, number]> = {
-      portfolio: [0, 0],
-      bookflow: [-8.8, -3.2],
-      assetflow: [8.8, -3.2],
-      journal: [-6.8, 8],
-      contact: [6.8, 8],
-      about: [0, -8.8],
-    };
-    const portrait: Record<IslandId, [number, number]> = {
-      portfolio: [-4.1, -7.7],
-      about: [4.1, -7.7],
-      bookflow: [-4.8, 0.5],
-      assetflow: [4.8, 0.5],
-      journal: [-4.1, 8.4],
-      contact: [4.1, 8.4],
-    };
-    const map = width < 900 && height > width ? portrait : wide;
+    const map = islandLayout(width < 900 && height > width);
     for (const [id, island] of roots) {
-      const [x, z] = map[id];
+      const { x, z } = map[id];
       island.position.set(
         x,
         id === 'bookflow' || id === 'assetflow' ? -0.18 : 0,
@@ -763,26 +789,116 @@ export function createStudioScene(
       );
     }
     disposeGeometry(bridgeRoot);
-    for (const [a, b] of bridgePairs) {
-      const start = roots.get(a)!.position.clone(),
-        end = roots.get(b)!.position.clone();
+    for (const { from, to, fromIsland: a, toIsland: b } of bridgeRoutes(map)) {
+      const start = new THREE.Vector3(from.x, 0, from.z),
+        end = new THREE.Vector3(to.x, 0, to.z);
       const delta = end.clone().sub(start);
-      const length = delta.length() - 4.8;
+      const direction = delta.clone().normalize();
+      const reach = (id: IslandId | undefined) => {
+        if (!id) return 0;
+        const [rx, rz] = islandRadii(id);
+        return 1 / Math.hypot(direction.x / rx, direction.z / rz) - 0.25;
+      };
+      const bankA = start.clone().addScaledVector(direction, reach(a));
+      const bankB = end.clone().addScaledVector(direction, -reach(b));
+      const length = bankA.distanceTo(bankB);
       if (length < 0.2) continue;
       const bridge = new THREE.Group();
       bridgeRoot.add(bridge);
-      bridge.position.copy(start.clone().add(end).multiplyScalar(0.5));
+      bridge.position.copy(bankA.add(bankB).multiplyScalar(0.5));
       bridge.position.y = -0.05;
       bridge.rotation.y = Math.atan2(delta.x, delta.z);
-      box(bridge, 0.65, 0.12, length, 0xb69874);
-      for (const x of [-0.36, 0.36])
+      box(bridge, 1.6, 0.12, length, 0xb69874);
+      for (const x of [-0.83, 0.83])
         box(bridge, 0.035, 0.035, length, cream, x, 0.5);
       for (const z of [-length * 0.4, 0, length * 0.4])
-        for (const x of [-0.36, 0.36]) {
+        for (const x of [-0.83, 0.83]) {
           box(bridge, 0.045, 0.55, 0.045, ink, x, 0.22, z);
           pane(bridge, 0.045, 0.04, 0.16, x, 0.53, z);
         }
     }
+    const domain = createWorldDomain(map);
+    pedestrianNavigation = createNavigation(domain, 0.17);
+    const occupied: { position: { x: number; z: number }; radius: number }[] =
+      [];
+    for (const walker of walkers) {
+      scene.attach(walker.model.group);
+      walker.model.group.scale.setScalar(0.85);
+      const center = map[walker.home];
+      const [rx, rz] = islandRadii(walker.home);
+      const start = pedestrianNavigation.nearest(
+        {
+          x: center.x + Math.cos(walker.offset) * rx * 0.55,
+          z: center.z + Math.sin(walker.offset) * rz * 0.55,
+        },
+        (node) =>
+          Math.hypot(node.x - center.x, node.z - center.z) <
+            Math.max(...islandRadii(walker.home)) &&
+          !occupied.some(
+            (other) =>
+              Math.hypot(node.x - other.position.x, node.z - other.position.z) <
+              0.55,
+          ),
+      );
+      walker.motion = createPedestrian(
+        pedestrianNavigation,
+        start,
+        0.4 + Math.random() * 0.2,
+      );
+      occupied.push(walker.motion);
+      const p = walker.motion.position;
+      walker.model.group.position.set(p.x, walker.motion.height, p.z);
+    }
+    scene.attach(creator.group);
+    const creatorNavigation = createNavigation(domain, 0.4);
+    creatorMotion = createPedestrian(
+      creatorNavigation,
+      creatorNavigation.nearest(
+        map.about,
+        (node) =>
+          !occupied.some(
+            (other) =>
+              Math.hypot(node.x - other.position.x, node.z - other.position.z) <
+              0.7,
+          ),
+      ),
+      0.55,
+    );
+    creator.group.position.set(
+      creatorMotion.position.x,
+      creatorMotion.height,
+      creatorMotion.position.z,
+    );
+    // Start a real cross-island trip; later trips choose destinations freely.
+    creatorMotion.goTo(creatorNavigation.nearest(map.portfolio));
+    const guide = walkers.find((walker) => walker.home === 'about')!;
+    guide.motion!.goTo(pedestrianNavigation.nearest(map.contact));
+    seaNavigation = createNavigation(createSeaDomain(map), 0.55, 0.4);
+    boatMotion = boats.map((boat, i) => {
+      const start = seaNavigation.nearest({ x: -18 + i * 5, z: -12 });
+      const motion = createPedestrian(seaNavigation, start, 0.75);
+      boat.position.set(motion.position.x, -0.74, motion.position.z);
+      return motion;
+    });
+    dock = seaNavigation.nearest({
+      x: map.zailongchang.x + 6.5,
+      z: map.zailongchang.z,
+    });
+    const nearDock = seaNavigation.nearest({
+      x: map.zailongchang.x + 6.5,
+      z: map.zailongchang.z - 3,
+    });
+    boatMotion[0] = createPedestrian(seaNavigation, nearDock, 0.75);
+    boatMotion[0].goTo(dock);
+    boats[0]!.position.set(
+      boatMotion[0].position.x,
+      -0.74,
+      boatMotion[0].position.z,
+    );
+    dockOutbound = false;
+    container.dataset.navigation = 'ready';
+    container.dataset.bridgeCount = String(bridgePairs.length);
+    container.dataset.shadowMode = 'tracked';
     renderer.shadowMap.needsUpdate = true;
   }
   const waterClock = { value: 0 };
@@ -800,12 +916,57 @@ export function createStudioScene(
     );
   };
   const water = new THREE.Mesh(
-    new THREE.PlaneGeometry(200, 200, 80, 80).rotateX(-Math.PI / 2),
+    new THREE.CircleGeometry(34, 96).rotateX(-Math.PI / 2),
     waterMat,
   );
   water.position.y = -0.88;
   water.receiveShadow = true;
   scene.add(water);
+  // A finite sea basin closes against a low archipelago; these are scenery.
+  const scenery = [
+    ...reefIslands,
+    ...Array.from({ length: 38 }, (_, i) => {
+      const angle = (i / 38) * Math.PI * 2;
+      return {
+        x: Math.cos(angle) * 30,
+        z: Math.sin(angle) * 30,
+        r: 2.8 + (i % 4) * 0.3,
+      };
+    }),
+  ];
+  const shoreGeometry = new THREE.CylinderGeometry(1, 1.12, 0.6, 9);
+  const shoreMaterial = new THREE.MeshStandardMaterial({
+    color: 0xc5bca0,
+    roughness: 0.95,
+  });
+  const shores = new THREE.InstancedMesh(
+    shoreGeometry,
+    shoreMaterial,
+    scenery.length,
+  );
+  const hills = new THREE.InstancedMesh(
+    new THREE.ConeGeometry(0.82, 1.6, 7),
+    new THREE.MeshStandardMaterial({ color: sage, roughness: 0.95 }),
+    scenery.length,
+  );
+  const sceneryTransform = new THREE.Object3D();
+  scenery.forEach(({ x, z, r }, i) => {
+    sceneryTransform.position.set(x, -0.55, z);
+    sceneryTransform.scale.set(r, 1, r * 0.8);
+    sceneryTransform.rotation.y = i * 0.7;
+    sceneryTransform.updateMatrix();
+    shores.setMatrixAt(i, sceneryTransform.matrix);
+    sceneryTransform.position.y = 0.25;
+    sceneryTransform.updateMatrix();
+    hills.setMatrixAt(i, sceneryTransform.matrix);
+  });
+  shores.castShadow =
+    shores.receiveShadow =
+    hills.castShadow =
+    hills.receiveShadow =
+      true;
+  scene.add(shores, hills);
+  container.dataset.sceneryIslands = String(scenery.length);
   const ripples: THREE.Mesh[] = [];
   for (let i = 0; i < 24; i++) {
     const ripple = mesh(
@@ -862,16 +1023,6 @@ export function createStudioScene(
     fireflies.push(point);
   }
   const leaves: THREE.Object3D[] = [];
-  const boatMotion = boats.map((boat) => {
-    const motion = createWander(ellipseArea(16, 22, 0.8), {
-      speed: 0.5,
-      pause: 1.2,
-      maxDistance: 10,
-    });
-    boat.position.set(motion.position.x, -0.76, motion.position.z);
-    boat.rotation.y = motion.heading;
-    return motion;
-  });
   const birdMotion = birds.map(({ group }) => {
     const motion = createWander(rectangleArea(18, 14), {
       speed: 1.5,
@@ -891,6 +1042,62 @@ export function createStudioScene(
     }),
   }));
   const pointLights: THREE.PointLight[] = [];
+  const shadowSubjects = [
+    ...walkers.map(({ model }) => ({
+      group: model.group,
+      radius: 0.22,
+      lift: 0.25,
+      sea: false,
+    })),
+    { group: creator.group, radius: 0.42, lift: 0.65, sea: false },
+    ...boats.map((group) => ({ group, radius: 0.42, lift: 0.2, sea: true })),
+    ...birds.map(({ group }) => ({
+      group,
+      radius: 0.23,
+      lift: 4.5,
+      sea: true,
+    })),
+  ];
+  shadowSubjects.forEach(({ group }) =>
+    group.traverse((object) => {
+      if (object instanceof THREE.Mesh) object.castShadow = false;
+    }),
+  );
+  const shadowMaterial = new THREE.MeshBasicMaterial({
+    color: 0x233f44,
+    transparent: true,
+    opacity: 0.2,
+    depthWrite: false,
+  });
+  const movingShadows = new THREE.InstancedMesh(
+    new THREE.CircleGeometry(1, 14).rotateX(-Math.PI / 2),
+    shadowMaterial,
+    shadowSubjects.length,
+  );
+  movingShadows.frustumCulled = false;
+  scene.add(movingShadows);
+  const shadowTransform = new THREE.Object3D();
+  function updateMovingShadows() {
+    const projection = Math.max(5, sun.position.y);
+    shadowSubjects.forEach(({ group, radius, lift, sea }, index) => {
+      shadowTransform.position.set(
+        group.position.x - (sun.position.x / projection) * lift,
+        sea ? -0.79 : group.position.y + 0.028,
+        group.position.z - (sun.position.z / projection) * lift,
+      );
+      shadowTransform.scale.set(
+        radius * (1 + lift / projection),
+        1,
+        radius * 0.65,
+      );
+      shadowTransform.rotation.y = group.rotation.y;
+      shadowTransform.updateMatrix();
+      movingShadows.setMatrixAt(index, shadowTransform.matrix);
+    });
+    movingShadows.instanceMatrix.needsUpdate = true;
+    shadowMaterial.opacity = 0.2 - nightLevel * 0.12;
+    container.dataset.shadowFrame = String(Math.round(ambientTime * 30));
+  }
   scene.traverse((object) => {
     if (object.userData.canopy) leaves.push(object);
     if (object instanceof THREE.PointLight) pointLights.push(object);
@@ -957,6 +1164,7 @@ export function createStudioScene(
   function paint() {
     if (!visible || disposed) return;
     camera.updateMatrixWorld();
+    updateMovingShadows();
     renderer.render(scene, camera);
     projectLabels();
   }
@@ -1002,17 +1210,50 @@ export function createStudioScene(
             new THREE.Vector3(4, 2.6, -1.65),
             new THREE.Vector3(0, 2.6, 1.7),
           ]
-        : active === 'portfolio' || active === 'journal'
-          ? [new THREE.Vector3(-1, 2, 0.5), new THREE.Vector3(1, 2, 0.5)]
-          : [new THREE.Vector3(0, 2.6, 1)];
+        : active === 'journal'
+          ? [
+              new THREE.Vector3(-1.5, 2, -1.8),
+              new THREE.Vector3(1.5, 2, -1.8),
+              new THREE.Vector3(-1.5, 2, 1.5),
+              new THREE.Vector3(1.5, 2, 1.5),
+              new THREE.Vector3(0, 2, 2.8),
+            ]
+          : active === 'zailongchang'
+            ? [
+                new THREE.Vector3(0, 2, -0.5),
+                new THREE.Vector3(-1.5, 2, 1),
+                new THREE.Vector3(1.5, 2, 1),
+              ]
+            : active === 'portfolio'
+              ? [new THREE.Vector3(-1, 2, 0.5), new THREE.Vector3(1, 2, 0.5)]
+              : [new THREE.Vector3(0, 2.6, 1)];
     labels.forEach((button, index) => {
       if (button.hidden || !anchors[index]) return;
-      const point = island
-        .localToWorld(anchors[index]!.clone())
-        .project(camera);
+      const point = (
+        active === 'about'
+          ? creator.group.position.clone().add(new THREE.Vector3(0, 1.8, 0))
+          : island.localToWorld(anchors[index]!.clone())
+      ).project(camera);
       let x = ((point.x + 1) * width) / 2;
-      const y = ((1 - point.y) * height) / 2;
+      let y = ((1 - point.y) * height) / 2;
+      // Keep the reading target stable while its character continues walking.
+      if (active === 'about') {
+        x = width / 2;
+        y = height * 0.42;
+      }
       if (width < 600 && anchors.length === 2) x += index === 0 ? -22 : 22;
+      if (width < 900 && active === 'journal') {
+        x = width * (index % 2 === 0 ? 0.25 : 0.75);
+        y = height * 0.36 + Math.floor(index / 2) * 78;
+      }
+      if (width < 900 && active === 'zailongchang') {
+        x = index === 0 ? width / 2 : width * (index === 1 ? 0.25 : 0.75);
+        y = height * 0.36 + (index === 0 ? 0 : 90);
+      }
+      if (height < 500 && (active === 'journal' || active === 'zailongchang')) {
+        x = (width * (index + 0.5)) / anchors.length;
+        y = height * 0.55;
+      }
       button.style.transform = `translate(${Math.max(64, Math.min(width - 64, x))}px,${Math.max(130, Math.min(height - 100, y))}px) translate(-50%,-50%)`;
     });
   }
@@ -1022,7 +1263,8 @@ export function createStudioScene(
     if (active) {
       const island = roots.get(active)!;
       const large = active === 'bookflow' || active === 'assetflow';
-      const d = large ? 12 : 9;
+      const d =
+        large || active === 'zailongchang' || active === 'journal' ? 12 : 10;
       const distance =
         aspect < 1 ? d / Math.max(0.55, aspect) : height < 500 ? d * 1.2 : d;
       targetLook.copy(island.position);
@@ -1032,8 +1274,12 @@ export function createStudioScene(
         .add(new THREE.Vector3(2, distance * 0.95, distance));
     } else {
       const distance =
-        width < 900 && height > width ? 18 / aspect : height < 500 ? 36 : 30;
-      targetLook.set(0, 0, 0);
+        width < 900 && height > width ? 30 / aspect : height < 500 ? 44 : 39;
+      targetLook.set(
+        width < 900 && height > width ? 0 : 3,
+        0,
+        width < 900 && height > width ? 5.5 : 3,
+      );
       targetCamera
         .copy(targetLook)
         .add(new THREE.Vector3(3, distance * 1.15, distance * 0.8));
@@ -1139,12 +1385,15 @@ export function createStudioScene(
       const delta = Math.min(elapsed, 70) / 1000;
       ambientTime += delta;
       ambientLast = now;
-      walkers.forEach(({ model, offset, motion }) => {
-        motion.update(delta);
+      const peers = [...walkers.map(({ motion }) => motion!), creatorMotion];
+      walkers.forEach(({ model, offset, motion: walkerMotion }) => {
+        const motion = walkerMotion!;
+        motion.update(delta, peers);
         const stride = motion.moving ? 1 : 0;
         model.group.position.set(
           motion.position.x,
-          0.1 + Math.abs(Math.sin(ambientTime * 5 + offset)) * 0.025 * stride,
+          motion.height +
+            Math.abs(Math.sin(ambientTime * 5 + offset)) * 0.015 * stride,
           motion.position.z,
         );
         model.group.rotation.y = motion.heading;
@@ -1161,13 +1410,52 @@ export function createStudioScene(
               stride),
         );
       });
-      creator.group.position.y = 0.08 + Math.sin(ambientTime * 1.3) * 0.02;
-      creator.arms[1]!.rotation.z = -0.8 + Math.sin(ambientTime * 1.8) * 0.25;
-      creator.arms[0]!.rotation.x = Math.sin(ambientTime * 0.9) * 0.12;
-      creator.group.rotation.y = 0.2 + Math.sin(ambientTime * 0.35) * 0.16;
+      creatorMotion.update(delta, peers);
+      creator.group.position.set(
+        creatorMotion.position.x,
+        creatorMotion.height,
+        creatorMotion.position.z,
+      );
+      creator.group.rotation.y = creatorMotion.heading;
+      const creatorStride = creatorMotion.moving ? 1 : 0;
+      creator.legs.forEach(
+        (leg, i) =>
+          (leg.rotation.x =
+            Math.sin(ambientTime * 4 + i * Math.PI) * 0.3 * creatorStride),
+      );
+      creator.arms.forEach((arm, i) => {
+        arm.rotation.z = 0;
+        arm.rotation.x =
+          -Math.sin(ambientTime * 4 + i * Math.PI) * 0.22 * creatorStride;
+      });
+      container.dataset.avatarDistance = creatorMotion.distance.toFixed(2);
+      const centers = islandLayout(width < 900 && height > width);
+      const onBridge = peers.some(
+        ({ position }) =>
+          !Object.entries(centers).some(([id, c]) => {
+            const [rx, rz] = islandRadii(id as IslandId);
+            return (
+              Math.hypot((position.x - c.x) / rx, (position.z - c.z) / rz) <= 1
+            );
+          }),
+      );
+      if (onBridge) bridgeCrossings++;
+      container.dataset.bridgeCrossings = String(bridgeCrossings);
       boats.forEach((boat, i) => {
         const motion = boatMotion[i]!;
-        motion.update(delta);
+        motion.update(delta, boatMotion);
+        if (i === 0 && motion.arrived) {
+          if (!dockOutbound) {
+            harborVisits++;
+            motion.goTo(
+              seaNavigation.nearest({
+                x: centers.zailongchang.x - 7,
+                z: centers.zailongchang.z + 2,
+              }),
+            );
+          } else motion.goTo(dock);
+          dockOutbound = !dockOutbound;
+        }
         boat.position.set(
           motion.position.x,
           -0.73 + Math.sin(ambientTime + i) * 0.04,
@@ -1175,6 +1463,7 @@ export function createStudioScene(
         );
         boat.rotation.y = motion.heading;
       });
+      container.dataset.harborVisits = String(harborVisits);
       birds.forEach(({ group, wings }, i) => {
         const motion = birdMotion[i]!;
         motion.update(delta);
@@ -1282,6 +1571,11 @@ export function createStudioScene(
   };
   renderer.domElement.addEventListener('webglcontextlost', contextLost);
   return {
+    focusAvatar() {
+      targetLook.copy(creator.group.position);
+      targetCamera.copy(targetLook).add(new THREE.Vector3(2, 10, 10));
+      return move();
+    },
     focusIsland(id, animated = true) {
       active = id;
       home();

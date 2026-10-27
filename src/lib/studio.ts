@@ -179,7 +179,7 @@ export function initStudio(root: HTMLElement) {
     );
   query('[data-avatar-focus]').addEventListener(
     'click',
-    () => void navigate('about'),
+    () => void navigate('about').then(() => scene?.focusAvatar()),
   );
   root
     .querySelectorAll<HTMLButtonElement>('[data-phase-choice]')

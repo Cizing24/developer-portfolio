@@ -17,9 +17,7 @@ const routes = ['zh-tw', 'en'].flatMap((locale) =>
 );
 test('localized homes, keyboard skip and main navigation', async ({ page }) => {
   await page.goto('/zh-tw/');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText(
-    'CIZING24',
-  );
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('CIZING');
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: '跳到主要內容' })).toBeFocused();
   await page.keyboard.press('Enter');
@@ -31,9 +29,7 @@ test('localized homes, keyboard skip and main navigation', async ({ page }) => {
     .click();
   await expect(page.locator('[data-view-panel="projects"]')).toBeVisible();
   await page.goto('/en/');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText(
-    'CIZING24',
-  );
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('CIZING');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
 test('project filtering, readable introductions, private boundary and public source', async ({

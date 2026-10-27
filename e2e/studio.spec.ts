@@ -69,12 +69,12 @@ test('time icons are centered inside their circular buttons', async ({
   }
 });
 
-test('six fixed islands have small labels, no slogans and useful project topics', async ({
+test('seven fixed islands have small labels, no slogans and useful project topics', async ({
   page,
 }) => {
   await page.goto('/en/');
   await ready(page);
-  await expect(page.locator('h1')).toHaveText('CIZING24');
+  await expect(page.locator('h1')).toHaveText('CIZING');
   await expect(page.locator('.world-header')).toHaveCSS(
     'background-color',
     'rgba(0, 0, 0, 0)',
@@ -84,7 +84,7 @@ test('six fixed islands have small labels, no slogans and useful project topics'
     'border-radius',
     '50%',
   );
-  await expect(page.locator('[data-portal]')).toHaveCount(6);
+  await expect(page.locator('[data-portal]')).toHaveCount(7);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollHeight <= innerHeight + 1,
@@ -210,9 +210,7 @@ test('avatar button finds the personal island and opens its profile in place', a
     'about',
   );
   await page.locator('[data-station="0"]').click();
-  await expect(page.locator('[data-view-panel=about] h2')).toHaveText(
-    'Cizing24',
-  );
+  await expect(page.locator('[data-view-panel=about] h2')).toHaveText('CIZING');
   await expect(page.locator('[data-view-panel=about]')).toContainText(
     'Full-stack developer',
   );
@@ -438,7 +436,7 @@ test('autonomous people, birds, boats and water move, pause and respect reduced 
   await expect(studio).toHaveAttribute('data-ambient', 'playing');
 });
 
-test('WebGL fallback retains all six islands, topics, search and reading controls', async ({
+test('WebGL fallback retains all seven islands, topics, search and reading controls', async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -566,14 +564,37 @@ test('single and two finger dragging rotate the world and reader text keeps nati
   await ready(page);
   const client = await page.context().newCDPSession(page);
   await client.send('Emulation.setTouchEmulationEnabled', { enabled: true });
-  const canvas = page.locator('canvas'),
-    box = (await canvas.boundingBox())!,
-    y = box.height * 0.65;
+  const canvas = page.locator('canvas');
   for (const count of [1, 2]) {
     const before = await canvas.screenshot();
+    // Island labels move after rotation; start each gesture on exposed canvas.
+    const origin = await page.evaluate((count) => {
+      const canvas = document.querySelector('canvas')!;
+      const box = canvas.getBoundingClientRect();
+      for (const fy of [0.65, 0.55, 0.75, 0.45, 0.35])
+        for (const fx of [0.15, 0.3, 0.45, 0.6]) {
+          const x = box.x + box.width * fx,
+            y = box.y + box.height * fy;
+          if (x + (count - 1) * 38 + 40 > box.right - 15) continue;
+          if (
+            Array.from({ length: count }, (_, i) => i).every((i) =>
+              [0, 8, 16, 24, 32, 40].every(
+                (dx) =>
+                  document.elementFromPoint(x + i * 38 + dx, y) === canvas,
+              ),
+            )
+          )
+            return { x, y };
+        }
+      return null;
+    }, count);
+    expect(
+      origin,
+      'a clear canvas area for the complete touch gesture',
+    ).not.toBeNull();
     const points = Array.from({ length: count }, (_, i) => ({
-      x: box.width * 0.44 + i * 38,
-      y,
+      x: origin!.x + i * 38,
+      y: origin!.y,
       id: i + 1,
     }));
     await client.send('Input.dispatchTouchEvent', {

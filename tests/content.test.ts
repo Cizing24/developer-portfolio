@@ -103,9 +103,7 @@ describe('metadata', () => {
     );
   });
   it('adds consistent identity to the title', () => {
-    expect(pageTitle('作品', 'Cizing24')).toContain(
-      'Cizing24 / Software Engineer',
-    );
+    expect(pageTitle('作品', 'CIZING')).toContain('CIZING / Software Engineer');
   });
   it('escapes HTML delimiters in structured data', () => {
     expect(safeJsonLd({ name: '</script>' })).not.toContain('<');
