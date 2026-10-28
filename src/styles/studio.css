@@ -380,6 +380,17 @@
 .world-tools button > span {
   display: flex;
 }
+.world-tools button,
+.world-menu-toggle {
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.world-tools svg,
+.world-menu-toggle svg {
+  display: block;
+  flex-shrink: 0;
+}
 .world-tools button:hover:not(:disabled) {
   background: #eadfd0;
 }
@@ -423,6 +434,16 @@
 .fallback-island:nth-child(6) {
   left: 39%;
   top: 10%;
+}
+.fallback-island:nth-child(7) {
+  left: 76%;
+  top: 58%;
+  width: 16%;
+  height: 13%;
+}
+.studio:not([data-renderer='ready']) .world-portal:nth-child(7) {
+  left: 86%;
+  top: 64%;
 }
 .studio[data-renderer='ready'] .studio-fallback {
   display: none;
@@ -666,6 +687,26 @@
 .reader-principles p:not(.eyebrow) {
   font-size: 0.9rem;
   color: var(--muted);
+}
+.reader-note-category {
+  margin-top: 28px;
+}
+.reader-category-title {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #c6c6b6;
+  font-size: 0.9rem;
+  color: #7e343d;
+}
+@media (max-width: 899px) {
+  .studio[data-island='journal'] .studio-node,
+  .studio[data-island='zailongchang'] .studio-node {
+    max-width: min(140px, calc(50vw - 22px));
+  }
+}
+@media (max-height: 499px) {
+  .studio[data-island='journal'] .studio-node {
+    max-width: min(140px, calc(20vw - 14px));
+  }
 }
 .reader-contact-links a {
   display: flex;

@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-28",
+  "timezone": "Asia/Taipei",
+  "scope": "Local validation checkpoint before Git submission. Remote CI and deployment results must be verified separately.",
+  "method": "Full regression followed by targeted reruns after UI and touch-target fixes. Coverage merges matching file, title and viewport cases; this is not a claim of a second full-suite run.",
+  "unitTests": {
+    "passed": 47,
+    "failed": 0
+  },
+  "initialFullRun": {
+    "total": 116,
+    "passed": 112,
+    "failures": [
+      {
+        "title": "camera travel and reader transitions run smoothly and allow rapid interruption",
+        "project": "tablet",
+        "status": "timedOut"
+      },
+      {
+        "title": "camera travel and reader transitions run smoothly and allow rapid interruption",
+        "project": "mobile",
+        "status": "timedOut"
+      },
+      {
+        "title": "single and two finger dragging rotate the world and reader text keeps native scrolling",
+        "project": "mobile",
+        "status": "failed"
+      },
+      {
+        "title": "single and two finger dragging rotate the world and reader text keeps native scrolling",
+        "project": "small-mobile",
+        "status": "failed"
+      }
+    ]
+  },
+  "finalTargetedRun": {
+    "total": 28,
+    "passed": 28,
+    "failed": 0
+  },
+  "combinedCoverage": {
+    "total": 116,
+    "passed": 116,
+    "unresolvedFailures": 0
+  },
+  "bridgeAndCrowdFollowup": {
+    "unitTestsPassed": 50,
+    "navigationTestsPassed": 11,
+    "browserTestsPassed": 12,
+    "browserScope": "world-expansion.spec.ts across four viewports; remote full regression is tracked on the latest PR commit.",
+    "crowdSimulation": "26 pedestrians for one minute; no overlaps and each pedestrian advances during the final 20 seconds.",
+    "oncomingTraffic": "Six pedestrians from opposite ends all pass through without overlap."
+  },
+  "screenshots": [
+    "desktop-overview.png",
+    "desktop-harbor.png",
+    "mobile-overview.png",
+    "bridge-motion.png",
+    "notes.png",
+    "government-note.png",
+    "mobile-notes-island.png"
+  ]
+}

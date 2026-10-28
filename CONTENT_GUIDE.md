@@ -6,7 +6,7 @@
 
 ## 身分與聯絡
 
-`src/config.ts` 是公開資訊來源。Cizing24／GitHub 為已提供真實資料，Email、LinkedIn、resume 留空。只有確認可公開的值才加入；空值不產生假入口。履歷如設定 `/resume.pdf`，需先加入已審查檔案。不要放 token 或機密。
+`src/config.ts` 是公開資訊來源。顯示名稱統一為 CIZING，GitHub 網址保留真實帳號。Email、LinkedIn 與 resume 依當前設定呈現；只有確認可公開的值才加入，空值不產生假入口。履歷如設定 `/resume.pdf`，需先加入已審查檔案。不要放 token 或機密。
 
 ## 新增作品或文章
 

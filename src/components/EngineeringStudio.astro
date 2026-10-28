@@ -25,7 +25,7 @@ const en = locale === 'en';
 >
   <header class="world-header">
     <h1>
-      <span class="world-brand">CIZING24</span>
+      <span class="world-brand">CIZING</span>
     </h1>
     <div
       class="world-time"
@@ -80,12 +80,12 @@ const en = locale === 'en';
         role="group"
         aria-label={en ? 'Island contents' : '島嶼內容'}
       >
-        {[0, 1, 2].map((index) => (
+        {[0, 1, 2, 3, 4].map((index) => (
           <button
             type="button"
             class="studio-node"
             data-station={index}
-            hidden={index === 2}
+            hidden={index >= 2}
           >
             <span class="hotspot-dot" aria-hidden="true"></span>
             <span data-node-title>
@@ -240,8 +240,8 @@ const en = locale === 'en';
     <button
       type="button"
       data-avatar-focus
-      aria-label={en ? 'Find Cizing24' : '找到 Cizing24'}
-      title={en ? 'Find Cizing24' : '找到 Cizing24'}
+      aria-label={en ? 'Find CIZING' : '找到 CIZING'}
+      title={en ? 'Find CIZING' : '找到 CIZING'}
     >
       <WorldIcon name="user" />
     </button>
