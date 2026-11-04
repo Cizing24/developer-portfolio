@@ -35,3 +35,11 @@ SITE_URL 仍驗證真實 HTTPS origin。未配置不產生假 canonical、hrefla
 原有 24 Unit 擴充為 33；原有 E2E 的閱讀、篩選、安全與聯絡邊界保留並擴充四尺寸雙語。axe 找到 Shiki 註解色對比不足，修正高亮 token 而不關閉測試。Pixel regression 比對相同 Windows／Chromium 已檢視基準；Linux CI 執行功能、版面與 axe，不假稱跨 OS 像素一致。
 
 只 push 工作分支並建立 PR，禁止自動 merge 或部署。本輪不修改 BookFlow／AssetFlow repository、不新增付費資源。來源說明見 SOURCE_REVIEW；本輪結果見 V2_VALIDATION。
+
+# ADR-009：修補阻擋交付的 minimatch 開發工具依賴
+
+2026-11-04，Accepted。既有 CI 的 `npm audit --audit-level=moderate` 因 [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249) 失敗；`minimatch <11.0.1` 受影響，上游 ESLint／TypeScript ESLint 仍依賴 10.x。
+
+依 [npm overrides](https://docs.npmjs.com/cli/v11/configuring-npm/package-json#overrides) 固定間接依賴為 11.0.1，保留 lockfile 與稽核門檻。修補版仍提供 ESM／CommonJS 入口，Node engines 與本專案 Node 24 相容；以實際 Lint 與既有 CI 驗證跨主版本相容性。此套件僅在開發工具鏈使用，不加入網站 runtime。上游正式採用修補版後，應移除此暫時 override。
+
+不採用 `npm audit fix --force` 的 ESLint 4 降版建議，也不忽略公告或降低掃描等級。
