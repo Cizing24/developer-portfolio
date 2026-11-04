@@ -83,19 +83,23 @@
 }
 @media (max-width: 760px) {
   .world-shortcuts {
-    top: 72px;
+    top: 124px;
     left: 12px;
     padding: 0 12px;
-    max-width: calc(100% - 82px);
+    max-width: calc(100% - 24px);
     font-size: 0.75rem;
   }
   .shortcut-projects {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     column-gap: 12px;
   }
   .shortcut-more {
     gap: 0 12px;
+  }
+  .world-shortcuts a {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 }
 @media (max-height: 500px) and (orientation: landscape) {
