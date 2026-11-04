@@ -57,8 +57,22 @@ export function islandLayout(portrait: boolean): Record<IslandId, Point> {
     Object.entries(values).map(([id, [x, z]]) => [id, { x, z }]),
   ) as Record<IslandId, Point>;
 }
+export const portfolioExhibits = [
+  { x: -1.2, z: -1.6 },
+  { x: 1.2, z: -1.6 },
+  { x: -1.2, z: 1.6 },
+  { x: 1.2, z: 1.6 },
+];
 const rects: Partial<Record<IslandId, [number, number, number, number][]>> = {
-  portfolio: [[0, 0, 1.72, 1.32]],
+  portfolio: [
+    [0, 0, 1.72, 1.32],
+    ...portfolioExhibits.map(({ x, z }): [number, number, number, number] => [
+      x,
+      z,
+      0.5,
+      0.4,
+    ]),
+  ],
   journal: [[0, 0, 1.58, 0.7]],
   contact: [[0, 0, 1.25, 1]],
   about: [[1, 0.7, 1.05, 0.65]],

@@ -62,6 +62,14 @@ export function islandItems(id: IslandId, locale: Locale): IslandItem[] {
     return [
       { title: 'BookFlow', island: 'bookflow' },
       { title: 'AssetFlow', island: 'assetflow' },
+      {
+        title: locale === 'en' ? 'Cotton House' : '棉麻屋',
+        view: 'note-cotton-booking',
+      },
+      {
+        title: locale === 'en' ? 'Zailongchang' : '在隆昌',
+        island: 'zailongchang',
+      },
     ];
   if (id === 'journal')
     return locale === 'en'
@@ -109,16 +117,24 @@ export function islandItems(id: IslandId, locale: Locale): IslandItem[] {
         view: 'note-youth-village-action',
       },
     ];
+  if (id === 'about')
+    return [
+      {
+        title: locale === 'en' ? 'About CIZING' : '關於 CIZING',
+        view: 'about',
+      },
+      {
+        title: locale === 'en' ? 'Skills & evidence' : '技術與證據',
+        view: 'skills',
+      },
+      {
+        title: locale === 'en' ? 'AI collaboration' : 'AI 協作',
+        view: 'note-ai-collaboration',
+      },
+    ];
   return [
     {
-      title:
-        id === 'about'
-          ? locale === 'en'
-            ? 'About CIZING'
-            : '關於 CIZING'
-          : locale === 'en'
-            ? 'Contact details'
-            : '聯絡方式',
+      title: locale === 'en' ? 'Contact details' : '聯絡方式',
       view: id,
     },
   ];

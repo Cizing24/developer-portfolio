@@ -18,6 +18,7 @@ import {
   createWorldDomain,
   createSeaDomain,
   reefIslands,
+  portfolioExhibits,
 } from './world-map';
 
 export interface StudioScene {
@@ -454,13 +455,15 @@ export function createStudioScene(
   );
   canopy.rotation.y = Math.PI / 4;
   canopy.scale.z = 0.8;
-  for (const [i, x] of [-0.8, 0.8].entries()) {
+  for (const [i, { x, z }] of portfolioExhibits.entries()) {
     const display = new THREE.Group();
     display.userData.hotspot = i;
+    display.position.set(x, 0, z);
     portfolio.add(display);
-    box(display, 0.8, 0.12, 0.6, ink, x, 0.5, 0.8);
-    box(display, 0.7, 0.55, 0.08, i ? ink : wine, x, 0.83, 0.6);
-    pane(display, 0.53, 0.35, 0.02, x, 0.86, 0.65);
+    box(display, 0.8, 0.12, 0.6, ink, 0, 0.5, 0);
+    box(display, 0.12, 0.5, 0.12, ink, 0, 0.25, 0);
+    box(display, 0.7, 0.55, 0.08, [wine, ink, gold, rose][i]!, 0, 0.83, -0.2);
+    pane(display, 0.53, 0.35, 0.02, 0, 0.86, -0.15);
   }
   const journal = utility('journal');
   for (const [i, x] of [-0.85, 0.85].entries()) {
@@ -511,14 +514,18 @@ export function createStudioScene(
   aerial.rotation.y = 0.3;
   const about = utility('about');
   const desk = new THREE.Group();
-  desk.userData.hotspot = 0;
+  desk.userData.hotspot = 1;
   about.add(desk);
   desk.position.set(1, 0, 0.7);
   box(desk, 1.8, 0.16, 0.95, ink, 0, 0.85);
   for (const x of [-0.7, 0.7]) box(desk, 0.12, 0.8, 0.6, cream, x, 0.4);
-  box(desk, 0.8, 0.05, 0.6, 0xb9b8ad, 0, 0.98);
-  box(desk, 0.8, 0.5, 0.05, ink, 0, 1.23, -0.2);
-  pane(desk, 0.65, 0.35, 0.02, 0, 1.25, -0.16);
+  const laptop = new THREE.Group();
+  laptop.userData.hotspot = 2;
+  laptop.position.copy(desk.position);
+  about.add(laptop);
+  box(laptop, 0.8, 0.05, 0.6, 0xb9b8ad, 0, 0.98);
+  box(laptop, 0.8, 0.5, 0.05, ink, 0, 1.23, -0.2);
+  pane(laptop, 0.65, 0.35, 0.02, 0, 1.25, -0.16);
   function person(parent: THREE.Object3D, creator = false) {
     const group = new THREE.Group();
     group.userData.animated = true;
@@ -1236,26 +1243,38 @@ export function createStudioScene(
                 new THREE.Vector3(1.5, 2, 1),
               ]
             : active === 'portfolio'
-              ? [new THREE.Vector3(-1, 2, 0.5), new THREE.Vector3(1, 2, 0.5)]
-              : [new THREE.Vector3(0, 2.6, 1)];
+              ? portfolioExhibits.map(
+                  ({ x, z }) => new THREE.Vector3(x, 1.6, z + 0.2),
+                )
+              : active === 'about'
+                ? [
+                    new THREE.Vector3(0, 2.6, 1),
+                  new THREE.Vector3(-0.4, 1.1, 1.8),
+                    new THREE.Vector3(1.8, 2, 1.5),
+                  ]
+                : [new THREE.Vector3(0, 2.6, 1)];
     labels.forEach((button, index) => {
       if (button.hidden || !anchors[index]) return;
       const point = (
-        active === 'about'
+        active === 'about' && index === 0
           ? creator.group.position.clone().add(new THREE.Vector3(0, 1.8, 0))
           : island.localToWorld(anchors[index]!.clone())
       ).project(camera);
       let x = ((point.x + 1) * width) / 2;
       let y = ((1 - point.y) * height) / 2;
       // Keep the reading target stable while its character continues walking.
-      if (active === 'about') {
+      if (active === 'about' && index === 0) {
         x = width / 2;
-        y = height * 0.42;
+        y = height * 0.35;
       }
       if (width < 600 && anchors.length === 2) x += index === 0 ? -22 : 22;
-      if (width < 900 && active === 'journal') {
+      if (width < 900 && (active === 'journal' || active === 'portfolio')) {
         x = width * (index % 2 === 0 ? 0.25 : 0.75);
         y = height * 0.36 + Math.floor(index / 2) * 78;
+      }
+      if (width < 900 && active === 'about' && index > 0) {
+        x = width * (index === 1 ? 0.25 : 0.75);
+        y = height * 0.52;
       }
       if (width < 900 && active === 'zailongchang') {
         x = index === 0 ? width / 2 : width * (index === 1 ? 0.25 : 0.75);

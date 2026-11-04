@@ -276,7 +276,6 @@ const noteCategories = [
             : '這些專案也持續累積成學習紀錄。AI 協作、自己理解到哪裡，以及實際完成哪些驗證，需要分開說明；做出功能不等於每個細節都已熟練。個人的文化行動計畫也放在這份紀錄裡，並區分申請規劃與已完成成果。歡迎交流全端開發、系統維護，以及軟體工程的工作機會。'}
         </p>
       </div>
-      <SkillsIndex locale={locale} />
       <div class="reader-actions">
         <button type="button" data-open="projects">
           {en ? 'Portfolio' : '查看作品'}
@@ -285,6 +284,13 @@ const noteCategories = [
           {en ? 'Contact' : '聯絡方式'}
         </button>
       </div>
+    </section>
+    <section
+      data-view-panel="skills"
+      data-title={en ? 'Skills & evidence' : '技術與證據'}
+      hidden
+    >
+      <SkillsIndex locale={locale} />
     </section>
     <section
       data-view-panel="contact"

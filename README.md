@@ -1,6 +1,6 @@
 # 2026-11-04 求職展示更新
 
-首頁保留 V3 群島，增加四個案例、技能與聯絡的普通連結。AssetFlow 與 BookFlow 的雙語案例連結實作、流程截圖、測試及對應版本 CI；兩者皆無公開登入或 Live Demo。AssetFlow 本次確認為 Public，更新原先的私人來源標示。
+首頁以 V3 群島作為主要導航：作品島的四個展示螢幕對應四個案例，個人島的角色、工作桌與筆電連到個人介紹、技術證據和 AI 協作。原有世界選單保留可直接閱讀的連結，不在全景外加浮動選單。AssetFlow 與 BookFlow 的雙語案例連結實作、流程截圖、測試及對應版本 CI；兩者皆無公開登入或 Live Demo。AssetFlow 本次確認為 Public，更新原先的私人來源標示。
 
 技能索引位於兩語的 `/about/#skills`。AI 協作的公開範圍與證據見 [docs/AI_COLLABORATION.md](docs/AI_COLLABORATION.md)。棉麻屋不公開客戶畫面或部署網址；在隆昌使用公開首頁截圖。未取得四份原始 GIF，沒有製作替代操作錄影。
 

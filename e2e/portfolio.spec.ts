@@ -18,8 +18,7 @@ const routes = ['zh-tw', 'en'].flatMap((locale) =>
 test('localized homes, keyboard skip and main navigation', async ({ page }) => {
   await page.goto('/zh-tw/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('CIZING');
-  await expect(page.locator('.shortcut-projects a')).toHaveCount(4);
-  await expect(page.locator('.world-shortcuts')).toBeVisible();
+  await expect(page.locator('.world-shortcuts')).toHaveCount(0);
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: '跳到主要內容' })).toBeFocused();
   await page.keyboard.press('Enter');
