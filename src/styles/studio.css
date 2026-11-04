@@ -51,6 +51,62 @@
 .studio [hidden] {
   display: none !important;
 }
+.world-shortcuts {
+  position: absolute;
+  top: 92px;
+  left: 24px;
+  z-index: 4;
+  max-width: calc(100% - 112px);
+  background: var(--paper);
+  color: var(--text);
+  border: 1px solid var(--line);
+  padding: 4px 12px;
+  font-size: 0.8rem;
+}
+.shortcut-projects,
+.shortcut-more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
+}
+.shortcut-projects {
+  border-bottom: 1px solid var(--line);
+}
+.world-shortcuts a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+.world-shortcuts a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+@media (max-width: 760px) {
+  .world-shortcuts {
+    top: 72px;
+    left: 12px;
+    padding: 0 12px;
+    max-width: calc(100% - 82px);
+    font-size: 0.75rem;
+  }
+  .shortcut-projects {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 12px;
+  }
+  .shortcut-more {
+    gap: 0 12px;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .world-shortcuts {
+    top: 64px;
+    max-width: calc(100% - 90px);
+  }
+  .shortcut-projects {
+    display: flex;
+  }
+}
 .world-header {
   background: transparent;
   position: absolute;

@@ -18,6 +18,8 @@ const routes = ['zh-tw', 'en'].flatMap((locale) =>
 test('localized homes, keyboard skip and main navigation', async ({ page }) => {
   await page.goto('/zh-tw/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('CIZING');
+  await expect(page.locator('.shortcut-projects a')).toHaveCount(4);
+  await expect(page.locator('.world-shortcuts')).toBeVisible();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: '跳到主要內容' })).toBeFocused();
   await page.keyboard.press('Enter');
@@ -32,7 +34,7 @@ test('localized homes, keyboard skip and main navigation', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toContainText('CIZING');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
-test('project filtering, readable introductions, private boundary and public source', async ({
+test('project filtering, readable introductions, public source and honest demo status', async ({
   page,
 }) => {
   await page.goto('/zh-tw/projects/');
@@ -43,7 +45,11 @@ test('project filtering, readable introductions, private boundary and public sou
     .getByRole('link')
     .click();
   await expect(page.locator('.project-introduction > section')).toHaveCount(3);
-  await expect(page.locator('a[href*="assetflow-itam"]')).toHaveCount(0);
+  await expect(page.locator('.simple-project-source a')).toHaveAttribute(
+    'href',
+    'https://github.com/Cizing24/assetflow-itam',
+  );
+  await expect(page.locator('.workflow-screens figure')).toHaveCount(2);
   await expect(page.getByRole('link', { name: 'Live Demo' })).toHaveCount(0);
   await page.goto('/en/projects/bookflow/');
   await expect(page.locator('.project-introduction > section')).toHaveCount(3);

@@ -4,18 +4,59 @@ translationKey: assetflow
 title: AssetFlow ITAM
 description: 集中管理公司設備、員工領用、歸還與離職交接，讓每一台設備的去向清楚可查。
 category: IT ASSET MANAGEMENT
-tags: [Vue 3, TypeScript, Fastify, PostgreSQL, Prisma]
+tags: [Vue 3, TypeScript, Pinia, Fastify, PostgreSQL, Prisma]
 highlights: ['整理設備清冊', '辦理領用與歸還', '追蹤離職交接']
 status: 已實作・隔離展示
-visibility: private
+visibility: public
+repository: https://github.com/Cizing24/assetflow-itam
 featured: true
 order: 1
 sourceCommit: 7a698fbcd8bbffb4e46ec434a310690973aab77a
-reviewedAt: '2026-10-22'
+reviewedAt: '2026-11-04'
 cover: ../../../assets/assetflow.png
 coverAlt: AssetFlow 工作總覽實際截圖，顯示合成設備統計與操作紀錄
 ---
 
 import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
+import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 
 <ProjectIntroduction project="assetflow" locale="zh-tw" />
+
+## 從清單到交接的操作成果
+
+設備清冊、領還與離職交接若分散在訊息與試算表，難以確認設備去向。這個個人實作以 Vue 3、TypeScript 與 REST API 串起管理介面，讓異動與歷史紀錄一起保存。
+
+1. 在設備清單搜尋、篩選狀態，查看設備與使用者。
+2. 領用表單選擇可借設備與在職員工，送出後重新載入清單。
+3. 正常歸還釋放設備；故障歸還需填寫描述並建立維修。
+4. 離職交接追蹤未歸還設備，確認實際離職日期後結案，保留稽核紀錄。
+
+<ProjectWorkflow project="assetflow" locale="zh-tw" />
+
+## 核心實作與工程取捨
+
+**前端狀態與 API 回饋。** Pinia 保存登入者與權限衍生狀態；頁面透過共用 API client 處理 HTTP 與 CSRF。領還表單沿用共用 Dialog，送出成功後重新讀取資料，避免畫面保留舊的設備狀態。前端權限用於操作提示，真正授權仍由後端執行。
+
+**領用與稽核一起成功。** 生命週期服務在交易內鎖定員工與設備，檢查狀態後寫入領用、設備狀態與 audit；稽核失敗時整筆回滾。這比只在前端停用按鈕更能保護多人操作，但仍須以資料庫測試確認競態。
+
+**日期與時間各自有意義。** 預計離職日、實際離職日與交接完成時間分開保存。完成交接要求零有效領用，並驗證實際日期；不因提早歸還設備就推定員工已離職。
+
+<details>
+<summary>閱讀實作、測試與 CI 證據</summary>
+
+- [Vue 領還表單](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/src/pages/Assignments.vue)與 [Pinia 登入狀態](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/src/stores/auth.ts)
+- [生命週期交易](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/api/src/services/lifecycle.ts)與 [PostgreSQL 整合測試](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/api/test/integration.test.ts)
+- [日期契約修正 Commit](https://github.com/Cizing24/assetflow-itam/commit/7a698fbcd8bbffb4e46ec434a310690973aab77a)與[工程筆記](/zh-tw/notes/date-contracts/)
+- [該版本成功的 GitHub Actions](https://github.com/Cizing24/assetflow-itam/actions/runs/39593727102)與 [TESTING](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/TESTING.md)
+
+來源測試涵蓋同設備競爭領用、稽核失敗回滾、日期邊界與桌面／手機流程。CI 為該版本的歷史結果；本次作品集整備沒有重跑 AssetFlow 測試。
+
+</details>
+
+## AI 協作：從交接規則整理可追溯的案例
+
+本次由我指定求職定位、工程成果優先順序與公開邊界；Codex 協助追查交接服務、Vue 表單、日期測試與 CI，再整理這份案例與中英文筆記。公開的[本次協作紀錄](https://github.com/Cizing24/developer-portfolio/blob/main/docs/AI_COLLABORATION.md)記錄這個分工，不以 Commit 作者名稱推定每段程式由誰手寫。
+
+## 已知限制
+
+這是單一企業工作空間的個人實作，未提供公開登入或 Live Demo；沒有多租戶、SSO 或正式營運監控。不把歷史 CI 視為正式容量、實機手機或完整無障礙認證。原始碼於 2026-11-04 查核為 Public。

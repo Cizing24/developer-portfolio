@@ -1,0 +1,81 @@
+---
+import { Image } from 'astro:assets';
+import type { Locale } from '../lib/i18n';
+import type { ProjectId } from '../lib/project-introductions';
+import register from '../assets/workflows/asset-register.png';
+import offboarding from '../assets/workflows/asset-offboarding.png';
+import booking from '../assets/workflows/bookflow-booking.png';
+import calendar from '../assets/workflows/bookflow-calendar.png';
+interface Props {
+  project: ProjectId;
+  locale: Locale;
+}
+const { project, locale } = Astro.props;
+const en = locale === 'en';
+const images =
+  project === 'assetflow'
+    ? [
+        {
+          src: register,
+          caption: en
+            ? 'Equipment register: search, status and assignees.'
+            : '設備清單：搜尋、狀態與目前使用者。',
+        },
+        {
+          src: offboarding,
+          caption: en
+            ? 'Offboarding: outstanding devices and handover progress.'
+            : '離職交接：未歸還設備與交接進度。',
+        },
+      ]
+    : [
+        {
+          src: booking,
+          caption: en
+            ? 'Customer booking: service, staff and available time.'
+            : '顧客預約：服務、人員與可用時段。',
+        },
+        {
+          src: calendar,
+          caption: en
+            ? 'Business calendar: inspect and manage appointments.'
+            : '店家行事曆：查看與管理預約。',
+        },
+      ];
+---
+
+<div class="workflow-screens">
+  {images.map(({ src, caption }) => (
+    <figure>
+      <Image
+        src={src}
+        alt={caption}
+        widths={[480, 800, 1200]}
+        sizes="(max-width:760px) 90vw,800px"
+        loading="lazy"
+      />
+      <figcaption>{caption}</figcaption>
+    </figure>
+  ))}
+  <p>
+    {en
+      ? 'Actual system screenshots from the public repository, using synthetic test data. These still images illustrate stages of the workflow; they are not a recording or a live demo.'
+      : '公開 Repository 的實際系統截圖，使用合成測試資料。靜態畫面用來說明流程階段，並非操作錄影或線上 Demo。'}
+  </p>
+</div>
+<style>
+  .workflow-screens figure {
+    margin: 24px 0;
+  }
+  .workflow-screens img {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line);
+  }
+  .workflow-screens figcaption,
+  .workflow-screens > p {
+    color: var(--muted);
+    font-size: 0.875rem;
+    line-height: 1.7;
+  }
+</style>

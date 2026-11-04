@@ -54,6 +54,30 @@ const en = locale === 'en';
       {en ? '繁中' : 'EN'}
     </a>
   </header>
+  <nav
+    class="world-shortcuts"
+    aria-label={
+      en ? 'Projects and engineering evidence' : '作品與工程證據快速入口'
+    }
+  >
+    <div class="shortcut-projects">
+      <a href={localizedPath(locale, 'projects/assetflow')}>AssetFlow</a>
+      <a href={localizedPath(locale, 'projects/bookflow')}>BookFlow</a>
+      <a href={localizedPath(locale, 'projects') + '#cotton'}>
+        {en ? 'Cotton House' : '棉麻屋'}
+      </a>
+      <a href={localizedPath(locale, 'projects') + '#zailongchang'}>
+        {en ? 'Zailongchang' : '在隆昌'}
+      </a>
+    </div>
+    <div class="shortcut-more">
+      <a href={localizedPath(locale, 'about') + '#skills'}>
+        {en ? 'Skills & evidence' : '技術與證據'}
+      </a>
+      <a href={localizedPath(locale, 'about')}>{en ? 'About' : '關於我'}</a>
+      <a href={localizedPath(locale, 'contact')}>{en ? 'Contact' : '聯絡'}</a>
+    </div>
+  </nav>
   <div class="studio-world">
     <div class="studio-viewport" data-viewport>
       <div class="studio-fallback" aria-hidden="true">

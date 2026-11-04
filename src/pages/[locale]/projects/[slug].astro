@@ -57,7 +57,9 @@ const ids = [
           : '實際產品畫面，使用合成測試資料。'}
       </figcaption>
     </figure>
-    <Content />
+    <div class="prose engineering-case">
+      <Content />
+    </div>
     <details class="simple-project-source">
       <summary>{en ? 'Project status and source' : '專案狀態與來源'}</summary>
       <p>
@@ -81,7 +83,7 @@ const ids = [
   .simple-project-page {
     padding-bottom: 80px;
   }
-  .simple-project-page > .project-introduction {
+  .simple-project-page > .engineering-case {
     max-width: 850px;
     margin: 60px auto;
   }

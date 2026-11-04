@@ -4,7 +4,7 @@ translationKey: bookflow
 title: BookFlow SaaS
 description: 讓顧客線上選擇服務與時段，讓店家集中管理人員排班、休假與預約行事曆的預約系統。
 category: MULTI-TENANT BOOKING
-tags: [Next.js, TypeScript, PostgreSQL, Prisma]
+tags: [React, Next.js, TypeScript, PostgreSQL, Prisma]
 highlights: ['顧客線上預約', '店家管理日常營運', '多店家各自管理']
 status: 已實作・隔離展示
 visibility: public
@@ -12,11 +12,51 @@ repository: https://github.com/Cizing24/bookflow-saas
 featured: true
 order: 2
 sourceCommit: 4c913361edab42f4be2ac4a8dc28eef942947824
-reviewedAt: '2026-10-22'
+reviewedAt: '2026-11-04'
 cover: ../../../assets/bookflow.png
 coverAlt: BookFlow 專業行事曆實際截圖，呈現合成測試店家及預約資料
 ---
 
 import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
+import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 
 <ProjectIntroduction project="bookflow" locale="zh-tw" />
+
+## 從排班到管理預約的操作成果
+
+人工排程需要反覆確認服務、人員與時段，還要處理撞期與異動。這個個人實作以 React、Next.js 與 TypeScript 建立顧客預約和店家後台，API 與 PostgreSQL 共同維持多店資料邊界。
+
+1. 店家建立服務與人員，設定營業時間、工作／休息區間及停班日期。
+2. 顧客選擇服務、人員與日期，前端查詢可用時段，呈現載入、空值與失敗回饋。
+3. 送出時由伺服器重新計算時段，成功後可在店家行事曆查看紀錄。
+4. 透過私人管理連結或有權限的後台取消／改期，檢查狀態與 revision，保留異動歷史。
+
+<ProjectWorkflow project="bookflow" locale="zh-tw" />
+
+## 核心實作與工程取捨
+
+**React 表單與伺服器資料。** 表單保存服務、人員、日期、時段與送出狀態，透過 API 查詢日期與空位；服務異動需同步更新可選人員與時段。錯誤與重試有明確畫面回饋，預約結束時間和價格仍由伺服器推導。
+
+**看到空位，不等於保留成功。** 建立預約時先取得 Tenant row lock，再讀設定與占用；PostgreSQL 的 partial GiST exclusion 另外禁止有效占用區間重疊。代價是同店寫入序列化，未量測前不宣稱特定吞吐量。
+
+**重試與跨店存取是不同問題。** 店家內的冪等鍵與請求 hash 處理回應遺失後重送；伺服器 Session、Membership 授權與 tenant-scoped 查詢處理跨店存取。複合外鍵與 SQL 約束保護關聯，並未實作 PostgreSQL RLS。
+
+<details>
+<summary>閱讀實作、測試與 CI 證據</summary>
+
+- [React 預約表單](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/src/components/booking-form.tsx)與[預約服務](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/src/modules/booking/service.ts)
+- [排程與併發整合測試](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/tests/integration/scheduling.test.ts)與[權限文件](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/docs/PERMISSIONS.md)
+- [整合 PR #1](https://github.com/Cizing24/bookflow-saas/pull/1)與[該版本成功的 GitHub Actions](https://github.com/Cizing24/bookflow-saas/actions/runs/39655913415)
+- [工程取捨文件](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/docs/TECHNICAL_DEEP_DIVE.md)與[一致性筆記](/zh-tw/notes/booking-consistency/)
+
+原專案紀錄包含單元、PostgreSQL 整合、正式編譯伺服器 E2E，以及同時搶訂時僅一筆成功的情境。這是來源版本的歷史證據；本次作品集整備沒有重跑系統測試或壓力測試。
+
+</details>
+
+## AI 協作：把併發問題連回可檢查的程式
+
+本次由我指定優先展示已有成果、保留測試邊界，不增加金流或訂閱功能；Codex 協助把預約表單、交易、測試和公開 PR 連成可閱讀的案例。詳見[本次協作紀錄](https://github.com/Cizing24/developer-portfolio/blob/main/docs/AI_COLLABORATION.md)。PR 與 CI 能證明交付範圍及結果，無法單獨證明過往每項設計的人工／AI 分工。
+
+## 已知限制
+
+未提供公開登入或 Live Demo，未部署為正式 SaaS。Outbox 保存待寄通知不等於真實郵件已送達；金流、訂閱、正式郵件與容量驗證不列為已交付成果。租戶隔離為應用授權與資料庫關聯約束，不能表述為 RLS。

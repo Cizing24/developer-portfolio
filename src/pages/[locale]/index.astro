@@ -10,7 +10,9 @@ const locale = Astro.params.locale as Locale;
 
 <Base
   title={
-    locale === 'en' ? 'Explore the engineering islands.' : '走進工程群島。'
+    locale === 'en'
+      ? 'Frontend projects & engineering islands.'
+      : '前端作品與工程群島。'
   }
   immersive
   anchorMap={{ main: 'main', studio: 'studio' }}

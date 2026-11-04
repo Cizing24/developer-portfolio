@@ -4,6 +4,7 @@ import { locales, t, type Locale } from '../../../lib/i18n';
 import Base from '../../../layouts/Base.astro';
 import ProjectCard from '../../../components/ProjectCard.astro';
 import ContactCTA from '../../../components/ContactCTA.astro';
+import WebsiteCases from '../../../components/WebsiteCases.astro';
 import { sortProjects } from '../../../lib/content';
 export function getStaticPaths() {
   return locales.map((locale) => ({ params: { locale } }));
@@ -65,6 +66,9 @@ const tags = [...new Set(projects.flatMap((p) => p.data.tags))].sort();
         {copy.empty}
       </p>
     </section>
+  </div>
+  <div class="wrap">
+    <WebsiteCases locale={locale} />
   </div>
   <ContactCTA />
 </Base>

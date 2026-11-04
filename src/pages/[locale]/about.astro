@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import ContactCTA from '../../components/ContactCTA.astro';
+import SkillsIndex from '../../components/SkillsIndex.astro';
 import { locales, localizedPath, t, type Locale } from '../../lib/i18n';
 export function getStaticPaths() {
   return locales.map((locale) => ({ params: { locale } }));
@@ -59,8 +60,8 @@ const principles = en
   title={copy.about}
   description={
     en
-      ? 'CIZING’s full-stack direction: understand the problem, define contracts and verify the result.'
-      : '認識 CIZING 的全端開發方向、問題拆解方式與以可驗證成果為基礎的工程理念。'
+      ? 'CIZING’s frontend and web engineering direction, with inspectable project evidence.'
+      : '認識 CIZING 的前端／網頁開發方向、問題拆解方式與可驗證的工程成果。'
   }
 >
   <div class="wrap">
@@ -69,8 +70,8 @@ const principles = en
       <h1>{en ? 'A thoughtful approach.' : '好的工程，始於清楚的問題。'}</h1>
       <p>
         {en
-          ? 'I am CIZING. These complete software projects make requirements analysis, interface design, data modeling and verification visible.'
-          : '我是 CIZING，專注全端開發，以完整的軟體專案呈現需求分析、介面設計、資料建模與交付驗證。'}
+          ? 'I am CIZING, seeking frontend and web engineering roles. My work starts with Vue 3, React and TypeScript interfaces, and extends to APIs, data consistency and delivery verification.'
+          : '我是 CIZING，求職方向為前端／網頁工程師。以 Vue 3、React、TypeScript 的介面實作為起點，延伸到 API、資料一致性與交付驗證。'}
       </p>
     </section>
     <div class="about-grid">
@@ -117,6 +118,9 @@ const principles = en
         {copy.projects}
       </a>
     </section>
+  </div>
+  <div class="wrap">
+    <SkillsIndex locale={locale} />
   </div>
   <ContactCTA />
 </Base>
