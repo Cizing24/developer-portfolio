@@ -5,6 +5,8 @@ import { localeFromPath, entrySlug, localizedPath } from '../lib/i18n';
 import { sortProjects, publishedNotes } from '../lib/content';
 import { profile } from '../config';
 import ProjectIntroduction from './ProjectIntroduction.astro';
+import SkillsIndex from './SkillsIndex.astro';
+import WebsiteCases from './WebsiteCases.astro';
 import {
   projectTopics,
   topicTitle,
@@ -115,6 +117,7 @@ const noteCategories = [
           </article>
         ))}
       </div>
+      <WebsiteCases locale={locale} />
     </section>
     {projects.map(({ entry, Content }) => (
       <article
@@ -136,7 +139,7 @@ const noteCategories = [
             ? 'Actual product screen with synthetic test data. No live service is connected.'
             : '實際產品畫面，使用合成測試資料；此網站不連線正式服務。'}
         </p>
-        <div class="reader-prose">
+        <div class="prose reader-prose">
           <Content />
         </div>
         <button type="button" class="text-link" data-reader-share>
@@ -246,8 +249,8 @@ const noteCategories = [
       <h2>CIZING</h2>
       <p class="reader-lead">
         {en
-          ? 'Full-stack developer. My projects include BookFlow, a booking system, and AssetFlow, an IT asset management system.'
-          : '全端開發者。作品包含預約系統 BookFlow，以及 IT 資產管理系統 AssetFlow。'}
+          ? 'Frontend and web engineering. My projects include BookFlow, a booking system, and AssetFlow, an IT asset management system.'
+          : '前端／網頁工程師求職作品。包含預約系統 BookFlow，以及 IT 資產管理系統 AssetFlow。'}
       </p>
       <div class="prose reader-prose">
         <h3>
@@ -273,6 +276,7 @@ const noteCategories = [
             : '這些專案也持續累積成學習紀錄。AI 協作、自己理解到哪裡，以及實際完成哪些驗證，需要分開說明；做出功能不等於每個細節都已熟練。個人的文化行動計畫也放在這份紀錄裡，並區分申請規劃與已完成成果。歡迎交流全端開發、系統維護，以及軟體工程的工作機會。'}
         </p>
       </div>
+      <SkillsIndex locale={locale} />
       <div class="reader-actions">
         <button type="button" data-open="projects">
           {en ? 'Portfolio' : '查看作品'}

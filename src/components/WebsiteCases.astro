@@ -1,0 +1,146 @@
+---
+import { Image } from 'astro:assets';
+import { localizedPath, type Locale } from '../lib/i18n';
+import zailongchang from '../assets/workflows/zailongchang.png';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const en = locale === 'en';
+---
+
+<section
+  class="website-cases"
+  aria-label={en ? 'Website experience' : '實際網站經驗'}
+>
+  <h2>{en ? 'Websites in practice.' : '實際網站經驗。'}</h2>
+  <div class="website-list">
+    <article id="cotton">
+      <div
+        class="cotton-summary"
+        role="img"
+        aria-label={
+          en
+            ? 'Cotton House: booking workflow summary, not a system screenshot.'
+            : '棉麻屋：預約流程摘要，非系統截圖。'
+        }
+      >
+        <strong>{en ? 'Cotton House' : '棉麻屋'}</strong>
+        <span>
+          {en
+            ? 'Choose a time · Enter details · Confirm'
+            : '選擇時段・填寫資料・確認結果'}
+        </span>
+        <small>
+          {en
+            ? 'Workflow summary / no client screenshot'
+            : '流程摘要／未公開客戶畫面'}
+        </small>
+      </div>
+      <h3>{en ? 'Cotton House booking' : '棉麻屋預約'}</h3>
+      <p>
+        {en
+          ? 'Client-work summary: booking steps, error feedback and maintenance considerations. Client data, admin screens, source and deployment URL remain restricted.'
+          : '接案公開摘要：預約步驟、錯誤回饋與後續維護考量。保留客戶資料、後台、原始碼與部署網址的公開限制。'}
+      </p>
+      <a class="text-link" href={localizedPath(locale, 'notes/cotton-booking')}>
+        {en ? 'Read the public summary' : '閱讀接案公開摘要'}
+      </a>
+    </article>
+    <article id="zailongchang">
+      <figure>
+        <Image
+          src={zailongchang}
+          alt={
+            en
+              ? 'Public Zailongchang homepage captured on 2026-11-04.'
+              : '2026-11-04 擷取的在隆昌公開首頁。'
+          }
+          widths={[480, 800, 1280]}
+          sizes="(max-width:760px) 90vw,45vw"
+          loading="lazy"
+        />
+        <figcaption>
+          {en
+            ? 'Public homepage / captured 2026-11-04'
+            : '公開首頁／2026-11-04 擷取'}
+        </figcaption>
+      </figure>
+      <h3>{en ? 'Zailongchang' : '在隆昌'}</h3>
+      <p>
+        {en
+          ? 'A public website for local introductions, cultural stories and exhibitions. The existing development note covers content organization and publication boundaries; cultural plans are separate from completed outcomes.'
+          : '整理地方介紹、文化故事與展覽的公開網站。既有開發筆記說明資訊架構與發布邊界；文化計畫與已完成成果分開記錄。'}
+      </p>
+      <div class="website-links">
+        <a
+          class="text-link"
+          href={localizedPath(locale, 'notes/zailongchang-development')}
+        >
+          {en ? 'Read the development note' : '閱讀網站開發筆記'}
+        </a>
+        <a class="text-link" href="https://zailongchang.tw/">
+          {en ? 'Visit website' : '前往公開網站'}
+        </a>
+      </div>
+    </article>
+  </div>
+</section>
+<style>
+  .website-cases {
+    margin-block: 64px;
+  }
+  .website-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+  article {
+    min-width: 0;
+  }
+  figure {
+    margin: 0;
+  }
+  img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1280/850;
+    object-fit: cover;
+    border: 1px solid var(--line);
+  }
+  figcaption,
+  small {
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .cotton-summary {
+    aspect-ratio: 1280/850;
+    background: var(--surface);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+  }
+  .cotton-summary strong {
+    font: clamp(1.5rem, 3vw, 2.5rem)/1.3 var(--display);
+  }
+  .website-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+  }
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  h3 {
+    margin-top: 24px;
+  }
+  @media (max-width: 760px) {
+    .website-list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

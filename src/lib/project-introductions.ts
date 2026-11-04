@@ -164,8 +164,8 @@ export function projectIntroduction(project: ProjectId, locale: Locale) {
           },
         ],
     status: en
-      ? 'Implemented as a private project. Source code is private; no public login or live demo is provided.'
-      : '已完成專案實作，原始碼為私人專案，未提供公開登入或線上 Demo。',
+      ? 'Personal project with public source code. No public login or live demo is provided.'
+      : '個人實作專案，原始碼已公開；未提供公開登入或線上 Demo。',
   };
 }
 export function topicTitle(topic: ProjectTopic, locale: Locale) {

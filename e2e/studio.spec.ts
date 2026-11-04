@@ -210,10 +210,15 @@ test('avatar button finds the personal island and opens its profile in place', a
     'about',
   );
   await page.locator('[data-station="0"]').click();
-  await expect(page.locator('[data-view-panel=about] h2')).toHaveText('CIZING');
-  await expect(page.locator('[data-view-panel=about]')).toContainText(
-    'Full-stack developer',
+  await expect(page.locator('[data-view-panel=about] > h2')).toHaveText(
+    'CIZING',
   );
+  await expect(page.locator('[data-view-panel=about]')).toContainText(
+    'Frontend and web engineering',
+  );
+  await expect(
+    page.locator('[data-view-panel=about] .skills-index dt'),
+  ).toHaveCount(5);
 });
 
 test('topic dialogs preserve project, language and history across reloads and legacy links', async ({

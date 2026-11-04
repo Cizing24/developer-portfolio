@@ -1,3 +1,11 @@
+# 2026-11-04 維護補充
+
+現行案例由 `ProjectIntroduction.astro` 的簡介與雙語 MDX 工程內容組成，`ProjectWorkflow.astro` 使用已審核的合成資料截圖。`WebsiteCases.astro` 共用實際網站經驗摘要，`SkillsIndex.astro` 將能力連到案例與筆記。新增內容須同時維護兩語，不增加產品後端或虛構操作展示。
+
+首頁 `world-shortcuts` 為普通連結，不依賴 Three.js、dialog 或 JavaScript；保留既有互動世界與 no-JS 備援。AssetFlow 的 Public 狀態已於 2026-11-04 查核，未來使用來源時仍須重新確認。內部來源審查與交付報告保留在 Repository 外，不得提交私人筆記索引。
+
+---
+
 > 2026-10-23 更新：首頁與專案介紹已改為 V3 全螢幕互動群島；目前行為與內容維護以 [互動網站說明](docs/INTERACTIVE_WORLD.md) 為準。以下 V2 內容保留作為歷史決策紀錄，六步流程與 13 章案例不再是本輪驗收要求。
 
 # V2 內容管理

@@ -4,7 +4,7 @@ translationKey: assetflow
 title: AssetFlow ITAM
 description: An internal IT workspace for equipment records, employee assignments, returns and offboarding handovers.
 category: IT ASSET MANAGEMENT
-tags: [Vue 3, TypeScript, Fastify, PostgreSQL, Prisma]
+tags: [Vue 3, TypeScript, Pinia, Fastify, PostgreSQL, Prisma]
 highlights:
   [
     'Maintain an equipment register',
@@ -12,15 +12,56 @@ highlights:
     'Complete employee handovers',
   ]
 status: Implemented · isolated showcase
-visibility: private
+visibility: public
+repository: https://github.com/Cizing24/assetflow-itam
 featured: true
 order: 1
 sourceCommit: 7a698fbcd8bbffb4e46ec434a310690973aab77a
-reviewedAt: '2026-10-22'
+reviewedAt: '2026-11-04'
 cover: ../../../assets/assetflow.png
 coverAlt: AssetFlow dashboard with synthetic employees and equipment; actual application screenshot
 ---
 
 import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
+import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 
 <ProjectIntroduction project="assetflow" locale="en" />
+
+## From equipment register to handover
+
+Spreadsheets and messages make it difficult to track equipment, returns and employee handovers. This personal project connects a Vue 3 and TypeScript workspace to REST APIs, keeping changes and their history together.
+
+1. Search and filter the equipment register to inspect status and assignees.
+2. Select available equipment and an active employee in the assignment form; reload the list after submission.
+3. Release equipment on return, or require a fault description and create a repair record.
+4. Track outstanding devices during offboarding, confirm the actual departure date and close the handover with an audit trail.
+
+<ProjectWorkflow project="assetflow" locale="en" />
+
+## Implementation and tradeoffs
+
+**Frontend state and API feedback.** Pinia holds the session user and derived permissions. A shared API client handles HTTP and CSRF. Assignment forms reuse a Dialog and reload data after success to avoid stale device state. UI permissions guide interaction; the server still enforces authorization.
+
+**Assignment and audit commit together.** The lifecycle service locks the employee and asset inside a transaction, checks current state, and writes the assignment, equipment state and audit event. Audit failure rolls back the operation. Disabling a button alone cannot provide this protection against concurrent users.
+
+**Dates describe different facts.** Planned departure, actual departure and handover completion are separate fields. Closure requires no active assignments and an explicit valid departure date. An early equipment return does not imply that an employee has already left.
+
+<details>
+<summary>Inspect implementation, tests and CI evidence</summary>
+
+- [Vue assignment form](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/src/pages/Assignments.vue) and [Pinia session state](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/src/stores/auth.ts)
+- [Lifecycle transactions](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/api/src/services/lifecycle.ts) and [PostgreSQL integration tests](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/api/test/integration.test.ts)
+- [Date-contract fix](https://github.com/Cizing24/assetflow-itam/commit/7a698fbcd8bbffb4e46ec434a310690973aab77a) and [engineering note](/en/notes/date-contracts/)
+- [Successful CI for this revision](https://github.com/Cizing24/assetflow-itam/actions/runs/39593727102) and [TESTING](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/TESTING.md)
+
+Source tests cover competing assignments, audit rollback, date boundaries and desktop/mobile workflows. CI is historical evidence for this revision; AssetFlow tests were not rerun during this portfolio update.
+
+</details>
+
+## AI collaboration: trace the handover rules
+
+For this update, I set the job-search direction, engineering priorities and publication boundaries. Codex traced the handover service, Vue forms, date tests and CI, then helped prepare this case and its bilingual notes. The [collaboration record](https://github.com/Cizing24/developer-portfolio/blob/main/docs/AI_COLLABORATION.md) documents that scope. A commit author name does not establish who hand-wrote each line.
+
+## Known limits
+
+A personal implementation for one company workspace, with no public login or live demo. Multi-tenancy, SSO and production monitoring are outside its scope. Historical CI does not certify production capacity, physical phones or full accessibility compliance. The repository was confirmed Public on 2026-11-04.

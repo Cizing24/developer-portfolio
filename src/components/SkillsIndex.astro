@@ -1,0 +1,126 @@
+---
+import { localizedPath, type Locale } from '../lib/i18n';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const en = locale === 'en';
+const rows = [
+  {
+    title: 'Frontend',
+    text: en
+      ? 'Vue 3, TypeScript and Pinia in AssetFlow; React and Next.js in BookFlow. Forms, session state, loading and error feedback.'
+      : 'AssetFlow 的 Vue 3、TypeScript、Pinia；BookFlow 的 React、Next.js。以表單、登入狀態、載入與錯誤回饋呈現使用經驗。',
+    links: [
+      ['AssetFlow', 'projects/assetflow'],
+      ['BookFlow', 'projects/bookflow'],
+    ],
+  },
+  {
+    title: 'Backend & API',
+    text: en
+      ? 'REST APIs, runtime validation and server authorization. Follow the interface through its API boundary.'
+      : 'REST API、執行期驗證與伺服器授權。從介面追到請求驗證與前後端分工。',
+    links: [
+      [en ? 'Booking and permissions' : '預約與權限', 'projects/bookflow'],
+    ],
+  },
+  {
+    title: 'Database',
+    text: en
+      ? 'PostgreSQL and Prisma: relationships, transactions, date semantics and concurrency constraints.'
+      : 'PostgreSQL、Prisma：資料關係、交易、日期語意與併發約束。',
+    links: [
+      [en ? 'Date contracts' : '日期契約', 'notes/date-contracts'],
+      [en ? 'Booking consistency' : '預約一致性', 'notes/booking-consistency'],
+    ],
+  },
+  {
+    title: 'Testing & DevOps',
+    text: en
+      ? 'Unit, real-database integration, browser tests and GitHub Actions. Case studies link to revision-specific historical CI.'
+      : 'Unit、真實資料庫 Integration、瀏覽器測試與 GitHub Actions。案例連到對應版本的歷史 CI，區分來源結果與本次驗證。',
+    links: [
+      ['AssetFlow CI', 'projects/assetflow'],
+      ['BookFlow CI', 'projects/bookflow'],
+    ],
+  },
+  {
+    title: 'AI Collaboration',
+    text: en
+      ? 'I set goals, priorities and publication boundaries. Codex helps trace code, implement changes and assemble evidence; unsupported authorship claims stay pending.'
+      : '我指定目標、優先順序與公開邊界；Codex 協助追查程式、實作修改及整理證據。沒有紀錄的作者分工保留待確認。',
+    links: [
+      [en ? 'Collaboration cases' : '協作案例與證據', 'notes/ai-collaboration'],
+    ],
+  },
+];
+---
+
+<section id="skills" class="skills-index">
+  <h2>{en ? 'Skills, connected to evidence.' : '讓技術能力連到工程證據。'}</h2>
+  <p>
+    {en
+      ? 'Project experience with inspectable examples. Implementation does not imply mastery of every detail.'
+      : '以下以可檢查的專案呈現使用經驗；實作完成不等於每個細節皆已精通。'}
+  </p>
+  <dl>
+    {rows.map((row) => (
+      <div>
+        <dt>{row.title}</dt>
+        <dd>
+          <p>{row.text}</p>
+          <div class="skill-links">
+            {row.links.map(([label, path]) => (
+              <a class="text-link" href={localizedPath(locale, path)}>
+                {label}
+              </a>
+            ))}
+          </div>
+        </dd>
+      </div>
+    ))}
+  </dl>
+</section>
+<style>
+  .skills-index {
+    margin-block: 64px;
+  }
+  .skills-index > p {
+    max-width: 70ch;
+    color: var(--muted);
+  }
+  dl > div {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) 3fr;
+    gap: 24px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  dt {
+    font-weight: 600;
+  }
+  dd {
+    margin: 0;
+    min-width: 0;
+  }
+  dd p {
+    margin: 0 0 12px;
+  }
+  .skill-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+  }
+  .skill-links a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  @media (max-width: 760px) {
+    dl > div {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+  }
+</style>

@@ -24,7 +24,7 @@ export const dictionaries = {
     menu: '選單',
     navigation: '主要導覽',
     description:
-      '從使用者流程到資料一致性，以完整專案呈現軟體工程的思考與實踐。',
+      'CIZING 的前端／網頁工程師作品集：Vue 3、React、TypeScript 介面實作，連結 API、資料一致性與測試證據。',
     workTitle: '讓作品說明，\n我如何思考。',
     allProjects: '所有作品',
     case: '閱讀完整案例',
@@ -66,7 +66,7 @@ export const dictionaries = {
     menu: 'Menu',
     navigation: 'Main navigation',
     description:
-      'From user journeys to data consistency: software engineering explained through complete, verifiable projects.',
+      'CIZING’s frontend and web engineering portfolio: Vue 3, React and TypeScript interfaces connected to APIs, data consistency and test evidence.',
     workTitle: 'The work explains\nthe thinking.',
     allProjects: 'All projects',
     case: 'Read the case study',

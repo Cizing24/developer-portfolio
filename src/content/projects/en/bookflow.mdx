@@ -4,7 +4,7 @@ translationKey: bookflow
 title: BookFlow SaaS
 description: A booking system where customers find services and available times, and businesses manage staff schedules and appointments.
 category: MULTI-TENANT BOOKING
-tags: [Next.js, TypeScript, PostgreSQL, Prisma]
+tags: [React, Next.js, TypeScript, PostgreSQL, Prisma]
 highlights:
   ['Book an appointment', 'Manage the working day', 'Keep businesses separate']
 status: Implemented · isolated showcase
@@ -13,11 +13,51 @@ repository: https://github.com/Cizing24/bookflow-saas
 featured: true
 order: 2
 sourceCommit: 4c913361edab42f4be2ac4a8dc28eef942947824
-reviewedAt: '2026-10-22'
+reviewedAt: '2026-11-04'
 cover: ../../../assets/bookflow.png
 coverAlt: BookFlow calendar with synthetic business and bookings; actual application screenshot
 ---
 
 import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
+import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 
 <ProjectIntroduction project="bookflow" locale="en" />
+
+## From scheduling to booking management
+
+Manual scheduling means repeatedly checking services, staff and availability while handling conflicts and changes. This personal project uses React, Next.js and TypeScript for customer booking and business management, with APIs and PostgreSQL protecting tenant boundaries.
+
+1. Create services and staff; configure opening hours, working/break intervals and days off.
+2. Select a service, staff member and date. The form requests available times and provides loading, empty and error states.
+3. Recalculate availability on the server at submission, then inspect the appointment in the business calendar.
+4. Cancel or reschedule through a private management link or an authorized dashboard, checking status and revision while preserving history.
+
+<ProjectWorkflow project="bookflow" locale="en" />
+
+## Implementation and tradeoffs
+
+**React forms and server data.** The form holds service, staff, date, time and submission state, and requests available dates and slots through APIs. A service change must update staff eligibility and times. Errors and retries receive visible feedback; the server derives end time and price.
+
+**Seeing a slot does not reserve it.** Booking acquires a Tenant row lock before reading configuration and occupied times. A PostgreSQL partial GiST exclusion constraint also prevents overlapping active occupancy. Writes within one business are serialized; no throughput claim is made without measurement.
+
+**Retries and tenant access are separate concerns.** Tenant-scoped idempotency keys and request hashes handle lost responses and retries. Server sessions, Membership authorization and scoped queries handle tenant access. Composite foreign keys and SQL constraints protect relationships; PostgreSQL RLS is not implemented.
+
+<details>
+<summary>Inspect implementation, tests and CI evidence</summary>
+
+- [React booking form](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/src/components/booking-form.tsx) and [booking service](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/src/modules/booking/service.ts)
+- [Scheduling and concurrency tests](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/tests/integration/scheduling.test.ts) and [permissions](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/docs/PERMISSIONS.md)
+- [Integration PR #1](https://github.com/Cizing24/bookflow-saas/pull/1) and [successful CI for this revision](https://github.com/Cizing24/bookflow-saas/actions/runs/39655913415)
+- [Technical tradeoffs](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/docs/TECHNICAL_DEEP_DIVE.md) and [consistency note](/en/notes/booking-consistency/)
+
+Source records include unit tests, PostgreSQL integration, compiled-server E2E and concurrent booking with one successful reservation. These are historical results for the source revision. System tests and load tests were not rerun during this portfolio update.
+
+</details>
+
+## AI collaboration: connect concurrency to inspectable code
+
+For this update, I prioritized existing work and explicit verification boundaries, without adding payments or subscriptions. Codex helped connect the booking form, transactions, tests and public PR into a readable case. The [collaboration record](https://github.com/Cizing24/developer-portfolio/blob/main/docs/AI_COLLABORATION.md) documents this work. The PR and CI establish scope and results, but cannot independently prove past human/AI responsibility for every design decision.
+
+## Known limits
+
+No public login or live demo is provided; this is not an operating production SaaS. An Outbox record does not prove email delivery. Payments, subscriptions, production email and capacity validation are not claimed as delivered outcomes. Tenant isolation uses application authorization and database relationship constraints, not RLS.

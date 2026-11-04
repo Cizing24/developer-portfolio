@@ -127,7 +127,7 @@ test('independent harbor island exposes bounded bilingual notes and a richer pro
     expect(await client.locator('a[href^="https:"]').count()).toBe(0);
     await page.keyboard.press('Escape');
     await open(page, 'about', 'about');
-    await expect(page.locator('[data-view-panel=about] h2')).toHaveText(
+    await expect(page.locator('[data-view-panel=about] > h2')).toHaveText(
       'CIZING',
     );
     await expect(page.locator('[data-view-panel=about] h3')).toHaveCount(3);

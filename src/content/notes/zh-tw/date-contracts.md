@@ -24,7 +24,7 @@ DATE 的 API 契約是 `YYYY-MM-DD`，不代表 UTC 午夜或台灣午夜的一�
 
 台灣凌晨時，UTC 仍可能是前一天。使用 ISO timestamp 的前十碼取「今天」，會讓預計歸還與實際離職驗證在午夜附近出錯。
 
-以下為獨立說明範例，不是私人原始碼：
+以下為獨立說明範例：
 
 ```ts
 const instant = new Date('2026-10-21T16:30:00Z');
@@ -43,6 +43,10 @@ const display = new Intl.DateTimeFormat('zh-TW', {
 
 ## 驗證邊界
 
-原專案記錄涵蓋日期轉換、台灣午夜與交接流程回歸。本網站未重新執行私人專案測試，也不推定歷史錯填的日期可以自動修正；那需要外部人事事實。
+原專案記錄涵蓋日期轉換、台灣午夜與交接流程回歸。本次未重新執行 AssetFlow 測試，也不推定歷史錯填的日期可以自動修正；那需要外部人事事實。Repository 於 2026-11-04 查核為 Public。
+
+- [共用日期工具](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/packages/shared/src/dates.ts)
+- [日期回歸測試](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/test/dates.test.ts)
+- [交接交易](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/api/src/services/lifecycle.ts)與[對應版本 CI](https://github.com/Cizing24/assetflow-itam/actions/runs/39593727102)
 
 [閱讀 AssetFlow 案例](/zh-tw/projects/assetflow/)

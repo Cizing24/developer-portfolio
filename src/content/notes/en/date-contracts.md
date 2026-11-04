@@ -24,7 +24,7 @@ Event times are UTC instants transmitted as ISO strings with Z and displayed in 
 
 Around midnight in Taiwan, UTC can still be on the previous day. Taking the first ten characters of an ISO timestamp for today can break expected-return and actual-departure validation.
 
-This is an independent explanatory example, not private source code:
+This is an independent explanatory example:
 
 ```ts
 const instant = new Date('2026-10-21T16:30:00Z');
@@ -43,6 +43,10 @@ Field validation cannot replace concurrency control. Concurrency control cannot 
 
 ## Verification boundaries
 
-The source project records regression coverage for date conversion, Taiwan midnight and offboarding. This portfolio does not rerun private-project tests or assume historical wrong dates can be corrected automatically; that requires external personnel facts.
+The source project records regression coverage for date conversion, Taiwan midnight and offboarding. This update did not rerun AssetFlow tests or assume historical wrong dates can be corrected automatically; that requires external personnel facts. The repository was confirmed Public on 2026-11-04.
+
+- [Shared date utilities](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/packages/shared/src/dates.ts)
+- [Date regression tests](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/test/dates.test.ts)
+- [Handover transaction](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/api/src/services/lifecycle.ts) and [revision-specific CI](https://github.com/Cizing24/assetflow-itam/actions/runs/39593727102)
 
 [Read the AssetFlow case study](/en/projects/assetflow/)
