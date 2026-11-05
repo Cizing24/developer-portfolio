@@ -51,66 +51,6 @@
 .studio [hidden] {
   display: none !important;
 }
-.world-shortcuts {
-  position: absolute;
-  top: 92px;
-  left: 24px;
-  z-index: 4;
-  max-width: calc(100% - 112px);
-  background: var(--paper);
-  color: var(--text);
-  border: 1px solid var(--line);
-  padding: 4px 12px;
-  font-size: 0.8rem;
-}
-.shortcut-projects,
-.shortcut-more {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 20px;
-}
-.shortcut-projects {
-  border-bottom: 1px solid var(--line);
-}
-.world-shortcuts a {
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-}
-.world-shortcuts a:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-@media (max-width: 760px) {
-  .world-shortcuts {
-    top: 124px;
-    left: 12px;
-    padding: 0 12px;
-    max-width: calc(100% - 24px);
-    font-size: 0.75rem;
-  }
-  .shortcut-projects {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    column-gap: 12px;
-  }
-  .shortcut-more {
-    gap: 0 12px;
-  }
-  .world-shortcuts a {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-}
-@media (max-height: 500px) and (orientation: landscape) {
-  .world-shortcuts {
-    top: 64px;
-    max-width: calc(100% - 90px);
-  }
-  .shortcut-projects {
-    display: flex;
-  }
-}
 .world-header {
   background: transparent;
   position: absolute;
@@ -364,6 +304,21 @@
 .index-row {
   border-bottom: 1px solid #d9dbcf;
 }
+.index-reading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #d9dbcf;
+  font-size: 0.8rem;
+}
+.index-reading a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 .index-island {
   display: flex;
   align-items: center;
@@ -556,6 +511,18 @@
   background: var(--paper);
   color: var(--text);
   border-radius: 12px;
+}
+.studio:not([data-renderer='ready']) .studio-labels {
+  position: absolute;
+  inset: 44% 20px auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.studio:not([data-renderer='ready']) .studio-node {
+  position: static;
+  transform: none;
+  max-width: none;
 }
 .world-nojs h2 {
   font-size: 1.8rem;

@@ -216,9 +216,6 @@ test('avatar button finds the personal island and opens its profile in place', a
   await expect(page.locator('[data-view-panel=about]')).toContainText(
     'Frontend and web engineering',
   );
-  await expect(
-    page.locator('[data-view-panel=about] .skills-index dt'),
-  ).toHaveCount(5);
 });
 
 test('topic dialogs preserve project, language and history across reloads and legacy links', async ({
@@ -249,6 +246,33 @@ test('topic dialogs preserve project, language and history across reloads and le
   ).toBeVisible();
   await page.goBack();
   await expect(reader).not.toBeVisible();
+});
+
+test('case exhibits and skills stay integrated with their islands', async ({
+  page,
+}) => {
+  await page.goto('/en/');
+  await visit(page, 'portfolio');
+  await page.locator('[data-menu-close]').click();
+  await expect(page.locator('[data-station]:visible')).toHaveCount(4);
+  await page.locator('[data-station="2"]').click();
+  await expect(
+    page.locator('[data-view-panel=note-cotton-booking]'),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/\/en\/\?.*view=note-cotton-booking/);
+  await page.keyboard.press('Escape');
+  await visit(page, 'about');
+  await page.locator('[data-menu-close]').click();
+  await page.locator('[data-station="1"]').click();
+  await expect(
+    page.locator('[data-view-panel=skills] .skills-index dt'),
+  ).toHaveCount(5);
+  await page.keyboard.press('Escape');
+  await page.locator('[data-station="2"]').click();
+  await expect(
+    page.locator('[data-view-panel=note-ai-collaboration]'),
+  ).toBeVisible();
+  await expect(page.locator('.world-shortcuts')).toHaveCount(0);
 });
 
 test('camera travel and reader transitions run smoothly and allow rapid interruption', async ({

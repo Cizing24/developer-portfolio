@@ -2,7 +2,7 @@
 
 現行案例由 `ProjectIntroduction.astro` 的簡介與雙語 MDX 工程內容組成，`ProjectWorkflow.astro` 使用已審核的合成資料截圖。`WebsiteCases.astro` 共用實際網站經驗摘要，`SkillsIndex.astro` 將能力連到案例與筆記。新增內容須同時維護兩語，不增加產品後端或虛構操作展示。
 
-首頁 `world-shortcuts` 為普通連結，不依賴 Three.js、dialog 或 JavaScript；保留既有互動世界與 no-JS 備援。AssetFlow 的 Public 狀態已於 2026-11-04 查核，未來使用來源時仍須重新確認。內部來源審查與交付報告保留在 Repository 外，不得提交私人筆記索引。
+首頁入口統一由 `world-config.ts` 的島嶼內容、場景物件與同頁閱覽室提供；作品島有四個展示熱點，個人島有介紹、技能與 AI 協作三個入口。普通閱讀連結收進既有世界選單，no-JS 保留獨立頁面備援，不在世界外加浮動入口。AssetFlow 的 Public 狀態已於 2026-11-04 查核，未來使用來源時仍須重新確認。內部來源審查與交付報告保留在 Repository 外，不得提交私人筆記索引。
 
 ---
 
