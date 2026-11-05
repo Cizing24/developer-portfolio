@@ -20,7 +20,7 @@ coverAlt: AssetFlow 工作總覽實際截圖，顯示合成設備統計與操作
 import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
 import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 
-<ProjectIntroduction project="assetflow" locale="zh-tw" />
+<ProjectIntroduction project="assetflow" locale="zh-tw" topic="purpose" />
 
 ## 從清單到交接的操作成果
 
@@ -33,6 +33,10 @@ import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 
 <ProjectWorkflow project="assetflow" locale="zh-tw" />
 
+<ProjectIntroduction project="assetflow" locale="zh-tw" topic="features" />
+
+<ProjectIntroduction project="assetflow" locale="zh-tw" topic="architecture" />
+
 ## 核心實作與工程取捨
 
 **前端狀態與 API 回饋。** Pinia 保存登入者與權限衍生狀態；頁面透過共用 API client 處理 HTTP 與 CSRF。領還表單沿用共用 Dialog，送出成功後重新讀取資料，避免畫面保留舊的設備狀態。前端權限用於操作提示，真正授權仍由後端執行。
@@ -41,7 +45,7 @@ import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 
 **日期與時間各自有意義。** 預計離職日、實際離職日與交接完成時間分開保存。完成交接要求零有效領用，並驗證實際日期；不因提早歸還設備就推定員工已離職。
 
-<details>
+<details id="engineering-evidence">
 <summary>閱讀實作、測試與 CI 證據</summary>
 
 - [Vue 領還表單](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/src/pages/Assignments.vue)與 [Pinia 登入狀態](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/src/stores/auth.ts)
@@ -50,6 +54,8 @@ import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 - [該版本成功的 GitHub Actions](https://github.com/Cizing24/assetflow-itam/actions/runs/39593727102)與 [TESTING](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/TESTING.md)
 
 來源測試涵蓋同設備競爭領用、稽核失敗回滾、日期邊界與桌面／手機流程。CI 為該版本的歷史結果；本次作品集整備沒有重跑 AssetFlow 測試。
+
+- [此版本的本機重現說明](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/README.md)
 
 </details>
 

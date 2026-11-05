@@ -21,7 +21,7 @@ coverAlt: BookFlow calendar with synthetic business and bookings; actual applica
 import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
 import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 
-<ProjectIntroduction project="bookflow" locale="en" />
+<ProjectIntroduction project="bookflow" locale="en" topic="purpose" />
 
 ## From scheduling to booking management
 
@@ -34,6 +34,10 @@ Manual scheduling means repeatedly checking services, staff and availability whi
 
 <ProjectWorkflow project="bookflow" locale="en" />
 
+<ProjectIntroduction project="bookflow" locale="en" topic="features" />
+
+<ProjectIntroduction project="bookflow" locale="en" topic="architecture" />
+
 ## Implementation and tradeoffs
 
 **React forms and server data.** The form holds service, staff, date, time and submission state, and requests available dates and slots through APIs. A service change must update staff eligibility and times. Errors and retries receive visible feedback; the server derives end time and price.
@@ -42,7 +46,7 @@ Manual scheduling means repeatedly checking services, staff and availability whi
 
 **Retries and tenant access are separate concerns.** Tenant-scoped idempotency keys and request hashes handle lost responses and retries. Server sessions, Membership authorization and scoped queries handle tenant access. Composite foreign keys and SQL constraints protect relationships; PostgreSQL RLS is not implemented.
 
-<details>
+<details id="engineering-evidence">
 <summary>Inspect implementation, tests and CI evidence</summary>
 
 - [React booking form](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/src/components/booking-form.tsx) and [booking service](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/src/modules/booking/service.ts)
@@ -51,6 +55,8 @@ Manual scheduling means repeatedly checking services, staff and availability whi
 - [Technical tradeoffs](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/docs/TECHNICAL_DEEP_DIVE.md) and [consistency note](/en/notes/booking-consistency/)
 
 Source records include unit tests, PostgreSQL integration, compiled-server E2E and concurrent booking with one successful reservation. These are historical results for the source revision. System tests and load tests were not rerun during this portfolio update.
+
+- [Local setup at this revision](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/README.md)
 
 </details>
 

@@ -1,0 +1,373 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { entrySlug, localizedPath, t, type Locale } from '../lib/i18n';
+interface Props {
+  locale: Locale;
+  notes: CollectionEntry<'notes'>[];
+}
+const { locale, notes } = Astro.props;
+const en = locale === 'en';
+const copy = t(locale);
+const noteItem = (entry: CollectionEntry<'notes'>) => ({
+  title: entry.data.title,
+  description: entry.data.description,
+  tags: entry.data.tags,
+  href: localizedPath(locale, `notes/${entrySlug(entry.id)}`),
+});
+const caseItem = (
+  project: string,
+  title: string,
+  description: string,
+  tags: string[],
+  section: string,
+) => ({
+  title,
+  description,
+  tags,
+  href: localizedPath(locale, `projects/${project}`) + section,
+});
+const groups = [
+  {
+    id: 'frontend',
+    title: en ? 'Frontend engineering' : '前端工程',
+    items: [
+      caseItem(
+        'assetflow',
+        en
+          ? 'Vue and Pinia in the equipment workflow'
+          : '設備流程中的 Vue 與 Pinia',
+        en
+          ? 'Follow session state, permission cues and a real equipment list.'
+          : '從實際設備清冊追查登入狀態、權限提示與表單回饋。',
+        ['Vue 3', 'Pinia', 'TypeScript'],
+        '#product-workflow',
+      ),
+      caseItem(
+        'bookflow',
+        en ? 'React booking and calendar' : 'React 預約與行事曆',
+        en
+          ? 'Trace the customer form and the business calendar through real product screens.'
+          : '沿著實際畫面查看顧客預約與店家行事曆。',
+        ['React', 'Next.js', 'TypeScript'],
+        '#product-workflow',
+      ),
+    ],
+  },
+  {
+    id: 'data',
+    title: en ? 'Backend & data' : '後端與資料庫',
+    items: notes
+      .filter((note) =>
+        ['booking-consistency', 'date-contracts'].includes(
+          note.data.translationKey,
+        ),
+      )
+      .map(noteItem),
+  },
+  {
+    id: 'quality',
+    title: en ? 'Testing & quality' : '測試與工程品質',
+    items: [
+      caseItem(
+        'bookflow',
+        en ? 'BookFlow scheduling evidence' : 'BookFlow 排程測試證據',
+        en
+          ? 'Integration tests for PostgreSQL scheduling, concurrent booking and tenant access.'
+          : '查看 PostgreSQL 排程、併發預約與租戶存取的整合測試。',
+        ['Integration', 'PostgreSQL', 'CI'],
+        '#engineering-evidence',
+      ),
+      caseItem(
+        'assetflow',
+        en ? 'AssetFlow lifecycle evidence' : 'AssetFlow 生命週期測試證據',
+        en
+          ? 'Follow competing checkouts, rollback and date cases to versioned tests and CI.'
+          : '從設備競爭領用、交易回滾和日期邊界，追查對應版本的測試與 CI。',
+        ['Integration', 'PostgreSQL', 'CI'],
+        '#engineering-evidence',
+      ),
+    ],
+  },
+  {
+    id: 'ai',
+    title: en ? 'AI collaboration' : 'AI 協作',
+    items: notes
+      .filter((note) => note.data.translationKey === 'ai-collaboration')
+      .map(noteItem),
+  },
+  {
+    id: 'evidence',
+    title: en ? 'Skills & evidence' : '技術與證據',
+    items: [
+      {
+        title: en ? 'Skills evidence matrix' : '技術與工程證據索引',
+        description: en
+          ? 'Connect technologies to inspectable implementations, tests and notes.'
+          : '由技術追查可閱讀的實作、測試與工程筆記。',
+        tags: ['Vue 3', 'React', 'REST API', 'PostgreSQL', 'CI'],
+        href: localizedPath(locale, 'about') + '#skills',
+      },
+    ],
+  },
+  {
+    id: 'field',
+    title: en ? 'Field & development notes' : '實踐與開發紀錄',
+    items: notes
+      .filter(
+        (note) =>
+          ![
+            'booking-consistency',
+            'date-contracts',
+            'ai-collaboration',
+          ].includes(note.data.translationKey),
+      )
+      .map(noteItem),
+  },
+];
+const tags = [
+  ...new Set(groups.flatMap(({ items }) => items.flatMap(({ tags }) => tags))),
+].sort();
+const total = groups.reduce((sum, { items }) => sum + items.length, 0);
+---
+
+<div class="engineering-lab" data-lab>
+  <p class="lab-lead">
+    {en
+      ? 'Follow real projects from interface and data rules to source code, tests and field notes.'
+      : '從實際專案的介面與資料規則出發，接著查閱原始碼、測試與開發紀錄。'}
+  </p>
+  <div class="lab-filters" data-lab-filters hidden>
+    <label>
+      {en ? 'Search' : '搜尋'}
+      <input
+        type="search"
+        data-lab-query
+        placeholder={en ? 'e.g. PostgreSQL' : '例如 PostgreSQL'}
+      />
+    </label>
+    <label>
+      {copy.category}
+      <select data-lab-category>
+        <option value="">{copy.allCategories}</option>
+        {groups.map(({ id, title, items }) => (
+          <option value={id}>
+            {title} ({items.length})
+          </option>
+        ))}
+      </select>
+    </label>
+    <label>
+      {copy.tag}
+      <select data-lab-tag>
+        <option value="">{copy.allTags}</option>
+        {tags.map((tag) => (
+          <option>{tag}</option>
+        ))}
+      </select>
+    </label>
+  </div>
+  <p class="mono lab-total" role="status">
+    <span data-lab-total>{total}</span> {en ? 'RESULTS' : '項內容'}
+  </p>
+  <div class="lab-groups">
+    {groups.map(({ id, title, items }) => (
+      <section class="lab-group" data-lab-group={id}>
+        <h2>
+          {title}{' '}
+          <span class="mono" data-lab-count>
+            {items.length}
+          </span>
+        </h2>
+        {items.map(({ title, description, tags, href }) => (
+          <article
+            class="lab-item"
+            data-lab-item
+            data-tags={JSON.stringify(tags)}
+          >
+            <h3>
+              <a href={href}>{title}</a>
+            </h3>
+            <p>{description}</p>
+            <ul aria-label={en ? 'Technologies and tags' : '技術與標籤'}>
+              {tags.map((tag) => (
+                <li>{tag}</li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </section>
+    ))}
+  </div>
+  <p data-lab-empty hidden>
+    {en
+      ? 'No matches. Try a different search or clear a filter.'
+      : '找不到符合的內容，請換個關鍵字或清除部分篩選條件。'}
+  </p>
+</div>
+<style>
+  .engineering-lab [hidden] {
+    display: none !important;
+  }
+  .lab-lead {
+    max-width: 58ch;
+    color: var(--muted);
+  }
+  .lab-filters {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 12px;
+    margin: 22px 0 10px;
+  }
+  label {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+  input,
+  select {
+    width: 100%;
+    min-height: 44px;
+    padding: 5px 9px;
+    border: 1px solid var(--studio-field-line, var(--muted));
+    border-radius: 6px;
+    color: var(--text);
+    background: var(--studio-field, var(--paper));
+    font: inherit;
+  }
+  input::placeholder {
+    color: var(--muted);
+    opacity: 1;
+  }
+  .lab-total {
+    margin-block: 12px;
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+  .lab-groups {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 28px;
+  }
+  .lab-group {
+    min-width: 0;
+    border-top: 2px solid var(--accent);
+  }
+  .lab-group h2 {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 0;
+    padding: 9px 12px;
+    background: var(--studio-tint, var(--bg));
+    font-size: 1.15rem;
+  }
+  .lab-group h2 span {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+  .lab-item {
+    padding: 10px 12px;
+  }
+  .lab-item + .lab-item {
+    border-top: 1px solid var(--line);
+  }
+  .lab-item h3,
+  .lab-item p {
+    margin: 0;
+  }
+  .lab-item h3 {
+    font-size: 1rem;
+  }
+  .lab-item a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .lab-item p {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .lab-item ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .lab-item li {
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 1px 7px;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+  @media (max-width: 670px) {
+    .lab-filters {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .lab-filters label:first-child {
+      grid-column: 1 / -1;
+    }
+    .lab-groups {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+<script>
+  const normalize = (value: string) =>
+    value.normalize('NFKC').toLocaleLowerCase();
+  document.querySelectorAll<HTMLElement>('[data-lab]').forEach((lab) => {
+    const filters = lab.querySelector<HTMLElement>('[data-lab-filters]')!;
+    const query = lab.querySelector<HTMLInputElement>('[data-lab-query]')!;
+    const category = lab.querySelector<HTMLSelectElement>(
+      '[data-lab-category]',
+    )!;
+    const tag = lab.querySelector<HTMLSelectElement>('[data-lab-tag]')!;
+    const count = lab.querySelector('[data-lab-total]')!;
+    const empty = lab.querySelector<HTMLElement>('[data-lab-empty]')!;
+    const groups = [
+      ...lab.querySelectorAll<HTMLElement>('[data-lab-group]'),
+    ].map((group) => ({
+      group,
+      count: group.querySelector('[data-lab-count]')!,
+      items: [...group.querySelectorAll<HTMLElement>('[data-lab-item]')].map(
+        (item) => ({
+          item,
+          tags: JSON.parse(item.dataset.tags!) as string[],
+          search: normalize(item.textContent ?? ''),
+        }),
+      ),
+    }));
+    function filter() {
+      const words = normalize(query.value.trim()).split(/\s+/);
+      let total = 0;
+      for (const section of groups) {
+        let matches = 0;
+        for (const { item, tags, search } of section.items) {
+          item.hidden =
+            Boolean(
+              category.value &&
+              category.value !== section.group.dataset.labGroup,
+            ) ||
+            Boolean(tag.value && !tags.includes(tag.value)) ||
+            !words.every((word) => search.includes(word));
+          if (!item.hidden) matches++;
+        }
+        section.count.textContent = String(matches);
+        section.group.hidden = matches === 0;
+        total += matches;
+      }
+      count.textContent = String(total);
+      empty.hidden = total > 0;
+    }
+    filters.hidden = false;
+    filters.addEventListener('input', filter);
+    filter();
+  });
+</script>

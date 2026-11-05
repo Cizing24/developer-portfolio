@@ -20,7 +20,7 @@ coverAlt: BookFlow 專業行事曆實際截圖，呈現合成測試店家及預�
 import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
 import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 
-<ProjectIntroduction project="bookflow" locale="zh-tw" />
+<ProjectIntroduction project="bookflow" locale="zh-tw" topic="purpose" />
 
 ## 從排班到管理預約的操作成果
 
@@ -33,6 +33,10 @@ import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 
 <ProjectWorkflow project="bookflow" locale="zh-tw" />
 
+<ProjectIntroduction project="bookflow" locale="zh-tw" topic="features" />
+
+<ProjectIntroduction project="bookflow" locale="zh-tw" topic="architecture" />
+
 ## 核心實作與工程取捨
 
 **React 表單與伺服器資料。** 表單保存服務、人員、日期、時段與送出狀態，透過 API 查詢日期與空位；服務異動需同步更新可選人員與時段。錯誤與重試有明確畫面回饋，預約結束時間和價格仍由伺服器推導。
@@ -41,7 +45,7 @@ import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 
 **重試與跨店存取是不同問題。** 店家內的冪等鍵與請求 hash 處理回應遺失後重送；伺服器 Session、Membership 授權與 tenant-scoped 查詢處理跨店存取。複合外鍵與 SQL 約束保護關聯，並未實作 PostgreSQL RLS。
 
-<details>
+<details id="engineering-evidence">
 <summary>閱讀實作、測試與 CI 證據</summary>
 
 - [React 預約表單](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/src/components/booking-form.tsx)與[預約服務](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/src/modules/booking/service.ts)
@@ -50,6 +54,8 @@ import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 - [工程取捨文件](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/docs/TECHNICAL_DEEP_DIVE.md)與[一致性筆記](/zh-tw/notes/booking-consistency/)
 
 原專案紀錄包含單元、PostgreSQL 整合、正式編譯伺服器 E2E，以及同時搶訂時僅一筆成功的情境。這是來源版本的歷史證據；本次作品集整備沒有重跑系統測試或壓力測試。
+
+- [此版本的本機重現說明](https://github.com/Cizing24/bookflow-saas/blob/4c913361edab42f4be2ac4a8dc28eef942947824/README.md)
 
 </details>
 

@@ -25,7 +25,7 @@ coverAlt: AssetFlow dashboard with synthetic employees and equipment; actual app
 import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
 import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 
-<ProjectIntroduction project="assetflow" locale="en" />
+<ProjectIntroduction project="assetflow" locale="en" topic="purpose" />
 
 ## From equipment register to handover
 
@@ -38,6 +38,10 @@ Spreadsheets and messages make it difficult to track equipment, returns and empl
 
 <ProjectWorkflow project="assetflow" locale="en" />
 
+<ProjectIntroduction project="assetflow" locale="en" topic="features" />
+
+<ProjectIntroduction project="assetflow" locale="en" topic="architecture" />
+
 ## Implementation and tradeoffs
 
 **Frontend state and API feedback.** Pinia holds the session user and derived permissions. A shared API client handles HTTP and CSRF. Assignment forms reuse a Dialog and reload data after success to avoid stale device state. UI permissions guide interaction; the server still enforces authorization.
@@ -46,7 +50,7 @@ Spreadsheets and messages make it difficult to track equipment, returns and empl
 
 **Dates describe different facts.** Planned departure, actual departure and handover completion are separate fields. Closure requires no active assignments and an explicit valid departure date. An early equipment return does not imply that an employee has already left.
 
-<details>
+<details id="engineering-evidence">
 <summary>Inspect implementation, tests and CI evidence</summary>
 
 - [Vue assignment form](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/src/pages/Assignments.vue) and [Pinia session state](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/src/stores/auth.ts)
@@ -55,6 +59,8 @@ Spreadsheets and messages make it difficult to track equipment, returns and empl
 - [Successful CI for this revision](https://github.com/Cizing24/assetflow-itam/actions/runs/39593727102) and [TESTING](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/TESTING.md)
 
 Source tests cover competing assignments, audit rollback, date boundaries and desktop/mobile workflows. CI is historical evidence for this revision; AssetFlow tests were not rerun during this portfolio update.
+
+- [Local setup at this revision](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/README.md)
 
 </details>
 

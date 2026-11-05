@@ -8,6 +8,10 @@ category: Data consistency
 tags: [PostgreSQL, Concurrency, BookFlow]
 ---
 
+import FlowSimulation from '../../../components/FlowSimulation.astro';
+
+<FlowSimulation system="bookflow" />
+
 ## A query is not a reservation
 
 BookFlow computes availability on the server using opening hours, schedules, absences and occupied ranges. But there is a gap between querying and submitting: A and B can see the same slot before either writes. Disabling the submit button only prevents duplicate interaction in one browser.

@@ -30,11 +30,23 @@ async function visit(page: Page, id: string) {
   );
 }
 async function open(page: Page, id: string, view: string) {
-  await visit(page, id);
-  await page
-    .locator(`[data-index-details="${id}"] [data-open="${view}"]`)
-    .first()
-    .click();
+  await menu(page);
+  await page.locator(`[data-island-go="${id}"]`).click();
+  const panel = page.locator(`[data-view-panel="${view}"]`);
+  if (['portfolio', 'about', 'contact', 'journal'].includes(id)) {
+    if (id === 'journal' && view.startsWith('note-'))
+      await page
+        .locator(
+          `[data-view-panel=journal] a[href$="/notes/${view.slice(5)}/"]`,
+        )
+        .click();
+  } else {
+    await page
+      .locator(`[data-index-details="${id}"] [data-open="${view}"]`)
+      .first()
+      .click();
+  }
+  await expect(panel).toBeVisible();
 }
 
 test('time icons are centered inside their circular buttons', async ({
@@ -98,14 +110,16 @@ test('seven fixed islands have small labels, no slogans and useful project topic
   );
   await page.locator('[data-portal=bookflow]').click();
   const reader = page.locator('[data-reader]');
-  for (const [index, topic, title] of [
-    [0, 'purpose', 'Project purpose'],
-    [1, 'features', 'What it does'],
-    [2, 'architecture', 'How it is built'],
+  for (const [index, area, title] of [
+    [0, 'demo', 'Customer booking desk'],
+    [1, 'secondary', 'Business calendar'],
+    [2, 'architecture', 'How a change reaches the database'],
   ] as const) {
     await page.locator(`[data-station="${index}"]`).click();
     await expect(
-      reader.locator(`[data-view-panel="project-bookflow-${topic}"] h2`),
+      reader.locator(
+        `[data-view-panel=project-bookflow] [data-showcase-region="${area}"] h3`,
+      ),
     ).toHaveText(title);
     expect(new URL(page.url()).pathname).toBe('/en/');
     await page.keyboard.press('Escape');
@@ -132,27 +146,31 @@ test('seven fixed islands have small labels, no slogans and useful project topic
     }
 });
 
-test('right menu searches content, flies to every island and restores keyboard focus', async ({
+test('right menu searches islands, opens readers and restores keyboard focus', async ({
   page,
 }) => {
   await page.goto('/zh-tw/');
   await ready(page);
   await menu(page);
   const search = page.getByLabel('搜尋島嶼或內容');
-  await search.fill('日期');
+  await search.fill('技術與證據');
   await expect(page.locator('[data-index-row]:visible')).toHaveCount(1);
   await expect(page.locator('[data-index-row=journal]')).toBeVisible();
   await search.fill('不存在xyz');
   await expect(page.locator('[data-index-empty]')).toBeVisible();
   await search.fill('');
-  for (const id of [
-    'portfolio',
-    'bookflow',
-    'assetflow',
-    'journal',
-    'contact',
-    'about',
-  ]) {
+  for (const [id, view] of [
+    ['portfolio', 'projects'],
+    ['journal', 'journal'],
+    ['about', 'about'],
+    ['contact', 'contact'],
+  ] as const) {
+    await open(page, id, view);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('[data-reader]')).not.toBeVisible();
+    await expect(page.locator(`[data-island-go=${id}]`)).toBeFocused();
+  }
+  for (const id of ['bookflow', 'assetflow', 'zailongchang']) {
     await visit(page, id);
     await expect(page.locator(`[data-index-details="${id}"]`)).toBeVisible();
   }
@@ -209,7 +227,8 @@ test('avatar button finds the personal island and opens its profile in place', a
     'data-island',
     'about',
   );
-  await page.locator('[data-station="0"]').click();
+  await expect(page.locator('[data-reader]')).not.toBeVisible();
+  await page.locator('[data-portal=about]').click();
   await expect(page.locator('[data-view-panel=about] > h2')).toHaveText(
     'CIZING',
   );
@@ -226,14 +245,14 @@ test('topic dialogs preserve project, language and history across reloads and le
   );
   const reader = page.locator('[data-reader]');
   await expect(
-    reader.locator(
-      '[data-view-panel="project-assetflow-architecture"] .intro-architecture li',
-    ),
+    reader.locator('[data-view-panel="project-assetflow"] .showcase-layers li'),
   ).toHaveCount(3);
   await reader.locator('[data-reader-locale]').click();
   await expect(
-    reader.locator('[data-view-panel="project-assetflow-architecture"] h2'),
-  ).toHaveText('How it is built');
+    reader.locator(
+      '[data-view-panel="project-assetflow"] [data-showcase-region="architecture"] h3',
+    ),
+  ).toHaveText('How a change reaches the database');
   await page.reload();
   await expect(reader).toBeVisible();
   await reader.locator('[data-reader-close]').click();
@@ -242,37 +261,57 @@ test('topic dialogs preserve project, language and history across reloads and le
   await page.locator('[data-station="0"]').focus();
   await page.keyboard.press('Enter');
   await expect(
-    reader.locator('[data-view-panel="project-assetflow-purpose"]'),
+    reader.locator('[data-view-panel="project-assetflow"]'),
   ).toBeVisible();
   await page.goBack();
   await expect(reader).not.toBeVisible();
 });
 
-test('case exhibits and skills stay integrated with their islands', async ({
+test('direct portal shortcuts and Engineering Lab preserve filters and reader history', async ({
   page,
 }) => {
   await page.goto('/en/');
-  await visit(page, 'portfolio');
-  await page.locator('[data-menu-close]').click();
-  await expect(page.locator('[data-station]:visible')).toHaveCount(4);
-  await page.locator('[data-station="2"]').click();
-  await expect(
-    page.locator('[data-view-panel=note-cotton-booking]'),
-  ).toBeVisible();
-  await expect(page).toHaveURL(/\/en\/\?.*view=note-cotton-booking/);
+  await ready(page);
+  const reader = page.locator('[data-reader]');
+  await page.locator('[data-portal=portfolio]').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-view-panel=projects]')).toBeVisible();
+  await expect(page.locator('[data-studio]')).toHaveAttribute(
+    'data-mode',
+    'overview',
+  );
   await page.keyboard.press('Escape');
-  await visit(page, 'about');
-  await page.locator('[data-menu-close]').click();
-  await page.locator('[data-station="1"]').click();
+  await expect(page.locator('[data-portal=portfolio]')).toBeFocused();
+  await page.locator('[data-portal=about]').click();
+  await expect(page.locator('[data-view-panel=about]')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await open(page, 'journal', 'journal');
+  const lab = reader.locator('[data-lab]');
+  await lab.locator('[data-lab-category]').selectOption('data');
+  await lab.locator('[data-lab-query]').fill('GiST');
+  await expect(lab.locator('[data-lab-total]')).toHaveText('1');
+  await lab.locator('[data-lab-item]:visible a').click();
+  const specimen = reader.locator('[data-simulation=bookflow]');
+  await expect(specimen).toBeVisible();
+  await specimen.locator('[data-node="6"]').click();
+  await expect(specimen.locator('[data-state]')).toContainText('409');
+  const note = reader.locator('[data-view-panel=note-booking-consistency]');
+  await note.locator('.reader-contents summary').click();
+  await note.locator('.toc a').first().click();
+  expect(new URL(page.url()).hash).toBe('');
+  await page.goBack();
+  await expect(lab.locator('[data-lab-query]')).toHaveValue('GiST');
+  await page.goForward();
+  await expect(specimen).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(reader).not.toBeVisible();
+  await open(page, 'journal', 'journal');
+  await lab.locator('[data-lab-query]').clear();
+  await lab.locator('[data-lab-category]').selectOption('evidence');
+  await lab.locator('[data-lab-item]:visible a').click();
   await expect(
     page.locator('[data-view-panel=skills] .skills-index dt'),
   ).toHaveCount(5);
-  await page.keyboard.press('Escape');
-  await page.locator('[data-station="2"]').click();
-  await expect(
-    page.locator('[data-view-panel=note-ai-collaboration]'),
-  ).toBeVisible();
-  await expect(page.locator('.world-shortcuts')).toHaveCount(0);
 });
 
 test('camera travel and reader transitions run smoothly and allow rapid interruption', async ({
@@ -355,11 +394,11 @@ test('camera travel and reader transitions run smoothly and allow rapid interrup
     (event) => event.island === 'about' && event.moving === 'false',
   )!;
   expect(end.time - start.time).toBeGreaterThanOrEqual(1200);
-  await page.locator('[data-station="0"]').click();
+  await page.locator('[data-portal=about]').click();
   await expect(page.locator('[data-reader]')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('[data-reader]')).not.toBeVisible();
-  await expect(page.locator('[data-station="0"]')).toBeFocused();
+  await expect(page.locator('[data-portal=about]')).toBeFocused();
 });
 
 test('motion button pauses and resumes through real pointer clicks', async ({
@@ -486,7 +525,9 @@ test('WebGL fallback retains all seven islands, topics, search and reading contr
   await page.locator('[data-portal=bookflow]').click();
   await page.locator('[data-station="2"]').click();
   await expect(
-    page.locator('[data-view-panel="project-bookflow-architecture"]'),
+    page.locator(
+      '[data-view-panel="project-bookflow"] [data-showcase-region="architecture"]',
+    ),
   ).toBeVisible();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.keyboard.press('Escape');
@@ -517,7 +558,9 @@ test('3D context loss keeps current island and its content usable', async ({
   );
   await page.locator('[data-station="2"]').click();
   await expect(
-    page.locator('[data-view-panel="project-bookflow-architecture"]'),
+    page.locator(
+      '[data-view-panel="project-bookflow"] [data-showcase-region="architecture"]',
+    ),
   ).toBeVisible();
 });
 
@@ -528,11 +571,11 @@ test('portfolio, notes, contact and profile stay in the same reader with accessi
   await open(page, 'portfolio', 'projects');
   const reader = page.locator('[data-reader]');
   await reader
-    .locator('[data-view-panel=projects] [data-open=project-bookflow]')
+    .locator('[data-view-panel=projects] [data-open=project-bookflow-case]')
     .click();
   await expect(
     reader.locator(
-      '[data-view-panel=project-bookflow] .project-introduction > section',
+      '[data-view-panel=project-bookflow-case] .project-introduction > section',
     ),
   ).toHaveCount(3);
   await page.keyboard.press('Escape');
@@ -548,7 +591,9 @@ test('portfolio, notes, contact and profile stay in the same reader with accessi
       [],
     );
     if (view === 'journal') {
-      await reader.locator('[data-open=note-date-contracts]').click();
+      await reader
+        .locator('[data-view-panel=journal] a[href$="/notes/date-contracts/"]')
+        .click();
       await expect(
         reader.locator('[data-view-panel=note-date-contracts]'),
       ).toBeVisible();

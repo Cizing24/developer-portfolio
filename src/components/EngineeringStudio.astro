@@ -3,6 +3,7 @@ import { localeFromPath, localizedPath } from '../lib/i18n';
 import {
   islands,
   dayPhases,
+  directIslandView,
   phaseName,
   islandItems,
 } from '../lib/world-config';
@@ -19,6 +20,7 @@ const en = locale === 'en';
   data-studio
   data-language={locale}
   data-mode="overview"
+  data-renderer="loading"
   data-phase="noon"
   data-menu="closed"
   data-traveling="false"
@@ -56,10 +58,43 @@ const en = locale === 'en';
   </header>
   <div class="studio-world">
     <div class="studio-viewport" data-viewport>
-      <div class="studio-fallback" aria-hidden="true">
-        {islands.map((_, index) => (
-          <span class={`fallback-island island-${index}`}></span>
-        ))}
+      <div class="studio-loading">
+        <svg
+          viewBox="0 0 180 80"
+          width="180"
+          height="80"
+          aria-hidden="true"
+          fill="none"
+        >
+          <path
+            d="M22 37 37 21l20 4 9 12-14 12-25-2ZM69 52l10-16 20-6 16 8 1 14-15 13-25-3ZM123 27l11-12 22 2 9 10-8 11-23 2ZM135 59l12-8 15 3 6 9-14 6-15-2Z"
+            fill="#e1e2ca"
+            stroke="currentColor"
+          />
+          <path
+            d="m58 43 16 4m38-7 16-7m-113 25 13-2m23 7 14-2m93-20 14-2m-52 32 12-2"
+            stroke="currentColor"
+            stroke-linecap="round"
+          />
+        </svg>
+        <p class="mono" aria-hidden="true">
+          CIZING / ARCHIPELAGO
+        </p>
+        <p role="status">{en ? 'Preparing the islands…' : '正在準備群島…'}</p>
+        <a href={localizedPath(locale, 'projects')}>
+          {en ? 'Read the projects' : '閱讀作品'}
+        </a>
+      </div>
+      <div class="studio-fallback" data-fallback hidden>
+        <p data-fallback-message role="status"></p>
+        <div>
+          <button type="button" data-scene-retry>
+            {en ? 'Retry 3D' : '重試 3D'}
+          </button>
+          <a href={localizedPath(locale, 'projects')}>
+            {en ? 'Read the projects' : '閱讀作品'}
+          </a>
+        </div>
       </div>
       <div
         class="world-portals"
@@ -67,7 +102,12 @@ const en = locale === 'en';
         aria-label={en ? 'Islands' : '島嶼'}
       >
         {islands.map((island, index) => (
-          <button type="button" class="world-portal" data-portal={island.id}>
+          <button
+            type="button"
+            class="world-portal"
+            data-portal={island.id}
+            aria-haspopup={directIslandView(island.id) ? 'dialog' : undefined}
+          >
             <span class="island-number" aria-hidden="true">
               0{index + 1}
             </span>
@@ -80,17 +120,16 @@ const en = locale === 'en';
         role="group"
         aria-label={en ? 'Island contents' : '島嶼內容'}
       >
-        {[0, 1, 2, 3, 4].map((index) => (
+        {[0, 1, 2].map((index) => (
           <button
             type="button"
             class="studio-node"
             data-station={index}
-            hidden={index >= islandItems('portfolio', locale).length}
+            aria-haspopup="dialog"
+            hidden
           >
             <span class="hotspot-dot" aria-hidden="true"></span>
-            <span data-node-title>
-              {islandItems('portfolio', locale)[index]?.title ?? ''}
-            </span>
+            <span data-node-title></span>
           </button>
         ))}
       </div>
@@ -137,12 +176,6 @@ const en = locale === 'en';
     />
     <nav aria-label={en ? 'World navigation' : '世界導覽'}>
       <div class="index-reading">
-        <a href={localizedPath(locale, 'projects')} data-open="projects">
-          {en ? 'All projects' : '作品總覽'}
-        </a>
-        <a href={localizedPath(locale, 'about') + '#skills'} data-open="skills">
-          {en ? 'Skills & evidence' : '技術與證據'}
-        </a>
         <a href={localizedPath(locale, 'contact')} data-open="contact">
           {en ? 'Contact' : '聯絡'}
         </a>
@@ -151,7 +184,7 @@ const en = locale === 'en';
         <div
           class="index-row"
           data-index-row={island.id}
-          data-search={`${island.zh} ${island.en} ${islandItems(
+          data-search={`${island.zh} ${island.en} ${island.id === 'portfolio' ? '作品總覽 All projects BookFlow AssetFlow 棉麻屋 在隆昌' : island.id === 'journal' ? 'Engineering Lab 技術與證據 AI 協作' : island.id === 'about' ? '關於 About' : ''} ${islandItems(
             island.id,
             locale,
           )
@@ -162,24 +195,22 @@ const en = locale === 'en';
             type="button"
             class="index-island"
             data-island-go={island.id}
-            aria-expanded="false"
+            aria-expanded={directIslandView(island.id) ? undefined : 'false'}
+            aria-haspopup={directIslandView(island.id) ? 'dialog' : undefined}
           >
             <span class="mono">0{index + 1}</span>
             <span>{en ? island.en : island.zh}</span>
-            <span class="index-count">
-              {islandItems(island.id, locale).length}
+            <span class="index-count" aria-hidden="true">
+              {directIslandView(island.id)
+                ? en
+                  ? 'Read'
+                  : '閱讀'
+                : islandItems(island.id, locale).length}
             </span>
           </button>
-          <div class="index-details" data-index-details={island.id} hidden>
-            <button
-              type="button"
-              class="index-overview"
-              data-open={island.view}
-            >
-              {en ? 'View contents' : '查看內容'}
-            </button>
-            {islandItems(island.id, locale).map((item) =>
-              item.view ? (
+          {!directIslandView(island.id) && (
+            <div class="index-details" data-index-details={island.id} hidden>
+              {islandItems(island.id, locale).map((item) => (
                 <button
                   type="button"
                   class="index-content"
@@ -187,17 +218,9 @@ const en = locale === 'en';
                 >
                   {item.title}
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  class="index-content"
-                  data-island-link={item.island}
-                >
-                  {item.title}
-                </button>
-              ),
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       ))}
     </nav>
@@ -268,6 +291,14 @@ const en = locale === 'en';
   <p class="sr-only" role="status" data-scene-status></p>
   <StudioReader />
   <noscript>
+    <style is:inline>
+      .studio-loading,
+      .world-menu-toggle,
+      .world-time,
+      .world-tools {
+        display: none !important;
+      }
+    </style>
     <div class="world-nojs">
       <h2>{en ? 'Portfolio' : '作品集'}</h2>
       <a href={localizedPath(locale, 'projects')}>{en ? 'Projects' : '作品'}</a>

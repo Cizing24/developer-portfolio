@@ -1,4 +1,4 @@
-import type { IslandId } from './world-config';
+import { projectFacilities, type IslandId } from './world-config';
 import { segmentDistance, type NavigationDomain } from './navigation';
 import type { Point } from './wander';
 
@@ -25,6 +25,8 @@ export const islandRadii = (id: IslandId): [number, number] =>
         : id === 'journal'
           ? [3.4, 3.4]
           : [2.8, 2.8];
+export const islandElevation = (id: IslandId) =>
+  id === 'bookflow' || id === 'assetflow' ? -0.1 : 0.02;
 export const reefIslands = [
   { x: -19, z: -7, r: 1.4 },
   { x: -18, z: 7, r: 1.6 },
@@ -128,6 +130,22 @@ export function bridgeDecks(centers: Record<IslandId, Point>) {
       const reach = 1 / Math.hypot(dx / rx, dz / rz) - 1.2;
       points[index] = { x: p.x + dx * reach, z: p.z + dz * reach };
     }
+    const end = points.at(-1)!;
+    const ramp = islandElevation(b) < 0;
+    const rampLength = 1.5;
+    if (ramp) {
+      const approach = points.at(-2)!;
+      points.splice(-1, 0, {
+        x: end.x + Math.sign(approach.x - end.x) * rampLength,
+        z: end.z,
+      });
+    }
+    const height = (p: Point) =>
+      ramp
+        ? islandElevation(b) +
+          0.008 +
+          0.12 * Math.min(1, Math.abs(p.x - end.x) / rampLength)
+        : islandElevation(a) + 0.008;
     const normals = points.slice(1).map((p, i) => {
       const q = points[i]!,
         length = Math.hypot(p.x - q.x, p.z - q.z);
@@ -145,7 +163,13 @@ export function bridgeDecks(centers: Record<IslandId, Point>) {
       });
     const left = side(1),
       right = side(-1);
-    return { points, left, right, outline: [...left, ...right.toReversed()] };
+    return {
+      points,
+      left,
+      right,
+      height,
+      outline: [...left, ...right.toReversed()],
+    };
   });
 }
 
@@ -163,11 +187,69 @@ function insideDeck(point: Point, outline: Point[], radius: number) {
   }
   return inside;
 }
+function sceneryObstacles(id: IslandId) {
+  const circles: { x: number; z: number; radius: number }[] = [];
+  const project = id === 'bookflow' || id === 'assetflow';
+  if (project) {
+    for (const { x, z } of projectFacilities[id])
+      circles.push({ x, z, radius: 1.25 });
+    for (let i = 1; i < 22; i++) {
+      if (i === 11) continue;
+      const angle = (i / 22) * Math.PI * 2;
+      const size = 0.65 + (i % 4) * 0.15;
+      circles.push({
+        x: Math.cos(angle) * 5.8,
+        z: Math.sin(angle) * 3.6,
+        radius: 0.4 * size,
+      });
+    }
+    for (const [x, z] of [
+      [-5.6, -2.4],
+      [-4.9, -2.7],
+      [4.9, -2.8],
+      [5.5, -2.2],
+      [-5.5, 2.5],
+      [5.5, 2.5],
+    ] as const)
+      circles.push({ x, z, radius: 0.45 });
+  } else {
+    const treeRadius =
+      id === 'portfolio' ? 3.65 : id === 'journal' ? 3.5 : 2.85;
+    for (let i = 0; i < 4; i++) {
+      const angle = Math.PI / 4 + (i / 4) * Math.PI * 2;
+      const x = Math.cos(angle) * treeRadius;
+      const z = Math.sin(angle) * treeRadius;
+      if (!isAccessLane(id, x, z)) circles.push({ x, z, radius: 0.32 });
+    }
+  }
+  if (id === 'contact') circles.push({ x: 1.8, z: -0.5, radius: 0.15 });
+  const postRadius = project
+    ? 5.5
+    : id === 'portfolio'
+      ? 3.85
+      : id === 'journal'
+        ? 3.7
+        : 3.05;
+  for (let i = 0; i < 5; i++) {
+    const angle = (i / 5) * Math.PI * 2 + 0.3;
+    const x = Math.cos(angle) * postRadius;
+    const z = Math.sin(angle) * postRadius * (project ? 0.61 : 1);
+    if (!isAccessLane(id, x, z)) circles.push({ x, z, radius: 0.12 });
+  }
+  return circles;
+}
+
 export function createWorldDomain(
   centers: Record<IslandId, Point>,
-): NavigationDomain {
+  bridgeGeometry = bridgeDecks(centers),
+): NavigationDomain & {
+  surface(point: Point): number | undefined;
+  onBridge(point: Point): boolean;
+} {
   const ids = Object.keys(centers) as IslandId[];
-  const decks = bridgeDecks(centers).map((deck) => ({
+  // Path samples share the same scenery and bridge clearances for this layout.
+  const obstacles = new Map(ids.map((id) => [id, sceneryObstacles(id)]));
+  const decks = bridgeGeometry.map((deck) => ({
     ...deck,
     minX: Math.min(...deck.outline.map((p) => p.x)),
     maxX: Math.max(...deck.outline.map((p) => p.x)),
@@ -181,8 +263,8 @@ export function createWorldDomain(
       Math.hypot((p.x - c.x) / (rx - radius), (p.z - c.z) / (rz - radius)) <= 1
     );
   }
-  function onBridge(p: Point, radius: number) {
-    return decks.some(
+  function deckAt(p: Point, radius: number) {
+    return decks.find(
       ({ outline, minX, maxX, minZ, maxZ }) =>
         p.x >= minX &&
         p.x <= maxX &&
@@ -190,6 +272,14 @@ export function createWorldDomain(
         p.z <= maxZ &&
         insideDeck(p, outline, radius),
     );
+  }
+  function surface(p: Point) {
+    const island = ids.find((id) => onIsland(p, id, 0));
+    const deck = deckAt(p, 0);
+    if (island && deck)
+      return Math.max(islandElevation(island), deck.height(p));
+    if (island) return islandElevation(island);
+    return deck?.height(p);
   }
   function blocked(p: Point, id: IslandId, radius: number) {
     const c = centers[id],
@@ -208,99 +298,29 @@ export function createWorldDomain(
       )
     )
       return true;
-    if (id === 'bookflow' || id === 'assetflow') {
-      if (
-        [-4, 0, 4].some((cx) =>
-          [-1.65, 1.7].some((cz) => Math.hypot(x - cx, z - cz) < 1.25 + r),
-        )
-      )
-        return true;
-      if (Math.abs(x) < 4.8 && z < -2.5 && z > -4.5) return true; // Rocky northern ridge.
-      for (let i = 1; i < 22; i++) {
-        if (i === 11) continue;
-        const angle = (i / 22) * Math.PI * 2;
-        const size = 0.65 + (i % 4) * 0.15;
-        if (
-          Math.hypot(x - Math.cos(angle) * 5.8, z - Math.sin(angle) * 3.6) <
-          0.4 * size + r
-        )
-          return true;
-      }
-      if (
-        [
-          [-5.6, -2.4],
-          [-4.9, -2.7],
-          [4.9, -2.8],
-          [5.5, -2.2],
-          [-5.5, 2.5],
-          [5.5, 2.5],
-        ].some(([cx, cz]) => Math.hypot(x - cx!, z - cz!) < 0.45 + r)
-      )
-        return true;
-    } else {
-      const treeRadius =
-        id === 'portfolio' ? 3.65 : id === 'journal' ? 3.5 : 2.85;
-      for (let i = 0; i < 4; i++) {
-        const angle = Math.PI / 4 + (i / 4) * Math.PI * 2;
-        if (
-          !isAccessLane(
-            id,
-            Math.cos(angle) * treeRadius,
-            Math.sin(angle) * treeRadius,
-          ) &&
-          Math.hypot(
-            x - Math.cos(angle) * treeRadius,
-            z - Math.sin(angle) * treeRadius,
-          ) <
-            0.32 + r
-        )
-          return true;
-      }
-    }
-    if (id === 'contact' && Math.hypot(x - 1.8, z + 0.5) < r + 0.15)
-      return true;
-    for (let i = 0; i < 5; i++) {
-      const angle = (i / 5) * Math.PI * 2 + 0.3;
-      const project = id === 'bookflow' || id === 'assetflow';
-      const radius = project
-        ? 5.5
-        : id === 'portfolio'
-          ? 3.85
-          : id === 'journal'
-            ? 3.7
-            : 3.05;
-      if (
-        !isAccessLane(
-          id,
-          Math.cos(angle) * radius,
-          Math.sin(angle) * radius * (project ? 0.61 : 1),
-        ) &&
-        Math.hypot(
-          x - Math.cos(angle) * radius,
-          z - Math.sin(angle) * radius * (project ? 0.61 : 1),
-        ) <
-          r + 0.12
-      )
-        return true;
-    }
-    return false;
+    if (
+      (id === 'bookflow' || id === 'assetflow') &&
+      Math.abs(x) < 4.8 &&
+      z < -2.5 &&
+      z > -4.5
+    )
+      return true; // Rocky northern ridge.
+    return obstacles
+      .get(id)!
+      .some(
+        ({ x: cx, z: cz, radius }) => Math.hypot(x - cx, z - cz) < radius + r,
+      );
   }
   return {
     contains(p, radius) {
-      if (!ids.some((id) => onIsland(p, id, radius)) && !onBridge(p, radius))
+      if (!ids.some((id) => onIsland(p, id, radius)) && !deckAt(p, radius))
         return false;
       return !ids.some((id) => blocked(p, id, radius));
     },
-    height(p) {
-      const project = (['bookflow', 'assetflow'] as const).find((id) =>
-        onIsland(p, id, 0),
-      );
-      return project
-        ? -0.1
-        : onBridge(p, 0.2) && !ids.some((id) => onIsland(p, id, 0.1))
-          ? 0.015
-          : 0.025;
-    },
+    height: (p) => surface(p) ?? 0.02,
+    surface,
+    onBridge: (p) =>
+      Boolean(deckAt(p, 0)) && !ids.some((id) => onIsland(p, id, 0)),
   };
 }
 
