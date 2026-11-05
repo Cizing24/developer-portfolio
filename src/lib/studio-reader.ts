@@ -1,3 +1,5 @@
+import { projectShowcaseView, projectView } from './world-config';
+import { initProjectShowcase } from './studio-showcase';
 import type { ProjectId as System } from './project-introductions';
 
 export function initReader(
@@ -9,8 +11,13 @@ export function initReader(
   const panels = [...dialog.querySelectorAll<HTMLElement>('[data-view-panel]')];
   const scroll = dialog.querySelector<HTMLElement>('[data-reader-scroll]')!;
   const title = dialog.querySelector<HTMLElement>('[data-reader-title]')!;
+  const showcases = new WeakMap<
+    HTMLElement,
+    ReturnType<typeof initProjectShowcase>
+  >();
   let returnFocus: HTMLElement | null = null;
   let currentView = '';
+  let currentAnchor = '';
   let transition = 0;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -42,6 +49,22 @@ export function initReader(
       element.id = `${prefix}-${old}`;
       ids.set(old, element.id);
     });
+    for (const attribute of [
+      'for',
+      'aria-labelledby',
+      'aria-describedby',
+      'aria-controls',
+    ]) {
+      panel
+        .querySelectorAll<HTMLElement>(`[${attribute}]`)
+        .forEach((element) => {
+          const names = element.getAttribute(attribute)!.split(/\s+/);
+          element.setAttribute(
+            attribute,
+            names.map((name) => ids.get(name) ?? name).join(' '),
+          );
+        });
+    }
     panel
       .querySelectorAll<HTMLAnchorElement>('a[href^="#"]')
       .forEach((link) => {
@@ -62,39 +85,84 @@ export function initReader(
       });
   }
 
-  function show(view: string, persist = true) {
-    const panel = panels.find((panel) => panel.dataset.viewPanel === view);
+  function readerDepth() {
+    return (
+      (history.state?.studioReaderDepth as number | undefined) ??
+      Number(Boolean(history.state?.studioReader))
+    );
+  }
+
+  function resolve(view: string, anchor = '') {
+    const showcase = projectShowcaseView(view);
+    const base = showcase ? projectView(showcase.id) : view;
+    const caseKey = showcase ? projectView(showcase.id, '-case') : base;
+    const key =
+      anchor && document.getElementById(`${caseKey}-${anchor}`)
+        ? caseKey
+        : base;
+    return {
+      panel: panels.find((panel) => panel.dataset.viewPanel === key),
+      showcase,
+    };
+  }
+
+  function show(view: string, persist = true, anchor = '') {
+    const { panel, showcase } = resolve(view, anchor);
     if (!panel) return;
     transition++;
     const wasOpen = dialog.open;
-    const changed = currentView !== view;
+    const changed = currentView !== view || currentAnchor !== anchor;
     dialog.getAnimations().forEach((animation) => animation.cancel());
     if (!dialog.open)
       returnFocus = document.activeElement as HTMLElement | null;
+    const changedPanel = panel.hidden;
+    if (showcase && panel.hasAttribute('data-project-showcase')) {
+      let update = showcases.get(panel);
+      if (!update) {
+        update = initProjectShowcase(panel);
+        showcases.set(panel, update);
+      }
+      update(showcase.area);
+    }
     panels.forEach((other) => (other.hidden = other !== panel));
     title.textContent = panel.dataset.title ?? '';
-    if (view !== currentView) scroll.scrollTop = 0;
+    if (changed) scroll.scrollTop = 0;
     currentView = view;
-    if (persist) {
+    currentAnchor = anchor;
+    if (persist && (changed || !wasOpen)) {
       const url = new URL(location.href);
       url.searchParams.set('view', view);
-      if (dialog.open) history.replaceState(history.state, '', url);
-      else history.pushState({ ...history.state, studioReader: true }, '', url);
+      if (anchor) url.searchParams.set('section', anchor);
+      else url.searchParams.delete('section');
+      const depth = readerDepth();
+      if (!wasOpen || depth > 0)
+        history.pushState(
+          { ...history.state, studioReaderDepth: depth + 1 },
+          '',
+          url,
+        );
+      else history.replaceState(history.state, '', url);
     }
     if (!dialog.open) dialog.showModal();
     if (!wasOpen) void animate(dialog);
-    else if (changed) void animate(panel);
-    root.querySelectorAll<HTMLElement>('[data-open]').forEach((button) => {
-      if (button.closest('.world-dock')) {
-        if (
-          button.dataset.open === view ||
-          (view.startsWith('project-') && button.dataset.open === 'projects') ||
-          (view.startsWith('note-') && button.dataset.open === 'journal')
-        )
-          button.setAttribute('aria-current', 'page');
-        else button.removeAttribute('aria-current');
+    else if (changed && changedPanel) {
+      void animate(panel);
+      const heading = panel.querySelector<HTMLElement>('h2');
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
       }
-    });
+    }
+    if (anchor) {
+      const target = document.getElementById(
+        `${panel.dataset.viewPanel}-${anchor}`,
+      );
+      if (target && panel.contains(target)) {
+        const detail = target.closest('details');
+        if (detail) detail.open = true;
+        target.scrollIntoView({ block: 'start' });
+      }
+    }
     reading(true);
     syncLinks();
   }
@@ -104,21 +172,47 @@ export function initReader(
     if (token !== transition) return;
     dialog.close();
     currentView = '';
+    currentAnchor = '';
     reading(false);
-    returnFocus?.focus({ preventScroll: true });
+    if (
+      returnFocus &&
+      returnFocus !== document.body &&
+      returnFocus.getClientRects().length
+    ) {
+      returnFocus.focus({ preventScroll: true });
+    } else {
+      const selected = root.querySelector<HTMLElement>(
+        '[data-portal][aria-pressed=true]',
+      );
+      (
+        selected ?? root.querySelector<HTMLElement>('[data-menu-toggle]')
+      )?.focus({ preventScroll: true });
+    }
   }
   function close() {
-    if (history.state?.studioReader) history.back();
+    const depth = readerDepth();
+    if (depth > 0) history.go(-depth);
     else {
       const url = new URL(location.href);
       url.searchParams.delete('view');
+      url.searchParams.delete('section');
       history.replaceState(history.state, '', url);
       void hide();
       syncLinks();
     }
   }
+  function modifiedClick(event: MouseEvent) {
+    return (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.altKey ||
+      event.shiftKey
+    );
+  }
   root.querySelectorAll<HTMLElement>('[data-open]').forEach((button) =>
     button.addEventListener('click', (event) => {
+      if (button instanceof HTMLAnchorElement && modifiedClick(event)) return;
       event.preventDefault();
       show(button.dataset.open!);
     }),
@@ -132,17 +226,34 @@ export function initReader(
     if (event.target === dialog) close();
   });
   dialog.addEventListener('click', (event) => {
-    if (!(event.target instanceof Element)) return;
+    if (
+      event.defaultPrevented ||
+      modifiedClick(event) ||
+      !(event.target instanceof Element)
+    )
+      return;
     const link = event.target.closest<HTMLAnchorElement>('a[href]');
     if (
       !link ||
       link.hasAttribute('data-open') ||
-      link.hasAttribute('data-reader-locale') ||
-      (link.hash && link.pathname === location.pathname)
+      link.hasAttribute('data-reader-locale')
     )
       return;
     const target = new URL(link.href);
     if (target.origin !== location.origin) return;
+    if (target.hash && target.pathname === location.pathname) {
+      const destination = document.getElementById(
+        decodeURIComponent(target.hash.slice(1)),
+      );
+      if (destination && dialog.contains(destination)) {
+        event.preventDefault();
+        destination.scrollIntoView({
+          block: 'start',
+          behavior: reduced.matches ? 'instant' : 'smooth',
+        });
+      }
+      return;
+    }
     const parts = target.pathname.split('/').filter(Boolean);
     let view = '';
     if (parts[1] === 'projects')
@@ -150,9 +261,10 @@ export function initReader(
     else if (parts[1] === 'notes')
       view = parts[2] ? `note-${parts[2]}` : 'journal';
     else if (parts[1] === 'about' || parts[1] === 'contact') view = parts[1];
-    if (view && panels.some((panel) => panel.dataset.viewPanel === view)) {
+    if (view === 'about' && target.hash === '#skills') view = 'skills';
+    if (view && resolve(view).panel) {
       event.preventDefault();
-      show(view);
+      show(view, true, decodeURIComponent(target.hash.slice(1)));
     }
   });
   dialog
@@ -192,8 +304,9 @@ export function initReader(
         // Replace the current reader entry with the world it leads to.
         const url = new URL(location.href);
         url.searchParams.delete('view');
+        url.searchParams.delete('section');
         history.replaceState(
-          { ...history.state, studioReader: false },
+          { ...history.state, studioReader: false, studioReaderDepth: 0 },
           '',
           url,
         );
@@ -201,30 +314,15 @@ export function initReader(
         syncLinks();
       }),
     );
-  dialog
-    .querySelectorAll<HTMLAnchorElement>('[data-reader-anchor]')
-    .forEach((link) =>
-      link.addEventListener('click', (event) => {
-        const destination = document.getElementById(
-          decodeURIComponent(link.hash.slice(1)),
-        );
-        if (destination) {
-          event.preventDefault();
-          destination.scrollIntoView({
-            block: 'start',
-            behavior: reduced.matches ? 'instant' : 'smooth',
-          });
-        }
-      }),
-    );
   return {
     show,
     syncLinks,
     isOpen: () => dialog.open,
     restore() {
-      const view = new URL(location.href).searchParams.get('view');
-      if (view && panels.some((panel) => panel.dataset.viewPanel === view))
-        show(view, false);
+      const params = new URL(location.href).searchParams;
+      const view = params.get('view');
+      if (view && resolve(view, params.get('section') ?? '').panel)
+        show(view, false, params.get('section') ?? '');
       else if (dialog.open) void hide();
       syncLinks();
     },

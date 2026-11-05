@@ -25,9 +25,6 @@ test('localized homes, keyboard skip and main navigation', async ({ page }) => {
   await expect(page.locator('main')).toBeFocused();
   await page.locator('[data-menu-toggle]').click();
   await page.locator('[data-island-go="portfolio"]').click();
-  await page
-    .locator('[data-index-details="portfolio"] [data-open="projects"]')
-    .click();
   await expect(page.locator('[data-view-panel="projects"]')).toBeVisible();
   await page.goto('/en/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('CIZING');
@@ -64,16 +61,17 @@ test('notes category, tag, empty state, localized articles and reading navigatio
     await page.goto(`/${locale}/notes/`);
     await page
       .getByLabel(locale === 'en' ? 'Category' : '分類', { exact: true })
-      .selectOption(locale === 'en' ? 'Data consistency' : '資料一致性');
-    await expect(page.locator('.note-row:visible')).toHaveCount(1);
+      .selectOption('data');
+    await page.locator('[data-lab-query]').fill('GiST');
+    await expect(page.locator('[data-lab-item]:visible')).toHaveCount(1);
     await page
       .getByLabel(locale === 'en' ? 'Tag' : '標籤', { exact: true })
       .selectOption('AssetFlow');
-    await expect(page.locator('#note-empty')).toBeVisible();
+    await expect(page.locator('[data-lab-empty]')).toBeVisible();
     await page
       .getByLabel(locale === 'en' ? 'Tag' : '標籤', { exact: true })
       .selectOption('');
-    await page.locator('.note-row:visible').click();
+    await page.locator('[data-lab-item]:visible a').click();
     await expect(page.locator('.prose pre')).toBeVisible();
     await expect(page.locator('.toc')).toBeVisible();
     await expect(page.locator('.article-footer')).toBeVisible();

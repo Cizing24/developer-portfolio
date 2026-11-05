@@ -4,14 +4,13 @@ import { Image } from 'astro:assets';
 import { localeFromPath, entrySlug, localizedPath } from '../lib/i18n';
 import { sortProjects, publishedNotes } from '../lib/content';
 import { profile } from '../config';
-import ProjectIntroduction from './ProjectIntroduction.astro';
+import ProjectShowcase from './ProjectShowcase.astro';
+import EngineeringLab from './EngineeringLab.astro';
+import TableOfContents from './TableOfContents.astro';
 import SkillsIndex from './SkillsIndex.astro';
 import WebsiteCases from './WebsiteCases.astro';
-import {
-  projectTopics,
-  topicTitle,
-  type ProjectId,
-} from '../lib/project-introductions';
+import { projectView } from '../lib/world-config';
+import type { ProjectId } from '../lib/project-introductions';
 const locale = localeFromPath(Astro.url.pathname);
 const en = locale === 'en';
 const projects = await Promise.all(
@@ -24,9 +23,6 @@ const notes = await Promise.all(
     await getCollection('notes', (n) => n.data.locale === locale),
   ).map(async (entry) => ({ entry, ...(await render(entry)) })),
 );
-const noteCategories = [
-  ...new Set(notes.map(({ entry }) => entry.data.category)),
-];
 ---
 
 <dialog class="studio-reader" data-reader aria-labelledby="reader-title">
@@ -63,8 +59,8 @@ const noteCategories = [
       <div class="prose">
         <p>
           {en
-            ? 'Select an island label, or open the menu on the right to search islands and their contents. Choose a topic to read it here.'
-            : '點選島名，或開啟右側選單搜尋島嶼與內容。選擇主題後，就會在這裡開啟閱讀框。'}
+            ? 'Portfolio, Engineering Lab, Contact and CIZING open directly. BookFlow, AssetFlow and Zailongchang have their own places to explore.'
+            : '作品集、工程實驗室、聯絡和 CIZING 可直接閱讀。BookFlow、AssetFlow 和在隆昌各有可探索的場景。'}
         </p>
         <p>
           {en
@@ -85,7 +81,7 @@ const noteCategories = [
     </section>
     <section
       data-view-panel="projects"
-      data-title={en ? 'Selected projects' : '作品索引'}
+      data-title={en ? 'All projects' : '作品總覽'}
       hidden
     >
       <h2>{en ? 'Portfolio' : '作品集'}</h2>
@@ -108,7 +104,10 @@ const noteCategories = [
               </button>
               <a
                 class="text-link"
-                data-open={`project-${entrySlug(entry.id)}`}
+                data-open={projectView(
+                  entrySlug(entry.id) as ProjectId,
+                  '-case',
+                )}
                 href={localizedPath(locale, `projects/${entrySlug(entry.id)}`)}
               >
                 {en ? 'Read case study' : '閱讀完整案例'}
@@ -121,24 +120,23 @@ const noteCategories = [
     </section>
     {projects.map(({ entry, Content }) => (
       <article
-        data-view-panel={`project-${entrySlug(entry.id)}`}
+        data-view-panel={projectView(entrySlug(entry.id) as ProjectId, '-case')}
         data-title={entry.data.title}
         hidden
       >
         <p class="eyebrow">PROJECT / {entry.data.category}</p>
         <h2>{entry.data.title}</h2>
         <p class="reader-lead">{entry.data.description}</p>
-        <Image
-          src={entry.data.cover}
-          alt={entry.data.coverAlt}
-          width={1200}
-          loading="lazy"
-        />
-        <p class="reader-evidence">
-          {en
-            ? 'Actual product screen with synthetic test data. No live service is connected.'
-            : '實際產品畫面，使用合成測試資料；此網站不連線正式服務。'}
-        </p>
+        <a
+          class="text-link"
+          href={
+            localizedPath(locale) +
+            `?island=${entrySlug(entry.id)}&view=project-${entrySlug(entry.id)}`
+          }
+          data-open={projectView(entrySlug(entry.id) as ProjectId)}
+        >
+          {en ? 'Open the interactive showcase' : '開啟互動展示'}
+        </a>
         <div class="prose reader-prose">
           <Content />
         </div>
@@ -147,64 +145,38 @@ const noteCategories = [
         </button>
       </article>
     ))}
-    {projects.flatMap(({ entry }) =>
-      projectTopics.map((topic) => (
-        <article
-          data-view-panel={`project-${entrySlug(entry.id)}-${topic}`}
-          data-title={`${entry.data.title} / ${topicTitle(topic, locale)}`}
-          hidden
-        >
-          <p class="eyebrow">{entry.data.title}</p>
-          <ProjectIntroduction
-            project={entrySlug(entry.id) as ProjectId}
-            locale={locale}
-            topic={topic}
-          />
-          <button
-            type="button"
-            class="text-link"
-            data-open={`project-${entrySlug(entry.id)}`}
-          >
-            {en ? 'View the project overview' : '查看專案總覽'}
-          </button>
-        </article>
-      )),
-    )}
+    {projects.map(({ entry }) => (
+      <ProjectShowcase {entry} {locale} />
+    ))}
     <section
       data-view-panel="journal"
-      data-title={en ? 'Engineering notes' : '工程筆記'}
+      data-title={en ? 'Engineering Lab' : 'Engineering Lab 工程實驗室'}
       hidden
     >
-      <h2>{en ? 'Notes' : '筆記'}</h2>
-
-      {noteCategories.map((category) => (
-        <section class="reader-note-category" aria-label={category}>
-          <h3 class="reader-category-title">{category}</h3>
-          {notes
-            .filter(({ entry }) => entry.data.category === category)
-            .map(({ entry }) => (
-              <a
-                class="reader-note"
-                href={localizedPath(locale, `notes/${entrySlug(entry.id)}`)}
-                data-open={`note-${entrySlug(entry.id)}`}
-              >
-                <span class="eyebrow">{entry.data.category}</span>
-                <h3>{entry.data.title}</h3>
-                <p>{entry.data.description}</p>
-              </a>
-            ))}
-        </section>
-      ))}
+      <p class="eyebrow">CIZING / ENGINEERING LAB</p>
+      <h2>{en ? 'Engineering Lab' : '工程實驗室'}</h2>
+      <EngineeringLab locale={locale} notes={notes.map(({ entry }) => entry)} />
     </section>
-    {notes.map(({ entry, Content }) => (
+    {notes.map(({ entry, Content, headings }) => (
       <article
         data-view-panel={`note-${entrySlug(entry.id)}`}
         data-title={entry.data.title}
         hidden
       >
+        <a
+          class="text-link"
+          data-open="journal"
+          href={localizedPath(locale, 'notes')}
+        >
+          {en ? 'Back to Engineering Lab' : '回工程實驗室'}
+        </a>
         <p class="eyebrow">FIELD NOTE / {entry.data.category}</p>
         <h2>{entry.data.title}</h2>
         <p class="reader-lead">{entry.data.description}</p>
+        <details class="reader-contents">
+          <summary>{en ? 'In this note' : '本篇目錄'}</summary>
+          <TableOfContents headings={headings} />
+        </details>
         <div class="prose reader-prose">
           <Content />
         </div>
@@ -272,8 +244,8 @@ const noteCategories = [
         <h3>{en ? 'Work, learning and collaboration' : '作品、學習與協作'}</h3>
         <p>
           {en
-            ? 'These projects are also a continuing learning record. AI-assisted work is kept distinct from personal understanding, and implementation is kept distinct from demonstrated mastery. My personal cultural-action application belongs to that record, with planned work clearly separated from completed outcomes. I welcome conversations about full-stack development, maintainable systems and software engineering opportunities.'
-            : '這些專案也持續累積成學習紀錄。AI 協作、自己理解到哪裡，以及實際完成哪些驗證，需要分開說明；做出功能不等於每個細節都已熟練。個人的文化行動計畫也放在這份紀錄裡，並區分申請規劃與已完成成果。歡迎交流全端開發、系統維護，以及軟體工程的工作機會。'}
+            ? 'I use AI to help trace code and check decisions. I keep the sources and verification results with each project. I welcome conversations about full-stack development and maintainable systems.'
+            : '我會用 AI 協助追查程式與檢查決策，並把來源與驗證結果留在各個專案裡。歡迎交流全端開發與系統維護。'}
         </p>
       </div>
       <div class="reader-actions">
@@ -290,6 +262,13 @@ const noteCategories = [
       data-title={en ? 'Skills & evidence' : '技術與證據'}
       hidden
     >
+      <a
+        class="text-link"
+        data-open="journal"
+        href={localizedPath(locale, 'notes')}
+      >
+        {en ? 'Back to Engineering Lab' : '回工程實驗室'}
+      </a>
       <SkillsIndex locale={locale} />
     </section>
     <section

@@ -1,0 +1,229 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { entrySlug, localizedPath, type Locale } from '../lib/i18n';
+import { showcaseEngineering } from '../lib/project-showcase';
+import type { ProjectId } from '../lib/project-introductions';
+import { projectFacilities, projectView } from '../lib/world-config';
+import ProjectDemo from './ProjectDemo.astro';
+import WorldIcon from './WorldIcon.astro';
+
+interface Props {
+  entry: CollectionEntry<'projects'>;
+  locale: Locale;
+}
+const { entry, locale } = Astro.props;
+const project = entrySlug(entry.id) as ProjectId;
+const en = locale === 'en';
+const t = (zh: string, english: string) => (en ? english : zh);
+const data = entry.data;
+const engineering = showcaseEngineering(project, locale);
+const repo = data.visibility === 'public' ? data.repository : undefined;
+const source = repo ? `${repo}/blob/${data.sourceCommit}/` : undefined;
+const casePath = localizedPath(locale, `projects/${project}`);
+const notePath = localizedPath(locale, `notes/${engineering.notes}`);
+const view = (suffix: string) => projectView(project, suffix);
+const viewHref = (suffix: string) =>
+  localizedPath(locale) + `?island=${project}&view=${view(suffix)}`;
+const tabs = [
+  { key: 'demo', suffix: '', label: t('操作展示', 'Demo'), icon: 'play' },
+  {
+    key: 'architecture',
+    suffix: '-architecture',
+    label: t('系統架構', 'Architecture'),
+    icon: 'layers',
+  },
+  {
+    key: 'evidence',
+    suffix: '-evidence',
+    label: t('工程證據', 'Evidence'),
+    icon: 'file',
+  },
+];
+---
+
+<article
+  class="project-showcase"
+  data-view-panel={view('')}
+  data-project-showcase
+  data-title={data.title}
+  hidden
+>
+  <h2>{data.title}</h2>
+  <p class="showcase-purpose">{data.description}</p>
+  <nav class="showcase-tabs" aria-label={t('展示分頁', 'Showcase sections')}>
+    {tabs.map(({ key, suffix, label, icon }) => (
+      <a
+        href={viewHref(suffix)}
+        data-open={view(suffix)}
+        data-showcase-tab={key}
+      >
+        <WorldIcon name={icon} />
+        {label}
+      </a>
+    ))}
+  </nav>
+  <nav
+    class="showcase-modes"
+    data-showcase-subnav
+    aria-label={t('操作展示流程', 'Demo workflows')}
+  >
+    {projectFacilities[project].slice(0, 2).map((facility, index) => (
+      <a
+        href={viewHref(facility.suffix)}
+        data-open={view(facility.suffix)}
+        data-showcase-mode={index === 0 ? 'demo' : 'secondary'}
+      >
+        {en ? facility.en : facility.zh}
+      </a>
+    ))}
+  </nav>
+  <ProjectDemo {project} {locale} />
+  <section
+    data-showcase-region="architecture"
+    class="showcase-workspace"
+    hidden
+  >
+    <div class="showcase-workspace-head">
+      <WorldIcon name="layers" />
+      <h3>{t('一次操作如何寫入系統', 'How a change reaches the database')}</h3>
+      <span>{t('架構示意', 'Architecture diagram')}</span>
+    </div>
+    <ol
+      class="showcase-layers"
+      aria-label={t(
+        '從介面到資料庫的請求順序',
+        'Request order from interface to database',
+      )}
+    >
+      {engineering.nodes.map((node, index) => (
+        <li>
+          <details open={index === 0}>
+            <summary>
+              <span class="showcase-layer-index" aria-hidden="true">
+                0{index + 1}
+              </span>
+              <span>
+                <strong>{node.name}</strong>
+                <small>{node.stack}</small>
+              </span>
+            </summary>
+            <div>
+              <p>{node.detail}</p>
+              {source && (
+                <a href={source + node.path}>
+                  {t('查看此元件的原始碼', 'View source for this component')}
+                </a>
+              )}
+            </div>
+          </details>
+        </li>
+      ))}
+    </ol>
+    <div class="showcase-engineering-note">
+      <h4>
+        {project === 'bookflow'
+          ? t('遇到時段衝突時', 'When two bookings conflict')
+          : t('任一寫入失敗時', 'When a write fails')}
+      </h4>
+      <p>{engineering.engineering}</p>
+      <a href={notePath} data-open={`note-${engineering.notes}`}>
+        {project === 'bookflow'
+          ? t(
+              '到工程實驗室操作併發案例',
+              'Try concurrent bookings in Engineering Lab',
+            )
+          : t(
+              '閱讀日期契約與交接筆記',
+              'Read the date contracts and handover note',
+            )}
+      </a>
+    </div>
+  </section>
+  <section data-showcase-region="evidence" class="showcase-workspace" hidden>
+    <div class="showcase-workspace-head">
+      <WorldIcon name="file" />
+      <h3>{t('從功能追溯到來源', 'Trace features to their sources')}</h3>
+      <span>{t('歷史版本證據', 'Evidence for the reviewed revision')}</span>
+    </div>
+    <div class="showcase-evidence">
+      {repo && source && (
+        <>
+          <p class="showcase-revision">
+            <a href={`${repo}/commit/${data.sourceCommit}`}>
+              {t('查核版本', 'Reviewed revision')}{' '}
+              <code>{data.sourceCommit.slice(0, 12)}</code>
+            </a>
+            <time datetime={data.reviewedAt}>{data.reviewedAt}</time>
+          </p>
+          <dl>
+            <dt>{t('前端介面', 'Frontend interface')}</dt>
+            <dd>
+              <a href={source + engineering.nodes[0]!.path}>
+                {engineering.nodes[0]!.name}
+              </a>
+            </dd>
+            <dt>{t('後端業務與權限', 'Backend rules and access')}</dt>
+            <dd>
+              <a href={source + engineering.nodes[1]!.path}>
+                {engineering.nodes[1]!.name}
+              </a>
+              <a href={source + engineering.supporting}>
+                {t('權限與入口', 'Permissions and entry points')}
+              </a>
+            </dd>
+            <dt>{t('資料模型與約束', 'Data model and constraints')}</dt>
+            <dd>
+              <a href={source + engineering.nodes[2]!.path}>
+                {engineering.nodes[2]!.name}
+              </a>
+            </dd>
+            <dt>{t('測試與 CI', 'Tests and CI')}</dt>
+            <dd>
+              <a href={source + engineering.tests}>
+                {t('整合測試原始碼', 'Integration test source')}
+              </a>
+              <a href={`${repo}/actions/runs/${engineering.ci}`}>
+                {t(
+                  '該版本的 GitHub Actions 紀錄',
+                  'GitHub Actions run for this revision',
+                )}
+              </a>
+            </dd>
+            <dt>{t('重現與工程筆記', 'Reproduction and engineering notes')}</dt>
+            <dd>
+              <a href={source + 'README.md'}>
+                {t('原專案本機啟動說明', 'Source project setup')}
+              </a>
+              <a href={notePath} data-open={`note-${engineering.notes}`}>
+                {t('工程實驗室筆記', 'Engineering Lab note')}
+              </a>
+            </dd>
+          </dl>
+        </>
+      )}
+      <h4>{t('展示範圍', 'Showcase scope')}</h4>
+      <p>{engineering.limits}</p>
+      <h4>{t('AI 協作紀錄', 'AI collaboration')}</h4>
+      <p>
+        {t(
+          'CIZING 界定公開與展示範圍。Codex 協助查核來源、整理雙語工程內容及實作作品集模擬。',
+          'CIZING defined what to publish and demonstrate. Codex helped trace sources, write bilingual engineering material and implement the portfolio simulations.',
+        )}
+      </p>
+      <a
+        href={localizedPath(locale, 'notes/ai-collaboration')}
+        data-open="note-ai-collaboration"
+      >
+        {t('閱讀 AI 協作與驗證方式', 'Read how AI collaboration was verified')}
+      </a>
+    </div>
+  </section>
+  <footer class="showcase-footer">
+    <a href={casePath} data-open={view('-case')}>
+      {t('閱讀完整案例', 'Read the full case study')}
+    </a>
+    <button type="button" class="text-link" data-reader-share>
+      {t('複製此展示連結', 'Copy showcase link')}
+    </button>
+  </footer>
+</article>

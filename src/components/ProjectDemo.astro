@@ -1,0 +1,406 @@
+---
+import type { Locale } from '../lib/i18n';
+import type { ProjectId } from '../lib/project-introductions';
+import {
+  bookingDates,
+  createAssetDemo,
+  demoEmployees,
+} from '../lib/showcase-simulations';
+import ProjectWorkflow from './ProjectWorkflow.astro';
+import WorldIcon from './WorldIcon.astro';
+
+interface Props {
+  project: ProjectId;
+  locale: Locale;
+}
+const { project, locale } = Astro.props;
+const en = locale === 'en';
+const t = (zh: string, english: string) => (en ? english : zh);
+const services = [
+  ['consult', t('初次諮詢', 'Intro consultation')],
+  ['session', t('一對一服務', 'One-to-one session')],
+];
+const staff = [
+  ['north', t('人員 A', 'Staff A')],
+  ['south', t('人員 B', 'Staff B')],
+];
+const bookingSteps = [
+  t('選服務', 'Choose service'),
+  t('選日期與人員', 'Choose date & staff'),
+  t('確認時段', 'Confirm time'),
+];
+const bookingCopy = {
+  service: t('請先選擇一項服務。', 'Choose a service to continue.'),
+  schedule: t('請選擇日期與人員。', 'Choose a date and a staff member.'),
+  slot: t('請選擇一個時段。', 'Choose a time slot.'),
+  empty: t(
+    '此日期與人員沒有可用時段，請回上一步更換條件。',
+    'This staff member has no available times on that date. Go back and change your selection.',
+  ),
+  taken: t('已預約', 'Booked'),
+  confirmed: t(
+    '示範預約成立，該時段已標記為已預約。再次送出可查看衝突回饋。',
+    'Demo booking confirmed. The slot is now marked booked. Submit it again to see the conflict response.',
+  ),
+  conflict: t(
+    '時段已被預約，請改選其他時段。',
+    'That slot is already booked. Choose another time.',
+  ),
+  reset: t(
+    '已回到第一步，示範預約已清除。',
+    'Back at step one. Demo bookings have been cleared.',
+  ),
+};
+const calendarGuide = [
+  [
+    t('設定工作時間', 'Set working hours'),
+    t(
+      '店家先設定營業時間及各人員的工作時段，顧客只會看到符合服務與排班條件的時段。',
+      'Set opening hours and staff shifts first. Customers see times that fit the service and staff schedule.',
+    ),
+  ],
+  [
+    t('登記休假與例外', 'Record time off and exceptions'),
+    t(
+      '休假與例外會排除不可預約區間。店家可回到行事曆確認該日安排。',
+      'Time off removes unavailable periods. Return to the calendar to review the day.',
+    ),
+  ],
+  [
+    t('查看與管理預約', 'Review and manage appointments'),
+    t(
+      '依人員與日期查看預約，從行事曆開啟預約明細，再依權限調整或取消。',
+      'Review bookings by staff and date. Open a booking to inspect, reschedule or cancel it as permitted.',
+    ),
+  ],
+];
+const assets = createAssetDemo().assets;
+const assetCopy = {
+  available: t('可用', 'Available'),
+  assigned: t('已領用', 'Assigned'),
+  maintenance: t('維修中', 'Under repair'),
+  laptop: t('筆記型電腦', 'Laptop'),
+  desktop: t('桌上型電腦', 'Desktop'),
+  monitor: t('顯示器', 'Monitor'),
+  employee: t('員工', 'Employee'),
+  noHolder: t('無持有人', 'Unassigned'),
+  checkout: t('領用', 'Checkout'),
+  checkin: t('正常歸還', 'Return'),
+  damaged: t('故障歸還', 'Damaged return'),
+  assetRequired: t('請選擇設備。', 'Select a device.'),
+  unavailable: t(
+    '只有可用設備可以領用。',
+    'Only available equipment can be checked out.',
+  ),
+  employeeRequired: t('請選擇領用人員。', 'Select an employee.'),
+  offboardingEmployee: t(
+    '離職交接中的員工不能領用新設備。',
+    'An employee in offboarding cannot check out more equipment.',
+  ),
+  notAssigned: t(
+    '只有已領用設備可以歸還。',
+    'Only assigned equipment can be returned.',
+  ),
+  descriptionRequired: t(
+    '故障歸還需要填寫故障描述。',
+    'Describe the fault before submitting a damaged return.',
+  ),
+  updated: t(
+    '設備狀態已更新，已新增示意稽核事件。',
+    'Equipment updated and a demo audit event was recorded.',
+  ),
+  reset: t(
+    '設備與稽核事件已重設。',
+    'Equipment and audit events have been reset.',
+  ),
+  blocked: t(
+    '仍有設備待歸還，員工 B 的離職交接無法結案。',
+    'Employee B still has equipment to return. Handover cannot close.',
+  ),
+  cleared: t(
+    '員工 B 的設備已全數歸還，可進入交接確認。',
+    'Employee B has returned all equipment. Handover can proceed to confirmation.',
+  ),
+};
+const previous = t('上一步', 'Previous');
+const next = t('下一步', 'Next');
+const reset = t('重新開始', 'Start over');
+const simulation = t(
+  '合成資料・前端模擬',
+  'Synthetic data · browser simulation',
+);
+const actual = t('真實產品截圖', 'Actual product screenshot');
+---
+
+{project === 'bookflow' ? (
+  <>
+    <section data-showcase-region="demo" class="showcase-workspace">
+      <div class="showcase-workspace-head">
+        <WorldIcon name="calendar" />
+        <h3>{t('顧客預約櫃台', 'Customer booking desk')}</h3>
+        <span>{simulation}</span>
+      </div>
+      <form
+        data-booking-demo
+        data-copy={JSON.stringify(bookingCopy)}
+        class="showcase-form"
+      >
+        <ol
+          class="showcase-progress"
+          aria-label={t('預約步驟', 'Booking steps')}
+        >
+          {bookingSteps.map((step, index) => (
+            <li aria-current={index === 0 ? 'step' : undefined}>{step}</li>
+          ))}
+        </ol>
+        <fieldset data-booking-step>
+          <legend>
+            {t('這次想預約哪項服務？', 'What would you like to book?')}
+          </legend>
+          <label for="service">{t('服務項目', 'Service')}</label>
+          <select id="service" name="service">
+            <option value="">{t('選擇服務', 'Select a service')}</option>
+            {services.map(([value, label]) => (
+              <option value={value}>{label}</option>
+            ))}
+          </select>
+        </fieldset>
+        <fieldset data-booking-step hidden>
+          <legend>
+            {t('查詢日期與人員的空檔', 'Find availability by date and staff')}
+          </legend>
+          <div class="showcase-fields">
+            <label>
+              {t('日期', 'Date')}
+              <select name="date">
+                <option value="">{t('選擇日期', 'Select a date')}</option>
+                {bookingDates.map((date) => (
+                  <option value={date}>{date}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {t('服務人員', 'Staff member')}
+              <select name="staff">
+                <option value="">
+                  {t('選擇人員', 'Select a staff member')}
+                </option>
+                {staff.map(([value, label]) => (
+                  <option value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </fieldset>
+        <fieldset data-booking-step hidden>
+          <legend>
+            {t('查看並確認可用時段', 'Review and confirm an available time')}
+          </legend>
+          <p data-booking-summary></p>
+          <label for="booking-time">{t('可用時段', 'Available times')}</label>
+          <select id="booking-time" name="time">
+            <option value="">{t('選擇時段', 'Select a time')}</option>
+          </select>
+        </fieldset>
+        <p data-demo-status class="showcase-feedback" role="status"></p>
+        <div class="showcase-actions">
+          <button type="button" data-booking-back hidden>
+            {previous}
+          </button>
+          <button type="button" data-booking-next class="showcase-primary">
+            {next}
+          </button>
+          <button type="submit" class="showcase-primary" hidden>
+            {t('送出示範預約', 'Submit demo booking')}
+          </button>
+          <button type="reset">{reset}</button>
+        </div>
+      </form>
+      <details class="showcase-photo">
+        <summary>
+          {t('查看真實顧客預約畫面', 'See the actual customer booking screen')}
+        </summary>
+        <ProjectWorkflow {project} {locale} shot={0} />
+      </details>
+    </section>
+    <section data-showcase-region="secondary" class="showcase-workspace" hidden>
+      <div class="showcase-workspace-head">
+        <WorldIcon name="calendar" />
+        <h3>{t('店家行事曆', 'Business calendar')}</h3>
+        <span>{actual}</span>
+      </div>
+      <div class="showcase-guide" data-calendar-guide>
+        <div>
+          {calendarGuide.map(([title, detail], index) => (
+            <section data-guide-step hidden={index !== 0}>
+              <p class="showcase-step">
+                {index + 1} / {calendarGuide.length}
+              </p>
+              <h4 tabindex="-1">{title}</h4>
+              <p>{detail}</p>
+            </section>
+          ))}
+          <div
+            class="showcase-actions"
+            role="group"
+            aria-label={t('行事曆導覽步驟', 'Calendar walkthrough steps')}
+          >
+            <button type="button" data-guide-move="-1" disabled>
+              {previous}
+            </button>
+            <button type="button" data-guide-move="1">
+              {next}
+            </button>
+            <button type="button" data-guide-move="0">
+              {reset}
+            </button>
+          </div>
+        </div>
+        <ProjectWorkflow {project} {locale} shot={1} />
+      </div>
+    </section>
+  </>
+) : (
+  <section
+    data-showcase-region="demo secondary"
+    data-asset-demo
+    data-copy={JSON.stringify(assetCopy)}
+    class="showcase-workspace"
+  >
+    <div class="showcase-workspace-head">
+      <WorldIcon name="equipment" />
+      <h3 data-asset-mode="demo">{t('設備清冊', 'Equipment register')}</h3>
+      <h3 data-asset-mode="secondary" hidden>
+        {t('領還與離職交接', 'Checkout, return and handover')}
+      </h3>
+      <span>{simulation}</span>
+    </div>
+    <div class="showcase-form">
+      <div class="showcase-fields" data-asset-mode="demo">
+        <label>
+          {t('搜尋設備', 'Find equipment')}
+          <input type="search" data-asset-search />
+        </label>
+        <label>
+          {t('篩選狀態', 'Filter by status')}
+          <select data-asset-filter>
+            <option value="">{t('所有狀態', 'All statuses')}</option>
+            {(['available', 'assigned', 'maintenance'] as const).map(
+              (status) => (
+                <option value={status}>{assetCopy[status]}</option>
+              ),
+            )}
+          </select>
+        </label>
+      </div>
+      <table class="showcase-inventory">
+        <caption class="sr-only">
+          {t('合成設備清冊', 'Synthetic equipment register')}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">{t('設備', 'Device')}</th>
+            <th scope="col">{t('狀態', 'Status')}</th>
+            <th scope="col">{t('持有人', 'Holder')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {assets.map(({ id, kind, status, holder }) => (
+            <tr data-asset-row={id}>
+              <th scope="row">
+                {assetCopy[kind]} <small>{id}</small>
+              </th>
+              <td data-asset-status>{assetCopy[status]}</td>
+              <td data-asset-holder>
+                {holder
+                  ? `${assetCopy.employee} ${holder}`
+                  : assetCopy.noHolder}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p role="status" data-asset-empty hidden>
+        {t('沒有符合條件的設備。', 'No matching equipment.')}
+      </p>
+      <div data-asset-mode="secondary" hidden>
+        <form data-asset-form>
+          <div class="showcase-fields">
+            <label>
+              {t('操作', 'Action')}
+              <select name="action">
+                <option value="checkout">{assetCopy.checkout}</option>
+                <option value="checkin">{assetCopy.checkin}</option>
+                <option value="damaged">{assetCopy.damaged}</option>
+              </select>
+            </label>
+            <label>
+              {t('設備', 'Device')}
+              <select name="asset">
+                <option value="">{t('選擇設備', 'Select equipment')}</option>
+                {assets.map(({ id, kind }) => (
+                  <option value={id}>
+                    {assetCopy[kind]} · {id}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label data-asset-extra="checkout">
+              {t('領用人員', 'Employee')}
+              <select name="employee">
+                <option value="">{t('選擇員工', 'Select an employee')}</option>
+                {demoEmployees.map((id) => (
+                  <option value={id}>
+                    {assetCopy.employee} {id}
+                    {id === 'B' ? t('（離職交接中）', ' (offboarding)') : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label data-asset-extra="damaged" hidden>
+              {t('故障描述', 'Fault description')}
+              <input name="description" maxlength="160" />
+            </label>
+          </div>
+          <p role="status" data-demo-status class="showcase-feedback"></p>
+          <div class="showcase-actions">
+            <button type="submit" class="showcase-primary">
+              {t('套用設備異動', 'Apply equipment change')}
+            </button>
+            <button type="reset">{reset}</button>
+          </div>
+        </form>
+        <div class="showcase-handover">
+          <div>
+            <h4>{t('離職交接檢查', 'Offboarding check')}</h4>
+            <p data-handover-status role="status">
+              {assetCopy.blocked}
+            </p>
+          </div>
+          <div>
+            <h4>{t('示意稽核紀錄', 'Demo audit log')}</h4>
+            <p data-asset-audit-empty>
+              {t(
+                '尚無異動。成功操作會在這裡留下紀錄。',
+                'No changes yet. Successful actions will appear here.',
+              )}
+            </p>
+            <ol data-asset-audit></ol>
+          </div>
+        </div>
+      </div>
+    </div>
+    <details class="showcase-photo" data-asset-mode="demo">
+      <summary>
+        {t('查看真實設備清冊', 'See the actual equipment register')}
+      </summary>
+      <ProjectWorkflow {project} {locale} shot={0} />
+    </details>
+    <details class="showcase-photo" data-asset-mode="secondary" hidden>
+      <summary>
+        {t('查看真實離職交接畫面', 'See the actual offboarding screen')}
+      </summary>
+      <ProjectWorkflow {project} {locale} shot={1} />
+    </details>
+  </section>
+)}

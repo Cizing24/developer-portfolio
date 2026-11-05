@@ -20,13 +20,6 @@ async function visit(page: Page, id: string) {
     'false',
   );
 }
-async function open(page: Page, id: string, view: string) {
-  await visit(page, id);
-  await page
-    .locator(`[data-index-details="${id}"] [data-open="${view}"]`)
-    .first()
-    .click();
-}
 
 test('dock and menu icons remain centered in playing and paused states', async ({
   page,
@@ -101,32 +94,18 @@ test('independent harbor island exposes bounded bilingual notes and a richer pro
     );
     await page.keyboard.press('Escape');
     await visit(page, 'journal');
-    const cards = await page
-      .locator('[data-station]:visible')
-      .evaluateAll((nodes) =>
-        nodes.map((node) => {
-          const r = node.getBoundingClientRect();
-          return { x: r.x, y: r.y, w: r.width, h: r.height };
-        }),
-      );
-    expect(cards).toHaveLength(5);
-    for (let a = 0; a < cards.length; a++)
-      for (let b = a + 1; b < cards.length; b++) {
-        const x = cards[a]!,
-          y = cards[b]!;
-        expect(
-          Math.min(x.x + x.w, y.x + y.w) - Math.max(x.x, y.x) > 0 &&
-            Math.min(x.y + x.h, y.y + y.h) - Math.max(x.y, y.y) > 0,
-        ).toBe(false);
-      }
-    await open(page, 'journal', 'note-cotton-booking');
+    await expect(page.locator('[data-lab-group]:visible')).toHaveCount(6);
+    await page.locator('[data-lab-category]').selectOption('field');
+    await page
+      .locator('[data-view-panel=journal] a[href$="/notes/cotton-booking/"]')
+      .click();
     const client = page.locator('[data-view-panel=note-cotton-booking]');
     await expect(client).toContainText(
       locale === 'en' ? 'client project' : '接案專案',
     );
     expect(await client.locator('a[href^="https:"]').count()).toBe(0);
     await page.keyboard.press('Escape');
-    await open(page, 'about', 'about');
+    await visit(page, 'about');
     await expect(page.locator('[data-view-panel=about] > h2')).toHaveText(
       'CIZING',
     );

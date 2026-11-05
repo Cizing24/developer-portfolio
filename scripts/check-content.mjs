@@ -14,13 +14,22 @@ for (const collection of ['projects', 'notes']) {
       const id = `${locale}/${key}`;
       assert.ok(!pairs.has(id), `Duplicate translation: ${id}`);
       pairs.set(id, body);
-      if (collection === 'projects')
-        assert.ok(
-          body.includes(
-            `<ProjectIntroduction project="${key}" locale="${locale}" />`,
-          ),
-          `${id}: use the shared localized product introduction`,
+      if (collection === 'projects') {
+        const intro = (topic) =>
+          body.indexOf(
+            `<ProjectIntroduction project="${key}" locale="${locale}" topic="${topic}" />`,
+          );
+        const workflow = body.indexOf(
+          `<ProjectWorkflow project="${key}" locale="${locale}" />`,
         );
+        assert.ok(
+          intro('purpose') >= 0 &&
+            intro('purpose') < workflow &&
+            workflow < intro('features') &&
+            intro('features') < intro('architecture'),
+          `${id}: use the shared introduction and walkthrough in reading order`,
+        );
+      }
       if (locale === 'en')
         assert.doesNotMatch(
           body,

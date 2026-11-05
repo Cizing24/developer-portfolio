@@ -9,20 +9,23 @@ import calendar from '../assets/workflows/bookflow-calendar.png';
 interface Props {
   project: ProjectId;
   locale: Locale;
+  shot?: 0 | 1;
 }
-const { project, locale } = Astro.props;
+const { project, locale, shot } = Astro.props;
 const en = locale === 'en';
 const images =
   project === 'assetflow'
     ? [
         {
           src: register,
+          title: en ? 'Inventory and assignment' : '清冊與設備領用',
           caption: en
             ? 'Equipment register: search, status and assignees.'
             : '設備清單：搜尋、狀態與目前使用者。',
         },
         {
           src: offboarding,
+          title: en ? 'Return and offboarding' : '歸還與離職交接',
           caption: en
             ? 'Offboarding: outstanding devices and handover progress.'
             : '離職交接：未歸還設備與交接進度。',
@@ -31,12 +34,14 @@ const images =
     : [
         {
           src: booking,
+          title: en ? '01 / Customer booking' : '01 / 顧客預約',
           caption: en
             ? 'Customer booking: service, staff and available time.'
             : '顧客預約：服務、人員與可用時段。',
         },
         {
           src: calendar,
+          title: en ? '02 / Business calendar' : '02 / 店家行事曆',
           caption: en
             ? 'Business calendar: inspect and manage appointments.'
             : '店家行事曆：查看與管理預約。',
@@ -44,28 +49,61 @@ const images =
       ];
 ---
 
-<div class="workflow-screens">
-  {images.map(({ src, caption }) => (
-    <figure>
-      <Image
-        src={src}
-        alt={caption}
-        widths={[480, 800, 1200]}
-        sizes="(max-width:760px) 90vw,800px"
-        loading="lazy"
-      />
-      <figcaption>{caption}</figcaption>
-    </figure>
-  ))}
+<section
+  id={shot === undefined ? 'product-workflow' : undefined}
+  class="workflow-screens"
+>
+  {shot === undefined && <h2>{en ? 'Product walkthrough' : '操作展示'}</h2>}
+  <div class:list={['workflow-grid', { 'single-shot': shot !== undefined }]}>
+    {images
+      .filter((_, index) => shot === undefined || index === shot)
+      .map(({ src, caption, title }) => (
+        <figure>
+          {shot === undefined && <h3>{title}</h3>}
+          <Image
+            src={src}
+            alt={caption}
+            widths={[480, 800, 1200]}
+            sizes="(max-width:760px) 90vw,800px"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>{caption}</figcaption>
+          {shot !== undefined && (
+            <p data-shot-error hidden>
+              {en
+                ? 'The image could not be loaded. The written walkthrough is still available.'
+                : '截圖載入失敗，仍可閱讀文字導覽。'}
+            </p>
+          )}
+        </figure>
+      ))}
+  </div>
   <p>
     {en
-      ? 'Actual system screenshots from the public repository, using synthetic test data. These still images illustrate stages of the workflow; they are not a recording or a live demo.'
-      : '公開 Repository 的實際系統截圖，使用合成測試資料。靜態畫面用來說明流程階段，並非操作錄影或線上 Demo。'}
+      ? 'Actual product screenshots from the public repository with synthetic test data.'
+      : '公開程式庫的實際產品截圖，畫面使用合成測試資料。'}
   </p>
-</div>
+</section>
 <style>
+  .workflow-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .workflow-grid.single-shot {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .workflow-screens figure {
-    margin: 24px 0;
+    margin: 0;
+  }
+  .workflow-screens h3 {
+    font-size: 1.02rem;
+  }
+  @media (max-width: 700px) {
+    .workflow-grid {
+      grid-template-columns: 1fr;
+    }
   }
   .workflow-screens img {
     width: 100%;

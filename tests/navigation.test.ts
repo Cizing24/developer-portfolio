@@ -6,6 +6,7 @@ import {
 } from '../src/lib/navigation';
 import {
   islandLayout,
+  islandElevation,
   createWorldDomain,
   createSeaDomain,
   bridgePairs,
@@ -16,8 +17,8 @@ describe.each([false, true])('world navigation, portrait=%s', (portrait) => {
   it('shares both deck edges at the project-island bends', () => {
     const decks = bridgeDecks(islandLayout(portrait));
     for (const deck of decks.slice(0, 2)) {
-      expect(deck.points).toHaveLength(3);
-      expect(deck.outline).toHaveLength(6);
+      expect(deck.points).toHaveLength(4);
+      expect(deck.outline).toHaveLength(8);
       for (const side of [deck.left, deck.right])
         expect(
           Math.hypot(
@@ -27,6 +28,25 @@ describe.each([false, true])('world navigation, portrait=%s', (portrait) => {
         ).toBeLessThan(1.2);
     }
   });
+  it('uses the visible project ramp as the walking surface and leaves the sea unsupported', () => {
+    const centers = islandLayout(portrait);
+    const decks = bridgeDecks(centers);
+    const domain = createWorldDomain(centers, decks);
+    for (const [index, id] of ['bookflow', 'assetflow'].entries()) {
+      const deck = decks[index]!;
+      const start = deck.points.at(-2)!;
+      const end = deck.points.at(-1)!;
+      const middle = { x: (start.x + end.x) / 2, z: start.z };
+      expect(domain.height(start)).toBeCloseTo(deck.height(start));
+      expect(domain.height(middle)).toBeCloseTo(deck.height(middle));
+      expect(domain.height(middle)).toBeLessThan(domain.height(start));
+      expect(domain.height(centers[id as 'bookflow' | 'assetflow'])).toBe(
+        islandElevation(id as 'bookflow' | 'assetflow'),
+      );
+    }
+    expect(domain.surface({ x: 0, z: -21 })).toBeUndefined();
+  });
+
   it('connects every main island by walkable bridges and leaves the harbor island isolated', () => {
     const centers = islandLayout(portrait);
     const nav = createNavigation(createWorldDomain(centers), 0.17);

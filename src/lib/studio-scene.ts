@@ -1,14 +1,17 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { type IslandId, type DayPhase } from './world-config';
+import {
+  directIslandView,
+  projectFacilities,
+  type IslandId,
+  type DayPhase,
+} from './world-config';
+import { phaseLight, pigments as art } from './studio-art';
+import { createMovingShadows } from './studio-shadows';
 import type { ProjectId } from './project-introductions';
 import { createWander, rectangleArea } from './wander';
-import {
-  createNavigation,
-  createPedestrian,
-  type Navigation,
-} from './navigation';
+import { createNavigation, createPedestrian } from './navigation';
 import {
   islandLayout,
   islandRadii,
@@ -22,6 +25,7 @@ import {
 } from './world-map';
 
 export interface StudioScene {
+  firstFrame(): void;
   focusIsland(id: IslandId, animated?: boolean): Promise<void>;
   overview(animated?: boolean): Promise<void>;
   zoom(factor: number): void;
@@ -45,20 +49,45 @@ export function createStudioScene(
     alpha: true,
     powerPreference: 'low-power',
   });
-  renderer.setPixelRatio(
-    Math.min(devicePixelRatio, container.clientWidth < 600 ? 1.5 : 2),
-  );
+  try {
+    return buildScene(
+      renderer,
+      container,
+      labels,
+      onSelect,
+      onContextLost,
+      onEnter,
+    );
+  } catch (error) {
+    renderer.dispose();
+    renderer.forceContextLoss();
+    renderer.domElement.remove();
+    throw error;
+  }
+}
+
+function buildScene(
+  renderer: THREE.WebGLRenderer,
+  container: HTMLElement,
+  labels: HTMLButtonElement[],
+  onSelect: (index: number) => void,
+  onContextLost: () => void,
+  onEnter: (id: IslandId) => void,
+): StudioScene {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;
   renderer.shadowMap.needsUpdate = true;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 1.04;
   renderer.domElement.setAttribute('aria-hidden', 'true');
-  container.prepend(renderer.domElement);
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xb9dadd);
-  scene.fog = new THREE.FogExp2(0xb9dadd, 0.003);
+  const noon = phaseLight.noon;
+  const skyColor = new THREE.Color(noon.sky);
+  const fog = new THREE.FogExp2(noon.sky, noon.fog);
+  let fogDensity = noon.fog;
+  scene.background = skyColor;
+  scene.fog = fog;
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 220);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enablePan = false;
@@ -69,8 +98,9 @@ export function createStudioScene(
   controls.touches.ONE = THREE.TOUCH.ROTATE;
   controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
   renderer.domElement.style.touchAction = 'none';
-  const sun = new THREE.DirectionalLight(0xfff2d6, 2.6);
-  sun.position.set(-6, 18, 10);
+  const sun = new THREE.DirectionalLight(noon.sun, noon.power);
+  sun.position.set(...noon.position);
+  sun.shadow.intensity = noon.shade;
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
   Object.assign(sun.shadow.camera, {
@@ -80,14 +110,26 @@ export function createStudioScene(
     bottom: -25,
   });
   sun.shadow.bias = -0.001;
-  const hemi = new THREE.HemisphereLight(0xfffaf0, 0x657e78, 2.2);
+  const hemi = new THREE.HemisphereLight(
+    noon.ambientSky,
+    noon.ambientGround,
+    noon.ambient,
+  );
   scene.add(sun, hemi);
-  const cream = 0xf5eedc,
+  const cream = art.limestone,
     wine = 0x982d36,
-    sage = 0x6d8268,
-    ink = 0x314e49,
-    gold = 0xc59c52,
+    sage = art.foliage[1],
+    ink = art.ink,
+    gold = art.brass,
     rose = 0xd9ad9b;
+  const woodFinish = { roughness: 0.78, metalness: 0 };
+  const steelFinish = { roughness: 0.46, metalness: 0.22 };
+  const matteFinish = { roughness: 0.92, metalness: 0 };
+  function finish(color: number) {
+    if (color === art.timber || color === art.bark) return woodFinish;
+    if (color === art.steel || color === gold) return steelFinish;
+    return matteFinish;
+  }
   const materials = new Map<number, THREE.MeshStandardMaterial>();
   function material(color: number) {
     if (!materials.has(color))
@@ -95,8 +137,7 @@ export function createStudioScene(
         color,
         new THREE.MeshStandardMaterial({
           color,
-          roughness: 0.82,
-          metalness: 0.04,
+          ...finish(color),
         }),
       );
     return materials.get(color)!;
@@ -146,34 +187,83 @@ export function createStudioScene(
       z,
     );
   }
+  function turf(
+    parent: THREE.Object3D,
+    radius: number,
+    height: number,
+    y: number,
+    sides: number,
+    color: number = art.grass,
+  ) {
+    const lawn = cylinder(parent, radius, height, color, 0, y, 0, sides);
+    const vertices = lawn.geometry.attributes.position!;
+    const grass = new THREE.Color(color);
+    const dry = new THREE.Color(art.dryGrass);
+    const tint = new THREE.Color();
+    const values = new Float32Array(vertices.count * 3);
+    for (let i = 0; i < vertices.count; i++) {
+      const x = vertices.getX(i) / radius;
+      const z = vertices.getZ(i) / radius;
+      const edge = Math.hypot(x, z);
+      const variation =
+        0.45 + 0.36 * Math.sin(5 * x + 2 * z) + 0.17 * Math.cos(6 * z - x);
+      tint
+        .copy(grass)
+        .lerp(dry, edge * variation * 0.78)
+        .toArray(values, i * 3);
+    }
+    lawn.geometry.setAttribute('color', new THREE.BufferAttribute(values, 3));
+    return lawn;
+  }
+  const windows = new THREE.MeshStandardMaterial({
+    color: 0xe9b76b,
+    emissive: 0xffb753,
+    emissiveIntensity: 0.08,
+    roughness: 0.45,
+  });
+  const screens = new THREE.MeshStandardMaterial({
+    color: 0x8fbbba,
+    emissive: 0x73bbc5,
+    emissiveIntensity: 0.14,
+    roughness: 0.35,
+  });
   const roots = new Map<IslandId, THREE.Group>();
+  const facilities = { bookflow: [], assetflow: [] } as Record<
+    ProjectId,
+    THREE.Mesh[]
+  >;
+  const facilityGeometry = new THREE.BoxGeometry(1.85, 2, 1.45);
+  const facilityMaterial = new THREE.MeshBasicMaterial();
   function createProject(id: ProjectId) {
     const world = new THREE.Group();
     const ground = new THREE.Group();
     world.add(ground);
-    cylinder(ground, 7.1, 0.45, 0xb6b396, 0, -0.43, 0, 14).scale.z = 0.64;
-    cylinder(ground, 6.9, 0.25, 0xe8d8b1, 0, -0.1, 0, 14).scale.z = 0.64;
-    cylinder(ground, 6.5, 0.1, 0xb5c49b, 0, 0.03, 0, 14).scale.z = 0.64;
-    // Paths link the six stations across the island.
-    box(ground, 8.4, 0.035, 0.38, 0xe3dbc1, 0, 0.1, -1.65);
-    box(ground, 8.4, 0.035, 0.38, 0xe3dbc1, 0, 0.1, 1.7);
-    box(ground, 0.38, 0.035, 3.35, 0xe3dbc1, 4, 0.1, 0);
-    box(ground, 0.38, 0.035, 3.35, 0xe3dbc1, -4, 0.1, 0);
+    const bookflow = id === 'bookflow';
+    const trim = bookflow ? art.coral : art.teal;
+    cylinder(ground, 7.1, 0.45, art.stone, 0, -0.43, 0, 14).scale.z = 0.64;
+    cylinder(ground, 6.9, 0.25, art.sand, 0, -0.1, 0, 14).scale.z = 0.64;
+    turf(ground, 6.5, 0.1, 0.03, 14, bookflow ? art.olive : art.grass).scale.z =
+      0.64;
+    // Walkways connect the facilities to the island landings.
+    box(ground, 8.4, 0.035, 0.38, cream, 0, 0.064, -1.65);
+    box(ground, 8.4, 0.035, 0.38, cream, 0, 0.064, 1.7);
+    box(ground, 0.38, 0.035, 3.35, cream, 4, 0.064, 0);
+    box(ground, 0.38, 0.035, 3.35, cream, -4, 0.064, 0);
     for (const x of [-6, 6])
       for (const z of [-3.4, 3.4])
         cylinder(ground, 0.055, 0.04, gold, x, 0.03, z);
     function tree(x: number, z: number, size: number) {
-      cylinder(ground, 0.07, 0.55 * size, 0x8f7356, x, 0.27 * size, z, 8);
+      cylinder(ground, 0.07, 0.55 * size, art.bark, x, 0.27 * size, z, 8);
       const canopy = mesh(
         ground,
         new THREE.IcosahedronGeometry(0.38 * size, 0),
-        sage,
+        art.foliage[Math.abs(Math.round(x * 7 + z * 13)) % art.foliage.length]!,
         x,
         0.7 * size,
         z,
       );
       canopy.userData.canopy = true;
-      cylinder(ground, 0.27 * size, 0.18, 0xd2c7ac, x, 0.08, z, 8);
+      cylinder(ground, 0.27 * size, 0.18, art.sand, x, 0.08, z, 8);
     }
     [
       [-5.6, -2.4],
@@ -183,162 +273,121 @@ export function createStudioScene(
       [-5.5, 2.5],
       [5.5, 2.5],
     ].forEach(([x, z], i) => tree(x!, z!, 0.8 + (i % 3) * 0.18));
-    const positions = [
-      new THREE.Vector3(-4, 0, -1.65),
-      new THREE.Vector3(0, 0, -1.65),
-      new THREE.Vector3(4, 0, -1.65),
-      new THREE.Vector3(4, 0, 1.7),
-      new THREE.Vector3(0, 0, 1.7),
-      new THREE.Vector3(-4, 0, 1.7),
-    ];
-    const buildings: THREE.Group[] = [];
-    positions.forEach((position, index) => {
+    const screen = 0x8fbbba;
+    function terminal(parent: THREE.Group, x: number, y: number, z: number) {
+      box(parent, 0.57, 0.34, 0.09, ink, x, y, z);
+      box(parent, 0.47, 0.24, 0.025, screen, x, y, z + 0.055).material =
+        screens;
+      box(parent, 0.55, 0.05, 0.33, ink, x, y - 0.18, z + 0.1);
+    }
+    const ringGeometry = new THREE.TorusGeometry(0.99, 0.041, 6, 24);
+    const models = projectFacilities[id].map(({ x, z }, index) => {
       const group = new THREE.Group();
-      group.position.copy(position);
-      group.userData.station = index;
+      group.position.set(x, 0, z);
       world.add(group);
-      cylinder(group, 1.18, 0.22, 0xc5c7af, 0, 0.12, 0, 6);
+      cylinder(group, 1.18, 0.22, art.sand, 0, 0.12, 0, 6);
       cylinder(group, 1.1, 0.07, cream, 0, 0.26, 0, 6);
       const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(0.99, 0.035, 6, 48),
-        material(wine).clone(),
+        ringGeometry.clone(),
+        new THREE.MeshStandardMaterial({
+          color: trim,
+          emissive: trim,
+          emissiveIntensity: 0.17,
+          roughness: 0.85,
+        }),
       );
-      ring.name = `station-ring-${index}`;
       ring.rotation.x = -Math.PI / 2;
-      ring.position.y = 0.32;
+      ring.position.y = 0.31;
+      ring.userData.animated = true;
       group.add(ring);
-      const model = new THREE.Group();
-      model.position.y = 0.3;
-      group.add(model);
-      buildings.push(model);
-    });
-    // 01: a booking kiosk with a calendar, or an inventory shelf.
-    const bookingModel = new THREE.Group();
-    bookingModel.name = 'booking-kiosk';
-    buildings[0]!.add(bookingModel);
-    box(bookingModel, 1.3, 1.4, 0.65, cream, 0, 0.72);
-    box(bookingModel, 1.5, 0.18, 0.88, wine, 0, 1.5);
-    box(bookingModel, 1.02, 0.8, 0.04, 0xe3d5bf, 0, 0.88, 0.35);
-    for (let row = 0; row < 2; row++)
-      for (let col = 0; col < 3; col++)
-        box(
-          bookingModel,
-          0.2,
-          0.2,
-          0.04,
-          col === 1 && row === 1 ? wine : sage,
-          -0.3 + col * 0.3,
-          0.7 + row * 0.3,
-          0.39,
-        );
-    box(bookingModel, 0.7, 0.08, 0.4, rose, 0, 0.06, 0.65);
-    const assetModel = new THREE.Group();
-    assetModel.name = 'asset-shelf';
-    buildings[0]!.add(assetModel);
-    assetModel.visible = false;
-    for (const x of [-0.6, 0.6]) box(assetModel, 0.08, 1.5, 0.7, ink, x, 0.8);
-    for (const y of [0.2, 0.8, 1.4]) {
-      box(assetModel, 1.3, 0.08, 0.75, cream, 0, y);
-      for (const x of [-0.3, 0.3]) {
-        box(assetModel, 0.4, 0.32, 0.4, y === 0.8 ? wine : gold, x, y + 0.2);
-      }
-    }
-    // 02: an API relay station, with a slate roof and visible terminals.
-    box(buildings[1]!, 1.25, 0.95, 0.9, cream, 0, 0.5);
-    const roof = mesh(
-      buildings[1]!,
-      new THREE.CylinderGeometry(0, 1, 0.7, 4),
-      ink,
-      0,
-      1.3,
-    );
-    roof.rotation.y = Math.PI / 4;
-    roof.scale.z = 0.8;
-    box(buildings[1]!, 0.45, 0.62, 0.06, wine, 0, 0.4, 0.48);
-    for (const x of [-0.44, 0.44])
-      box(buildings[1]!, 0.23, 0.25, 0.04, gold, x, 0.65, 0.48);
-    cylinder(buildings[1]!, 0.035, 0.55, gold, 0.4, 1.75);
-    mesh(buildings[1]!, new THREE.SphereGeometry(0.1, 12, 8), wine, 0.4, 2.03);
-    // 03: the gate makes waiting and authorization a physical boundary.
-    for (const x of [-0.65, 0.65]) {
-      box(buildings[2]!, 0.24, 1.4, 0.4, ink, x, 0.7);
-      box(buildings[2]!, 0.32, 0.12, 0.5, gold, x, 1.43);
-    }
-    box(buildings[2]!, 1.55, 0.2, 0.45, cream, 0, 1.55);
-    box(buildings[2]!, 1.1, 0.15, 0.12, wine, 0, 0.75, 0.1);
-    for (const x of [-0.4, 0, 0.4])
-      box(buildings[2]!, 0.06, 0.9, 0.06, gold, x, 0.5, 0.1);
-    // 04: a validation desk with a magnifying ring.
-    box(buildings[3]!, 1.4, 0.2, 0.9, ink, 0, 0.75);
-    for (const x of [-0.5, 0.5])
-      box(buildings[3]!, 0.12, 0.7, 0.6, cream, x, 0.35);
-    box(buildings[3]!, 0.6, 0.06, 0.6, cream, -0.2, 0.9);
-    for (let i = 0; i < 3; i++)
-      box(buildings[3]!, 0.35, 0.02, 0.035, sage, -0.2, 0.94, -0.16 + i * 0.15);
-    const lens = mesh(
-      buildings[3]!,
-      new THREE.TorusGeometry(0.3, 0.065, 8, 24),
-      gold,
-      0.4,
-      1.3,
-      0.1,
-    );
-    lens.rotation.y = -0.2;
-    box(buildings[3]!, 0.07, 0.45, 0.07, gold, 0.65, 0.97, 0.1).rotation.z =
-      -0.6;
-    // 05: a database stack with three porcelain drums and a burgundy core.
-    for (let i = 0; i < 3; i++) {
-      cylinder(
-        buildings[4]!,
-        0.65,
-        0.35,
-        i === 1 ? wine : cream,
-        0,
-        0.25 + i * 0.43,
-      );
-      cylinder(buildings[4]!, 0.66, 0.045, gold, 0, 0.44 + i * 0.43);
-      box(
-        buildings[4]!,
-        0.13,
-        0.055,
-        0.06,
-        i === 1 ? gold : sage,
-        0.17,
-        0.25 + i * 0.43,
-        0.64,
-      );
-    }
-    // 06: an archive of committed events, with two distinct result lanes.
-    for (const x of [-0.4, 0.4]) {
-      box(buildings[5]!, 0.6, 1.1, 0.7, x < 0 ? ink : cream, x, 0.57);
-      for (let i = 0; i < 3; i++) {
-        box(
-          buildings[5]!,
-          0.45,
-          0.22,
-          0.05,
-          x < 0 ? sage : rose,
-          x,
-          0.27 + i * 0.3,
-          0.38,
-        );
-        box(buildings[5]!, 0.13, 0.025, 0.04, gold, x, 0.28 + i * 0.3, 0.42);
-      }
-    }
-    box(buildings[5]!, 1.6, 0.08, 1, gold, 0, 1.17);
 
-    const route = positions.map((p) => p.clone().setY(0.34));
-    const routeMaterial = new THREE.LineDashedMaterial({
-      color: 0x8a9378,
-      dashSize: 0.13,
-      gapSize: 0.12,
+      const proxy = new THREE.Mesh(facilityGeometry, facilityMaterial);
+      proxy.name = `facility-${id}-${index}`;
+      proxy.position.y = 1.28;
+      proxy.visible = false;
+      proxy.userData.ring = ring;
+      group.add(proxy);
+      facilities[id].push(proxy);
+
+      const model = new THREE.Group();
+      model.position.y = 0.31;
+      group.add(model);
+      return model;
     });
-    const line = new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(route),
-      routeMaterial,
-    );
-    line.computeLineDistances();
-    world.add(line);
+    ringGeometry.dispose();
+    const [entry, counter, systems] = models as [
+      THREE.Group,
+      THREE.Group,
+      THREE.Group,
+    ];
+    if (bookflow) {
+      // Booking counter with a striped canopy and customer terminal.
+      box(entry, 1.45, 0.66, 0.69, cream, 0, 0.35);
+      box(entry, 1.62, 0.12, 0.82, trim, 0, 0.72);
+      for (const x of [-0.68, 0.68])
+        box(entry, 0.08, 1, 0.08, ink, x, 1.21, -0.28);
+      for (let i = 0; i < 6; i++)
+        box(
+          entry,
+          0.28,
+          0.12,
+          0.92,
+          i % 2 ? cream : trim,
+          (i - 2.5) * 0.28,
+          1.74,
+        );
+      terminal(entry, 0.19, 0.97, 0.14);
+      box(entry, 0.58, 0.12, 0.045, gold, -0.26, 0.45, 0.36);
+
+      // A desk beneath a wall calendar. Color blocks mark bookings and time off.
+      box(counter, 1.55, 0.13, 0.75, art.timber, 0, 0.65);
+      for (const x of [-0.62, 0.62]) box(counter, 0.1, 0.67, 0.6, ink, x, 0.33);
+      box(counter, 1.45, 1.04, 0.1, cream, 0, 1.22, -0.3);
+      box(counter, 1.45, 0.21, 0.12, trim, 0, 1.7, -0.24);
+      for (let row = 0; row < 2; row++)
+        for (let col = 0; col < 4; col++)
+          box(
+            counter,
+            0.24,
+            0.18,
+            0.045,
+            (row + col) % 3 ? art.steel : trim,
+            (col - 1.5) * 0.29,
+            1.06 + row * 0.26,
+            -0.22,
+          );
+      terminal(counter, -0.42, 0.9, 0.18);
+    } else {
+      // Equipment shelf with open laptops and upright desktop towers.
+      for (const x of [-0.72, 0.72]) box(entry, 0.09, 1.68, 0.69, ink, x, 0.84);
+      for (const y of [0.2, 0.77, 1.36])
+        box(entry, 1.53, 0.085, 0.73, art.steel, 0, y);
+      for (const x of [-0.37, 0.37]) {
+        terminal(entry, x, 1.01, 0.08);
+        box(entry, 0.38, 0.41, 0.42, x < 0 ? ink : art.steel, x, 0.45);
+        box(entry, 0.11, 0.04, 0.035, gold, x, 0.54, 0.22);
+      }
+
+      // Two trays and a terminal give the handover desk distinct sides.
+      box(counter, 1.64, 0.61, 0.69, art.steel, 0, 0.32);
+      box(counter, 1.8, 0.14, 0.89, trim, 0, 0.68);
+      terminal(counter, 0, 1.07, -0.23);
+      for (const x of [-0.56, 0.56]) {
+        box(counter, 0.47, 0.08, 0.4, x < 0 ? sage : rose, x, 0.8, 0.15);
+        box(counter, 0.34, 0.05, 0.26, cream, x, 0.87, 0.15);
+        box(counter, 0.49, 0.12, 0.05, x < 0 ? art.steel : gold, x, 0.42, 0.36);
+      }
+    }
+    // Server bays and a service monitor distinguish both engineering rooms.
+    box(systems, 1.55, 1.62, 0.76, trim, 0, 0.82);
+    box(systems, 1.65, 0.08, 0.82, gold, 0, 1.65);
+    for (let row = 0; row < 4; row++) {
+      const y = 0.38 + row * 0.28;
+      box(systems, 1.24, 0.17, 0.09, 0x465449, 0, y, 0.4);
+      box(systems, 0.09, 0.06, 0.04, screen, 0.44, y, 0.46).material =
+        row === 2 ? windows : screens;
+    }
+    if (!bookflow) terminal(systems, 0, 1.91, 0.04);
     // Forested ridges, small workshops and a harbor give the system a landscape.
     for (let i = 0; i < 22; i++) {
       if (i === 0 || i === 11) continue; // Clear landings on both sides.
@@ -351,7 +400,7 @@ export function createStudioScene(
       const ridge = mesh(
         ground,
         new THREE.ConeGeometry(1.1 + i * 0.06, 1.2 + (i % 3) * 0.5, 5),
-        0x8c9f79,
+        sage,
         -3.5 + i * 1.7,
         0.5,
         -3.3,
@@ -360,15 +409,13 @@ export function createStudioScene(
     }
     const harbor = new THREE.Group();
     ground.add(harbor);
-    box(harbor, 2.4, 0.12, 1.2, 0xaa8966, 0, -0.01, 4.2);
+    box(harbor, 2.4, 0.12, 1.2, art.timber, 0, -0.01, 4.2);
     for (const x of [-0.95, 0.95])
       cylinder(harbor, 0.07, 0.7, ink, x, -0.2, 4.5, 8);
     cylinder(harbor, 0.28, 1.3, cream, 1.6, 0.6, 3.6, 12);
-    cylinder(harbor, 0.3, 0.18, wine, 1.6, 1, 3.6, 12);
-    mesh(harbor, new THREE.ConeGeometry(0.4, 0.32, 12), wine, 1.6, 1.43, 3.6);
+    cylinder(harbor, 0.3, 0.18, trim, 1.6, 1, 3.6, 12);
+    mesh(harbor, new THREE.ConeGeometry(0.4, 0.32, 12), trim, 1.6, 1.43, 3.6);
 
-    bookingModel.visible = id === 'bookflow';
-    assetModel.visible = id === 'assetflow';
     world.scale.setScalar(0.64);
     world.userData.island = id;
     scene.add(world);
@@ -377,13 +424,6 @@ export function createStudioScene(
   }
   createProject('bookflow');
   createProject('assetflow');
-  const windows = new THREE.MeshStandardMaterial({
-    color: 0xf3cd80,
-    emissive: 0xffc46a,
-    emissiveIntensity: 0,
-    roughness: 0.5,
-  });
-  const lamps: THREE.Mesh[] = [];
   function pane(
     parent: THREE.Object3D,
     w: number,
@@ -392,18 +432,19 @@ export function createStudioScene(
     x: number,
     y: number,
     z: number,
+    glazing = windows,
   ) {
-    const object = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), windows);
+    const object = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), glazing);
     object.position.set(x, y, z);
     parent.add(object);
     return object;
   }
   function plant(parent: THREE.Object3D, x: number, z: number, size = 0.8) {
-    cylinder(parent, 0.07, 0.55 * size, 0x8f7356, x, 0.25 * size, z, 6);
+    cylinder(parent, 0.07, 0.55 * size, art.bark, x, 0.25 * size, z, 6);
     const leaf = mesh(
       parent,
       new THREE.IcosahedronGeometry(0.45 * size, 0),
-      sage,
+      art.foliage[Math.abs(Math.round(x * 11 + z * 7)) % art.foliage.length]!,
       x,
       0.8 * size,
       z,
@@ -414,9 +455,16 @@ export function createStudioScene(
     const group = new THREE.Group();
     group.userData.island = id;
     const extra = id === 'portfolio' ? 0.8 : id === 'journal' ? 0.65 : 0;
-    cylinder(group, 3.3 + extra, 0.5, 0xb8b69d, 0, -0.55, 0, 10);
-    cylinder(group, 3.15 + extra, 0.18, 0xe3d4b3, 0, -0.23, 0, 10);
-    cylinder(group, 2.95 + extra, 0.16, 0xb4c297, 0, -0.06, 0, 10);
+    cylinder(group, 3.3 + extra, 0.5, art.stone, 0, -0.55, 0, 10);
+    cylinder(group, 3.15 + extra, 0.18, art.sand, 0, -0.23, 0, 10);
+    turf(
+      group,
+      2.95 + extra,
+      0.16,
+      -0.06,
+      10,
+      id === 'zailongchang' ? art.olive : art.grass,
+    );
     for (let i = 0; i < 4; i++) {
       const angle = Math.PI / 4 + (i / 4) * Math.PI * 2;
       if (
@@ -439,22 +487,28 @@ export function createStudioScene(
     return group;
   }
   const portfolio = utility('portfolio');
+  for (const z of [-1.35, 1.35])
+    box(portfolio, 2.9, 0.012, 0.32, art.sand, 0, 0.017, z);
+  for (const x of [-1.45, 1.45])
+    box(portfolio, 0.32, 0.012, 2.38, art.sand, x, 0.017, 0);
   const pavilion = new THREE.Group();
   pavilion.userData.hotspot = 0;
   portfolio.add(pavilion);
   box(pavilion, 3.2, 0.2, 2.4, cream, 0, 0.18);
   for (const x of [-1.3, 1.3])
     for (const z of [-0.85, 0.85])
-      box(pavilion, 0.13, 1.55, 0.13, ink, x, 0.95, z);
+      box(pavilion, 0.13, 1.55, 0.13, art.teal, x, 0.95, z);
   const canopy = mesh(
     pavilion,
     new THREE.CylinderGeometry(0, 2.3, 0.8, 4),
-    wine,
+    art.teal,
     0,
     1.9,
   );
   canopy.rotation.y = Math.PI / 4;
   canopy.scale.z = 0.8;
+  box(pavilion, 2.6, 0.11, 1.74, cream, 0, 1.49);
+  cylinder(pavilion, 0.085, 0.17, gold, 0, 2.33, 0, 8);
   for (const [i, { x, z }] of portfolioExhibits.entries()) {
     const display = new THREE.Group();
     display.userData.hotspot = i;
@@ -463,7 +517,7 @@ export function createStudioScene(
     box(display, 0.8, 0.12, 0.6, ink, 0, 0.5, 0);
     box(display, 0.12, 0.5, 0.12, ink, 0, 0.25, 0);
     box(display, 0.7, 0.55, 0.08, [wine, ink, gold, rose][i]!, 0, 0.83, -0.2);
-    pane(display, 0.53, 0.35, 0.02, 0, 0.86, -0.15);
+    pane(display, 0.53, 0.35, 0.02, 0, 0.86, -0.15, screens);
   }
   const journal = utility('journal');
   for (const [i, x] of [-0.85, 0.85].entries()) {
@@ -472,7 +526,7 @@ export function createStudioScene(
     journal.add(library);
     library.position.x = x;
     box(library, 1.25, 1.45, 1, cream, 0, 0.8);
-    box(library, 1.4, 0.16, 1.15, ink, 0, 1.57);
+    box(library, 1.4, 0.16, 1.15, art.violet, 0, 1.57);
     for (let row = 0; row < 3; row++)
       for (let col = 0; col < 4; col++)
         box(
@@ -480,7 +534,7 @@ export function createStudioScene(
           0.15,
           0.24,
           0.08,
-          [wine, ink, gold, rose][(row + col) % 4]!,
+          [art.violet, ink, gold, rose][(row + col) % 4]!,
           -0.36 + col * 0.24,
           0.4 + row * 0.35,
           0.55,
@@ -495,11 +549,12 @@ export function createStudioScene(
   const postRoof = mesh(
     post,
     new THREE.CylinderGeometry(0, 1.8, 0.75, 4),
-    wine,
+    art.ochre,
     0,
     1.8,
   );
   postRoof.rotation.y = Math.PI / 4;
+  box(post, 1.08, 0.13, 0.045, art.ochre, 0, 1.27, 0.83);
   box(post, 0.5, 0.85, 0.05, ink, 0, 0.5, 0.83);
   for (const x of [-0.7, 0.7]) pane(post, 0.43, 0.48, 0.04, x, 1, 0.83);
   cylinder(post, 0.04, 2.4, ink, 1.8, 1.2, -0.5, 6);
@@ -514,114 +569,108 @@ export function createStudioScene(
   aerial.rotation.y = 0.3;
   const about = utility('about');
   const desk = new THREE.Group();
-  desk.userData.hotspot = 1;
   about.add(desk);
   desk.position.set(1, 0, 0.7);
-  box(desk, 1.8, 0.16, 0.95, ink, 0, 0.85);
-  for (const x of [-0.7, 0.7]) box(desk, 0.12, 0.8, 0.6, cream, x, 0.4);
+  box(desk, 1.8, 0.16, 0.95, gold, 0, 0.85);
+  for (const x of [-0.7, 0.7]) box(desk, 0.12, 0.8, 0.6, ink, x, 0.4);
   const laptop = new THREE.Group();
-  laptop.userData.hotspot = 2;
   laptop.position.copy(desk.position);
   about.add(laptop);
-  box(laptop, 0.8, 0.05, 0.6, 0xb9b8ad, 0, 0.98);
+  box(laptop, 0.8, 0.05, 0.6, art.steel, 0, 0.98);
   box(laptop, 0.8, 0.5, 0.05, ink, 0, 1.23, -0.2);
-  pane(laptop, 0.65, 0.35, 0.02, 0, 1.25, -0.16);
-  function person(parent: THREE.Object3D, creator = false) {
+  pane(laptop, 0.65, 0.35, 0.02, 0, 1.25, -0.16, screens);
+  const shirts = [0xb25253, 0x355e70, 0xcb8744, 0x6b6489];
+  const skins = [0xe4b491, 0xc88e69, 0x996a53, 0xedc6a2];
+  const hairColors = [0x362e2c, 0x242b34, 0x433127, 0x6e4836];
+  const headGeometry = new THREE.SphereGeometry(0.215, 9, 6);
+  const hairGeometry = new THREE.SphereGeometry(
+    0.225,
+    9,
+    5,
+    0,
+    Math.PI * 2,
+    0,
+    1.75,
+  );
+  const glassesGeometry = new THREE.TorusGeometry(0.08, 0.014, 4, 10);
+  const colorMaterial = new THREE.MeshStandardMaterial({
+    vertexColors: true,
+    roughness: 0.88,
+  });
+  function coloredParts(group: THREE.Group) {
+    group.updateMatrixWorld(true);
+    const origin = group.matrixWorld.clone().invert();
+    const parts: THREE.BufferGeometry[] = [];
+    group.traverse((child) => {
+      if (!(child instanceof THREE.Mesh)) return;
+      const part = child.geometry.index
+        ? child.geometry.toNonIndexed()
+        : child.geometry.clone();
+      part.applyMatrix4(origin.clone().multiply(child.matrixWorld));
+      const color = (child.material as THREE.MeshStandardMaterial).color;
+      const values = new Float32Array(part.attributes.position!.count * 3);
+      for (let i = 0; i < values.length; i += 3) color.toArray(values, i);
+      part.setAttribute('color', new THREE.BufferAttribute(values, 3));
+      parts.push(part);
+    });
+    const result = mergeGeometries(parts)!;
+    parts.forEach((part) => part.dispose());
+    group.traverse((child) => {
+      if (
+        child instanceof THREE.Mesh &&
+        ![headGeometry, hairGeometry, glassesGeometry].includes(child.geometry)
+      )
+        child.geometry.dispose();
+    });
+    group.clear();
+    return result;
+  }
+  const torsos = new Map<number, THREE.BufferGeometry>();
+  function person(variant: number, creator = false) {
+    const shirt = creator ? 0x293f50 : shirts[variant]!;
     const group = new THREE.Group();
     group.userData.animated = true;
-    parent.add(group);
-    const skin = creator ? 0xe3b894 : cream;
-    box(
-      group,
-      creator ? 0.47 : 0.2,
-      creator ? 0.65 : 0.28,
-      creator ? 0.3 : 0.18,
-      creator ? 0x293f50 : rose,
-      0,
-      creator ? 0.75 : 0.35,
-    );
-    mesh(
-      group,
-      new THREE.SphereGeometry(creator ? 0.25 : 0.1, creator ? 12 : 8, 8),
-      skin,
-      0,
-      creator ? 1.35 : 0.6,
-    );
-    const arms: THREE.Group[] = [];
-    const legs: THREE.Group[] = [];
+    scene.add(group);
+    group.scale.setScalar(creator ? 0.93 : 0.56);
+    const key = creator ? -1 : variant;
+    if (!torsos.has(key)) {
+      const upper = new THREE.Group();
+      box(upper, 0.42, 0.44, 0.28, shirt, 0, 0.68);
+      box(upper, 0.32, 0.11, 0.24, ink, 0, 0.46);
+      mesh(upper, headGeometry, skins[variant]!, 0, 1.08);
+      mesh(upper, hairGeometry, hairColors[variant]!, 0, 1.12, -0.025);
+      box(upper, 0.12, 0.09, 0.025, creator ? gold : cream, 0.1, 0.78, 0.143);
+      if (creator) {
+        for (const x of [-0.096, 0.096])
+          mesh(upper, glassesGeometry, 0x29383d, x, 1.1, 0.194);
+        box(upper, 0.056, 0.023, 0.026, ink, 0, 1.11, 0.207);
+        box(upper, 0.32, 0.37, 0.14, wine, 0, 0.7, -0.19);
+      }
+      torsos.set(key, coloredParts(upper));
+    }
+    const torso = new THREE.Mesh(torsos.get(key)!, colorMaterial);
+    group.add(torso);
+    const arms: THREE.Mesh[] = [];
+    const legs: THREE.Mesh[] = [];
+    const shoes: THREE.Mesh[] = [];
     for (const side of [-1, 1]) {
-      const arm = new THREE.Group();
-      group.add(arm);
-      arm.position.set(side * (creator ? 0.31 : 0.16), creator ? 1 : 0.45, 0);
-      box(
-        arm,
-        creator ? 0.14 : 0.065,
-        creator ? 0.5 : 0.24,
-        creator ? 0.16 : 0.08,
-        creator ? 0x293f50 : rose,
-        0,
-        creator ? -0.18 : -0.08,
-      );
+      const arm = box(group, 0.12, 0.36, 0.13, shirt, side * 0.265, 0.8);
+      arm.geometry.translate(0, -0.13, 0);
       arms.push(arm);
-      const leg = new THREE.Group();
-      group.add(leg);
-      leg.position.set(
-        side * (creator ? 0.14 : 0.06),
-        creator ? 0.43 : 0.22,
-        0,
-      );
-      box(
-        leg,
-        creator ? 0.17 : 0.065,
-        creator ? 0.43 : 0.2,
-        creator ? 0.18 : 0.08,
-        ink,
-        0,
-        creator ? -0.2 : -0.1,
-      );
+      const leg = box(group, 0.135, 0.37, 0.15, ink, side * 0.115, 0.44);
+      leg.geometry.translate(0, -0.19, 0);
       legs.push(leg);
-    }
-    group.traverse((object) => {
-      if (object instanceof THREE.Mesh) object.castShadow = false;
-    });
-    if (creator) {
-      const hair = mesh(
-        group,
-        new THREE.SphereGeometry(
-          0.265,
-          12,
-          8,
-          0,
-          Math.PI * 2,
-          0,
-          Math.PI * 0.48,
-        ),
-        0x292c30,
-        0,
-        1.44,
+      shoes.push(
+        box(group, 0.16, 0.08, 0.24, 0x263638, side * 0.115, 0.04, 0.045),
       );
-      hair.rotation.x = -0.1;
-      for (const x of [-0.12, 0.12])
-        mesh(
-          group,
-          new THREE.TorusGeometry(0.095, 0.018, 5, 16),
-          0x29383d,
-          x,
-          1.36,
-          0.225,
-        );
-      box(group, 0.08, 0.025, 0.025, ink, 0, 1.36, 0.23);
-      box(group, 0.35, 0.4, 0.15, wine, 0, 0.85, -0.23);
-      box(group, 0.15, 0.15, 0.025, gold, 0, 0.9, 0.165);
-      group.scale.setScalar(1.25);
-      group.userData.hotspot = 0;
     }
-    return { group, arms, legs };
+    group.traverse((child) => {
+      if (child instanceof THREE.Mesh)
+        child.castShadow = child.receiveShadow = false;
+    });
+    return { group, arms, legs, shoes, torso, shirt, stride: 0 };
   }
-  const creator = person(about, true);
-  creator.group.scale.setScalar(0.9);
-  creator.group.position.set(-0.9, 0.08, 0.6);
-  creator.group.rotation.y = 0.2;
+  const creator = person(0, true);
   const walkers: {
     model: ReturnType<typeof person>;
     offset: number;
@@ -634,21 +683,22 @@ export function createStudioScene(
   village.userData.hotspot = 0;
   localIsland.add(village);
   box(village, 2.2, 1.3, 1.5, cream, 0, 0.65, -0.5);
-  box(village, 2.5, 0.12, 1.8, wine, 0, 1.38, -0.5);
+  box(village, 2.5, 0.12, 1.8, art.clay, 0, 1.38, -0.5);
+  box(village, 2.16, 0.16, 1.43, art.copper, 0, 1.5, -0.5);
   box(village, 0.45, 0.85, 0.05, ink, 0, 0.45, 0.27);
   pane(village, 0.42, 0.5, 0.05, -0.7, 0.8, 0.28);
   pane(village, 0.42, 0.5, 0.05, 0.7, 0.8, 0.28);
-  box(village, 0.8, 0.8, 1, 0xb59a75, -1.7, 0.4, -1);
+  box(village, 0.8, 0.8, 1, art.clay, -1.7, 0.4, -1);
   // A shore-side pier with two arms leaves an open berth for boats.
   for (const z of [-0.7, 0.7]) {
-    box(localIsland, 1.8, 0.12, 0.3, 0xb69874, 3.3, -0.35, z);
+    box(localIsland, 1.8, 0.12, 0.3, art.timber, 3.3, -0.35, z);
     for (const x of [2.65, 3.95])
       cylinder(localIsland, 0.06, 0.6, ink, x, -0.25, z, 6);
   }
-  box(localIsland, 0.3, 0.12, 1.7, 0xb69874, 2.55, -0.35, 0);
-  for (const [id, island] of roots) {
+  box(localIsland, 0.3, 0.12, 1.7, art.timber, 2.55, -0.35, 0);
+  for (const [islandIndex, [id, island]] of [...roots].entries()) {
     for (let i = 0; i < (id === 'about' ? 2 : 4); i++) {
-      const model = person(island);
+      const model = person((i + islandIndex) % shirts.length);
       walkers.push({
         model,
         offset: i * 1.6,
@@ -681,25 +731,42 @@ export function createStudioScene(
         z,
       );
       lamp.material = windows;
-      lamps.push(lamp);
       if (i === 0) {
         const glow = new THREE.PointLight(0xffca80, 0, 5, 2);
         glow.position.set(x, 1.2, z);
         island.add(glow);
       }
     }
-    // Warm light also reaches the project windows at night.
-    island.traverse((object) => {
-      if (
-        object instanceof THREE.Mesh &&
-        object.material === materials.get(gold) &&
-        object.geometry instanceof THREE.BoxGeometry
-      )
-        object.material = windows;
-    });
   }
-  // Merge stationary pieces while preserving clickable topics and moving branches.
-  // This keeps six islands from multiplying hundreds of individual draw calls.
+  const people = [...walkers.map(({ model }) => model), creator];
+  const distantFigure = new THREE.Group();
+  box(distantFigure, 0.55, 0.43, 0.27, 0xffffff, 0, 0.68);
+  box(distantFigure, 0.28, 0.43, 0.19, 0x45595f, 0, 0.22);
+  mesh(distantFigure, headGeometry, 0xf1dbc4, 0, 1.08);
+  mesh(distantFigure, hairGeometry, 0x524742, 0, 1.12, -0.025);
+  const distantPeople = new THREE.InstancedMesh(
+    coloredParts(distantFigure),
+    colorMaterial,
+    people.length,
+  );
+  distantPeople.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  distantPeople.frustumCulled = false;
+  people.forEach(({ shirt }, i) =>
+    distantPeople.setColorAt(
+      i,
+      new THREE.Color(shirt).lerp(new THREE.Color(0xffffff), 0.48),
+    ),
+  );
+  scene.add(distantPeople);
+  const emptyFigure = new THREE.Matrix4().makeScale(0, 0, 0);
+
+  // Bake opaque pigments into shared finishes without merging separate click targets.
+  const paintedFinishes = new Map(
+    [matteFinish, woodFinish, steelFinish].map((surface) => [
+      surface,
+      new THREE.MeshStandardMaterial({ ...surface, vertexColors: true }),
+    ]),
+  );
   for (const island of roots.values()) {
     island.updateMatrixWorld(true);
     const inverse = island.matrixWorld.clone().invert();
@@ -726,18 +793,22 @@ export function createStudioScene(
           return;
         if (parent.userData.hotspot !== undefined)
           hotspot = parent.userData.hotspot as number;
-        else if (
-          parent.userData.station !== undefined &&
-          [0, 2, 4].includes(parent.userData.station as number)
-        )
-          hotspot = [0, 2, 4].indexOf(parent.userData.station as number);
         parent = parent.parent;
       }
-      const key = `${object.material.uuid}:${hotspot ?? 'island'}`;
+      const pigment =
+        object.material instanceof THREE.MeshStandardMaterial &&
+        object.material !== windows &&
+        object.material !== screens
+          ? object.material.color
+          : undefined;
+      const surface = pigment
+        ? paintedFinishes.get(finish(pigment.getHex()))!
+        : object.material;
+      const key = `${surface.uuid}:${hotspot ?? 'island'}`;
       let batch = batches.get(key);
       if (!batch) {
         batch = {
-          material: object.material,
+          material: surface,
           hotspot,
           parts: [],
           originals: [],
@@ -751,6 +822,13 @@ export function createStudioScene(
         ? transformed.toNonIndexed()
         : transformed;
       if (geometry !== transformed) transformed.dispose();
+      if (pigment && !geometry.hasAttribute('color')) {
+        const values = new Float32Array(
+          geometry.attributes.position!.count * 3,
+        );
+        for (let i = 0; i < values.length; i += 3) pigment.toArray(values, i);
+        geometry.setAttribute('color', new THREE.BufferAttribute(values, 3));
+      }
       batch.parts.push(geometry);
       batch.originals.push(object);
     });
@@ -771,22 +849,45 @@ export function createStudioScene(
   }
   const bridgeRoot = new THREE.Group();
   scene.add(bridgeRoot);
-  let pedestrianNavigation: Navigation;
   let creatorMotion: ReturnType<typeof createPedestrian>;
-  let seaNavigation: Navigation;
   let boatMotion: ReturnType<typeof createPedestrian>[] = [];
+  let peerMotions: ReturnType<typeof createPedestrian>[] = [];
   let dock = -1,
     dockOutbound = false;
   let bridgeCrossings = 0,
     harborVisits = 0;
-  function disposeGeometry(group: THREE.Group) {
-    group.traverse((object) => {
-      if (object instanceof THREE.Mesh) object.geometry.dispose();
-    });
-    group.clear();
+  const worldLayouts = new Map<boolean, ReturnType<typeof buildLayout>>();
+  function buildLayout(portrait: boolean) {
+    const map = islandLayout(portrait);
+    const decks = bridgeDecks(map);
+    const domain = createWorldDomain(map, decks);
+    return {
+      map,
+      decks,
+      domain,
+      pedestrian: createNavigation(domain, 0.17),
+      creator: createNavigation(domain, 0.4),
+      sea: createNavigation(createSeaDomain(map), 0.55, 0.4),
+    };
   }
-  function layout(width: number, height: number) {
-    const map = islandLayout(width < 900 && height > width);
+  let currentLayout: ReturnType<typeof buildLayout>;
+  let portraitLayout: boolean | undefined;
+  function layout(portrait: boolean) {
+    if (portraitLayout === portrait) return;
+    portraitLayout = portrait;
+    fog.density = fogDensity * (portrait ? 0.72 : 1);
+    const world = worldLayouts.get(portrait) ?? buildLayout(portrait);
+    worldLayouts.set(portrait, world);
+    currentLayout = world;
+    const {
+      map,
+      decks,
+      domain,
+      pedestrian: pedestrianNavigation,
+      creator: creatorNavigation,
+      sea: seaNavigation,
+    } = world;
+    updateCoast(map);
     for (const [id, island] of roots) {
       const { x, z } = map[id];
       island.position.set(
@@ -795,21 +896,30 @@ export function createStudioScene(
         z,
       );
     }
-    disposeGeometry(bridgeRoot);
-    for (const { outline, left, right } of bridgeDecks(map)) {
-      const shape = new THREE.Shape(
-        outline.map((p) => new THREE.Vector2(p.x, -p.z)),
-      );
-      const deck = mesh(
-        bridgeRoot,
-        new THREE.ExtrudeGeometry(shape, {
+    bridgeRoot.traverse((object) => {
+      if (object instanceof THREE.Mesh) object.geometry.dispose();
+    });
+    bridgeRoot.clear();
+    for (const { left, right, height } of decks) {
+      for (let i = 1; i < left.length; i++) {
+        const outline = [left[i - 1]!, left[i]!, right[i]!, right[i - 1]!];
+        const shape = new THREE.Shape(
+          outline.map((p) => new THREE.Vector2(p.x, -p.z)),
+        );
+        const geometry = new THREE.ExtrudeGeometry(shape, {
           depth: 0.12,
           bevelEnabled: false,
-        }),
-        0xb69874,
-      );
-      deck.rotation.x = -Math.PI / 2;
-      deck.position.y = -0.11;
+        })
+          .rotateX(-Math.PI / 2)
+          .translate(0, -0.12, 0);
+        const positions = geometry.attributes.position!;
+        for (let j = 0; j < positions.count; j++) {
+          const p = { x: positions.getX(j), z: positions.getZ(j) };
+          positions.setY(j, positions.getY(j) + height(p));
+        }
+        geometry.computeVertexNormals();
+        mesh(bridgeRoot, geometry, art.timber);
+      }
       for (const edge of [left, right]) {
         for (let i = 1; i < edge.length; i++) {
           const from = edge[i - 1]!,
@@ -817,25 +927,55 @@ export function createStudioScene(
           const length = Math.hypot(to.x - from.x, to.z - from.z);
           const rail = new THREE.Group();
           bridgeRoot.add(rail);
-          rail.position.set((from.x + to.x) / 2, -0.05, (from.z + to.z) / 2);
+          rail.position.set((from.x + to.x) / 2, 0, (from.z + to.z) / 2);
           rail.rotation.y = Math.atan2(to.x - from.x, to.z - from.z);
-          box(rail, 0.035, 0.035, length, cream, 0, 0.5);
+          const bar = box(
+            rail,
+            0.035,
+            0.035,
+            Math.hypot(length, height(to) - height(from)),
+            cream,
+            0,
+            (height(from) + height(to)) / 2 + 0.45,
+          );
+          bar.rotation.x = Math.atan2(height(from) - height(to), length);
           const posts = Math.max(1, Math.ceil(length / 1.25));
           for (let j = 0; j <= posts; j++) {
-            const z = length * (j / posts - 0.5);
-            box(rail, 0.045, 0.55, 0.045, ink, 0, 0.22, z);
-            pane(rail, 0.045, 0.04, 0.16, 0, 0.53, z);
+            const t = j / posts;
+            const z = length * (t - 0.5);
+            const y = THREE.MathUtils.lerp(height(from), height(to), t);
+            box(rail, 0.045, 0.45, 0.045, ink, 0, y + 0.22, z);
+            pane(rail, 0.045, 0.04, 0.16, 0, y + 0.45, z);
           }
         }
       }
     }
-    const domain = createWorldDomain(map);
-    pedestrianNavigation = createNavigation(domain, 0.17);
+    bridgeRoot.updateMatrixWorld(true);
+    const batches = new Map<THREE.Material, THREE.BufferGeometry[]>();
+    bridgeRoot.traverse((object) => {
+      if (!(object instanceof THREE.Mesh) || Array.isArray(object.material))
+        return;
+      const part = object.geometry.index
+        ? object.geometry.toNonIndexed()
+        : object.geometry.clone();
+      part.applyMatrix4(object.matrixWorld);
+      object.geometry.dispose();
+      const list = batches.get(object.material) ?? [];
+      list.push(part);
+      batches.set(object.material, list);
+    });
+    bridgeRoot.clear();
+    for (const [material, parts] of batches) {
+      const geometry = mergeGeometries(parts)!;
+      parts.forEach((part) => part.dispose());
+      const batch = new THREE.Mesh(geometry, material);
+      batch.castShadow = batch.receiveShadow = true;
+      bridgeRoot.add(batch);
+    }
+    movingShadows.setSurface(domain);
     const occupied: { position: { x: number; z: number }; radius: number }[] =
       [];
     for (const walker of walkers) {
-      scene.attach(walker.model.group);
-      walker.model.group.scale.setScalar(0.85);
       const center = map[walker.home];
       const [rx, rz] = islandRadii(walker.home);
       const start = pedestrianNavigation.nearest(
@@ -867,8 +1007,6 @@ export function createStudioScene(
       const p = walker.motion.position;
       walker.model.group.position.set(p.x, walker.motion.height, p.z);
     }
-    scene.attach(creator.group);
-    const creatorNavigation = createNavigation(domain, 0.4);
     creatorMotion = createPedestrian(
       creatorNavigation,
       creatorNavigation.nearest(
@@ -891,7 +1029,6 @@ export function createStudioScene(
     creatorMotion.goTo(creatorNavigation.nearest(map.portfolio));
     const guide = walkers.find((walker) => walker.home === 'about')!;
     guide.motion!.goTo(pedestrianNavigation.nearest(map.contact));
-    seaNavigation = createNavigation(createSeaDomain(map), 0.55, 0.4);
     boatMotion = boats.map((boat, i) => {
       const start = seaNavigation.nearest({ x: -18 + i * 5, z: -12 });
       const motion = createPedestrian(seaNavigation, start, 0.75);
@@ -914,27 +1051,101 @@ export function createStudioScene(
       boatMotion[0].position.z,
     );
     dockOutbound = false;
+    peerMotions = [...walkers.map(({ motion }) => motion!), creatorMotion];
+    ambientAccumulator = 0;
+    previousPeople = peerMotions.map(snapshot);
+    previousBoats = boatMotion.map(snapshot);
     container.dataset.navigation = 'ready';
     container.dataset.bridgeCount = String(bridgePairs.length);
     container.dataset.shadowMode = 'tracked';
     renderer.shadowMap.needsUpdate = true;
   }
+  const waterRadius = 34;
+  const coastSize = 128;
+  const shallowsWidth = 1.75;
+  const coastPixels = new Uint8Array(coastSize * coastSize * 2);
+  const coast = new THREE.DataTexture(
+    coastPixels,
+    coastSize,
+    coastSize,
+    THREE.RGFormat,
+  );
+  coast.magFilter = coast.minFilter = THREE.LinearFilter;
+  function updateCoast(map: ReturnType<typeof islandLayout>) {
+    const shorelines = [
+      ...Array.from(roots.keys(), (id) => {
+        const [rx, rz] = islandRadii(id);
+        return { ...map[id], rx: rx + 0.24, rz: rz + 0.24 };
+      }),
+      ...reefIslands.map(({ x, z, r }) => ({ x, z, rx: r, rz: r * 0.8 })),
+    ];
+    for (let row = 0; row < coastSize; row++) {
+      const z = ((row + 0.5) / coastSize - 0.5) * waterRadius * 2;
+      for (let col = 0; col < coastSize; col++) {
+        const x = ((col + 0.5) / coastSize - 0.5) * waterRadius * 2;
+        let distance = shallowsWidth;
+        for (const shore of shorelines) {
+          const edge = Math.hypot(
+            (x - shore.x) / shore.rx,
+            (z - shore.z) / shore.rz,
+          );
+          distance = Math.min(
+            distance,
+            (edge - 1) * Math.min(shore.rx, shore.rz),
+          );
+        }
+        const index = (row * coastSize + col) * 2;
+        coastPixels[index] =
+          255 * (1 - THREE.MathUtils.smoothstep(distance, 0.04, shallowsWidth));
+        // Bake static water bands with the coast so both use a single texture read.
+        const band =
+          Math.sin(x * 0.37 + z * 0.83) * Math.cos(x * 0.14 - z * 0.12);
+        coastPixels[index + 1] = (band * 0.5 + 0.5) * 255;
+      }
+    }
+    coast.needsUpdate = true;
+  }
   const waterClock = { value: 0 };
   const waterMat = new THREE.MeshStandardMaterial({
-    color: 0x5d9fa5,
-    roughness: 0.56,
-    metalness: 0.16,
+    color: art.seaDeep,
+    roughness: 0.68,
   });
   waterMat.onBeforeCompile = (shader) => {
     shader.uniforms.uWorldTime = waterClock;
-    shader.vertexShader = 'uniform float uWorldTime;\n' + shader.vertexShader;
+    shader.uniforms.uCoast = { value: coast };
+    shader.uniforms.uShallows = { value: new THREE.Color(art.seaShallow) };
+    shader.uniforms.uHorizon = { value: skyColor };
+    shader.vertexShader =
+      'uniform float uWorldTime; varying vec2 waterPosition;\n' +
+      shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace(
       '#include <begin_vertex>',
-      '#include <begin_vertex>\ntransformed.y += sin(position.x * 1.1 + uWorldTime * 0.7) * cos(position.z * 0.8 + uWorldTime * 0.4) * 0.055;',
+      '#include <begin_vertex>\nwaterPosition = position.xz;\ntransformed.y += sin(position.x * 1.1 + uWorldTime * 0.7) * cos(position.z * 0.8 + uWorldTime * 0.4) * 0.055;',
     );
+    shader.fragmentShader = `
+      uniform sampler2D uCoast;
+      uniform vec3 uShallows;
+      uniform vec3 uHorizon;
+      varying vec2 waterPosition;
+      ${shader.fragmentShader}
+    `
+      .replace(
+        '#include <color_fragment>',
+        `#include <color_fragment>
+        vec2 waterTint = texture2D(uCoast, waterPosition / ${waterRadius * 2}.0 + 0.5).rg;
+        diffuseColor.rgb = mix(diffuseColor.rgb, uShallows, waterTint.r * 0.58) *
+          mix(0.947, 1.053, waterTint.g);`,
+      )
+      .replace(
+        '#include <fog_fragment>',
+        `#include <fog_fragment>
+        vec3 horizon = linearToOutputTexel(vec4(uHorizon, 1.0)).rgb;
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, horizon,
+          smoothstep(576.0, ${((waterRadius - 0.3) ** 2).toFixed(2)}, dot(waterPosition, waterPosition)));`,
+      );
   };
   const water = new THREE.Mesh(
-    new THREE.CircleGeometry(34, 96).rotateX(-Math.PI / 2),
+    new THREE.CircleGeometry(waterRadius, 96).rotateX(-Math.PI / 2),
     waterMat,
   );
   water.position.y = -0.88;
@@ -954,7 +1165,7 @@ export function createStudioScene(
   ];
   const shoreGeometry = new THREE.CylinderGeometry(1, 1.12, 0.6, 9);
   const shoreMaterial = new THREE.MeshStandardMaterial({
-    color: 0xc5bca0,
+    color: 0xffffff,
     roughness: 0.95,
   });
   const shores = new THREE.InstancedMesh(
@@ -964,19 +1175,31 @@ export function createStudioScene(
   );
   const hills = new THREE.InstancedMesh(
     new THREE.ConeGeometry(0.82, 1.6, 7),
-    new THREE.MeshStandardMaterial({ color: sage, roughness: 0.95 }),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 }),
     scenery.length,
   );
   const sceneryTransform = new THREE.Object3D();
+  const reefShore = new THREE.Color(art.sand);
+  const farShore = new THREE.Color(art.reef);
+  const tint = new THREE.Color();
   scenery.forEach(({ x, z, r }, i) => {
-    sceneryTransform.position.set(x, -0.55, z);
+    const distant = i >= reefIslands.length;
+    sceneryTransform.position.set(x, distant ? -0.68 : -0.55, z);
     sceneryTransform.scale.set(r, 1, r * 0.8);
     sceneryTransform.rotation.y = i * 0.7;
     sceneryTransform.updateMatrix();
     shores.setMatrixAt(i, sceneryTransform.matrix);
-    sceneryTransform.position.y = 0.25;
+    shores.setColorAt(i, distant ? farShore : reefShore);
+    sceneryTransform.position.y = distant ? -0.3 : 0.25;
+    sceneryTransform.scale.y = distant ? 0.44 + (i % 5) * 0.09 : 1;
     sceneryTransform.updateMatrix();
     hills.setMatrixAt(i, sceneryTransform.matrix);
+    hills.setColorAt(
+      i,
+      tint
+        .setHex(distant ? art.reef : art.foliage[i % art.foliage.length]!)
+        .multiplyScalar(0.83 + (i % 4) * 0.06),
+    );
   });
   shores.castShadow =
     shores.receiveShadow =
@@ -985,21 +1208,36 @@ export function createStudioScene(
       true;
   scene.add(shores, hills);
   container.dataset.sceneryIslands = String(scenery.length);
-  const ripples: THREE.Mesh[] = [];
-  for (let i = 0; i < 24; i++) {
-    const ripple = mesh(
-      scene,
-      new THREE.TorusGeometry(0.2 + (i % 3) * 0.08, 0.012, 4, 20),
-      0xa4c9c6,
-      Math.sin(i * 7.1) * 20,
-      -0.82,
-      Math.cos(i * 3.9) * 16,
-    );
-    ripple.rotation.x = -Math.PI / 2;
-    ripple.scale.x = 1.9;
-    ripple.castShadow = false;
-    ripples.push(ripple);
+  const ripples = new THREE.InstancedMesh(
+    new THREE.TorusGeometry(0.26, 0.008, 4, 20),
+    material(art.seaShallow),
+    24,
+  );
+  ripples.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  ripples.receiveShadow = true;
+  ripples.frustumCulled = false;
+  scene.add(ripples);
+  const rippleTransform = new THREE.Object3D();
+  rippleTransform.rotation.x = -Math.PI / 2;
+  function shapeRipples(time: number) {
+    for (let i = 0; i < ripples.count; i++) {
+      const radius = 0.78 + (i % 3) * 0.3;
+      rippleTransform.position.set(
+        Math.sin(i * 7.1) * 20,
+        -0.82,
+        Math.cos(i * 3.9) * 16,
+      );
+      rippleTransform.scale.set(
+        1.9 * radius,
+        radius * (1 + Math.sin(time * 0.7 + i) * 0.16),
+        1,
+      );
+      rippleTransform.updateMatrix();
+      ripples.setMatrixAt(i, rippleTransform.matrix);
+    }
+    ripples.instanceMatrix.needsUpdate = true;
   }
+  shapeRipples(0);
   const boats: THREE.Group[] = [];
   for (let i = 0; i < 4; i++) {
     const boat = new THREE.Group();
@@ -1060,108 +1298,24 @@ export function createStudioScene(
     }),
   }));
   const pointLights: THREE.PointLight[] = [];
-  const shadowSubjects = [
-    ...walkers.map(({ model }) => ({
-      group: model.group,
-      radius: 0.22,
-      lift: 0.25,
-      sea: false,
-    })),
-    { group: creator.group, radius: 0.42, lift: 0.65, sea: false },
-    ...boats.map((group) => ({ group, radius: 0.42, lift: 0.2, sea: true })),
-    ...birds.map(({ group }) => ({
-      group,
-      radius: 0.23,
-      lift: 4.5,
-      sea: true,
-    })),
-  ];
-  shadowSubjects.forEach(({ group }) =>
-    group.traverse((object) => {
+  for (const actor of [...boats, ...birds.map(({ group }) => group)]) {
+    actor.traverse((object) => {
       if (object instanceof THREE.Mesh) object.castShadow = false;
-    }),
-  );
-  const shadowMaterial = new THREE.MeshBasicMaterial({
-    color: 0x233f44,
-    transparent: true,
-    opacity: 0.2,
-    depthWrite: false,
-  });
-  const movingShadows = new THREE.InstancedMesh(
-    new THREE.CircleGeometry(1, 14).rotateX(-Math.PI / 2),
-    shadowMaterial,
-    shadowSubjects.length,
-  );
-  movingShadows.frustumCulled = false;
-  scene.add(movingShadows);
-  const shadowTransform = new THREE.Object3D();
-  function updateMovingShadows() {
-    const projection = Math.max(5, sun.position.y);
-    shadowSubjects.forEach(({ group, radius, lift, sea }, index) => {
-      shadowTransform.position.set(
-        group.position.x - (sun.position.x / projection) * lift,
-        sea ? -0.79 : group.position.y + 0.028,
-        group.position.z - (sun.position.z / projection) * lift,
-      );
-      shadowTransform.scale.set(
-        radius * (1 + lift / projection),
-        1,
-        radius * 0.65,
-      );
-      shadowTransform.rotation.y = group.rotation.y;
-      shadowTransform.updateMatrix();
-      movingShadows.setMatrixAt(index, shadowTransform.matrix);
     });
-    movingShadows.instanceMatrix.needsUpdate = true;
-    shadowMaterial.opacity = 0.2 - nightLevel * 0.12;
-    container.dataset.shadowFrame = String(Math.round(ambientTime * 30));
   }
+  const movingShadows = createMovingShadows(
+    people.map(({ group }) => group),
+    boats,
+  );
+  scene.add(movingShadows.mesh);
   scene.traverse((object) => {
     if (object.userData.canopy) leaves.push(object);
     if (object instanceof THREE.PointLight) pointLights.push(object);
   });
-  const phaseConfigs = {
-    dawn: {
-      sky: 0xd5d4e1,
-      water: 0x809caf,
-      sun: 0xffc49b,
-      power: 1.7,
-      ambient: 1.8,
-      night: 0.1,
-      position: new THREE.Vector3(-12, 6, 9),
-    },
-    noon: {
-      sky: 0xb9dadd,
-      water: 0x5d9fa5,
-      sun: 0xfff2d6,
-      power: 2.6,
-      ambient: 2.2,
-      night: 0,
-      position: new THREE.Vector3(-6, 18, 10),
-    },
-    sunset: {
-      sky: 0xe7b3a5,
-      water: 0x826d93,
-      sun: 0xffa469,
-      power: 1.8,
-      ambient: 1.5,
-      night: 0.3,
-      position: new THREE.Vector3(-17, 5, 5),
-    },
-    night: {
-      sky: 0x142440,
-      water: 0x1b3d61,
-      sun: 0xa9c8ff,
-      power: 0.7,
-      ambient: 0.8,
-      night: 1,
-      position: new THREE.Vector3(4, 16, -7),
-    },
-  };
   let phase: DayPhase = 'noon',
     nightLevel = 0;
   let reduced = matchMedia('(prefers-reduced-motion: reduce)').matches,
-    visible = true,
+    visible = false,
     disposed = false,
     ambientEnabled = !reduced;
   let active: IslandId | null = null,
@@ -1172,116 +1326,194 @@ export function createStudioScene(
     ambientFrame = 0;
   let cameraFrame = 0,
     lightingFrame = 0,
-    moving = false,
     cameraStarted = 0;
   let completeMove: (() => void) | undefined;
   const targetCamera = new THREE.Vector3(),
     targetLook = new THREE.Vector3(),
     startCamera = new THREE.Vector3(),
     startLook = new THREE.Vector3();
-  function paint() {
-    if (!visible || disposed) return;
+  const portals = [
+    ...container.querySelectorAll<HTMLButtonElement>('[data-portal]'),
+  ].map((button) => ({
+    button,
+    id: button.dataset.portal as IslandId,
+    width: 90,
+  }));
+  const anchors = {
+    bookflow: projectFacilities.bookflow.map(({ x, z, labelY }) => [
+      x,
+      labelY,
+      z,
+    ]),
+    assetflow: projectFacilities.assetflow.map(({ x, z, labelY }) => [
+      x,
+      labelY,
+      z,
+    ]),
+    journal: [[0, 2.2, 1.1]],
+    zailongchang: [
+      [0, 2, -0.5],
+      [-1.5, 2, 1],
+      [1.5, 2, 1],
+    ],
+  } satisfies Partial<Record<IslandId, number[][]>>;
+  const point = new THREE.Vector3();
+  let paintFrame = 0;
+  let labelsDirty = true;
+  let shadowsDirty = true;
+  let shadowLightAt = -Infinity;
+  let ambientAccumulator = 0;
+  let poseDelta = 0;
+  type Motion = ReturnType<typeof createPedestrian>;
+  function snapshot(motion: Motion) {
+    return {
+      x: motion.position.x,
+      z: motion.position.z,
+      heading: motion.heading,
+      distance: motion.distance,
+    };
+  }
+  let previousPeople: ReturnType<typeof snapshot>[] = [];
+  let previousBoats: ReturnType<typeof snapshot>[] = [];
+  function savePose(target: ReturnType<typeof snapshot>, motion: Motion) {
+    target.x = motion.position.x;
+    target.z = motion.position.z;
+    target.heading = motion.heading;
+    target.distance = motion.distance;
+  }
+  function posePeople(alpha: number, delta: number) {
+    const domain = currentLayout.domain;
+    people.forEach((model, i) => {
+      const { group } = model;
+      const before = previousPeople[i]!;
+      const motion = peerMotions[i]!;
+      group.position.x = THREE.MathUtils.lerp(
+        before.x,
+        motion.position.x,
+        alpha,
+      );
+      group.position.z = THREE.MathUtils.lerp(
+        before.z,
+        motion.position.z,
+        alpha,
+      );
+      group.position.y = domain.height(group.position);
+      group.rotation.y = THREE.MathUtils.lerp(
+        before.heading,
+        motion.heading,
+        alpha,
+      );
+      model.stride = THREE.MathUtils.damp(
+        model.stride,
+        Number(motion.moving),
+        11,
+        delta,
+      );
+      const distance = camera.position.distanceToSquared(group.position);
+      group.visible = distance < (group.visible ? 33 ** 2 : 29 ** 2);
+      group.updateMatrix();
+      distantPeople.setMatrixAt(i, group.visible ? emptyFigure : group.matrix);
+      if (!group.visible) return;
+      const progress =
+        THREE.MathUtils.lerp(before.distance, motion.distance, alpha) /
+        (0.64 * group.scale.x);
+      model.torso.rotation.z =
+        Math.sin(progress * 2 * Math.PI) * 0.035 * model.stride;
+      model.torso.position.y =
+        0.006 * Math.sin(4 * Math.PI * progress) * model.stride;
+      for (let foot = 0; foot < 2; foot++) {
+        const cycle = (progress + foot * 0.5) % 1;
+        const forward =
+          (cycle < 0.5 ? 0.16 - cycle * 0.64 : -0.16 + (cycle - 0.5) * 0.64) *
+          model.stride;
+        const lift =
+          cycle < 0.5
+            ? 0
+            : 0.1 * Math.sin((cycle - 0.5) * 2 * Math.PI) * model.stride;
+        const leg = model.legs[foot]!,
+          shoe = model.shoes[foot]!;
+        leg.rotation.x = -Math.atan2(forward, 0.4 - lift);
+        leg.scale.y = Math.hypot(0.4 - lift, forward) / 0.4;
+        shoe.position.setZ(forward + 0.045);
+        shoe.position.y = 0.04 + lift;
+        model.arms[foot]!.rotation.x =
+          -Math.cos(cycle * 2 * Math.PI) * 0.36 * model.stride;
+      }
+    });
+    distantPeople.instanceMatrix.needsUpdate = true;
+  }
+  function paint(force = false) {
+    if ((!visible && !force) || disposed) return;
     camera.updateMatrixWorld();
-    updateMovingShadows();
+    const project = labelsDirty;
+    if (project || poseDelta) {
+      posePeople(ambientAccumulator / simulationStep, poseDelta);
+      poseDelta = 0;
+    }
+    if (project || shadowsDirty) {
+      movingShadows.update(camera, sun, nightLevel, ambientTime, width < 600);
+      shadowsDirty = false;
+    }
     renderer.render(scene, camera);
-    projectLabels();
+    if (project) {
+      projectLabels();
+      labelsDirty = false;
+    }
+  }
+  function requestPaint() {
+    if (paintFrame || !visible || disposed) return;
+    paintFrame = requestAnimationFrame(() => {
+      paintFrame = 0;
+      paint();
+    });
   }
   function projectLabels() {
-    scene.updateMatrixWorld(true);
     const used: { x: number; y: number; w: number }[] = [];
-    container
-      .querySelectorAll<HTMLButtonElement>('[data-portal]')
-      .forEach((button) => {
-        const id = button.dataset.portal as IslandId;
-        const island = roots.get(id)!;
-        const point = island
-          .localToWorld(new THREE.Vector3(0, id === 'about' ? 2.5 : 2.1, 0))
-          .project(camera);
-        const x = id === active ? width / 2 : ((point.x + 1) * width) / 2;
-        let y = ((1 - point.y) * height) / 2;
-        if (id === active) y = width < 540 ? 146 : 106;
-        const show =
-          point.z < 1 &&
-          point.z > -1 &&
-          x > 32 &&
-          x < width - 32 &&
-          y > 100 &&
-          y < height - 72;
-        button.style.visibility = show ? 'visible' : 'hidden';
-        const w = button.offsetWidth || 90;
-        for (const previous of used)
-          if (
-            Math.abs(x - previous.x) < (w + previous.w) / 2 + 6 &&
-            Math.abs(y - previous.y) < 34
-          )
-            y = previous.y + 35;
-        used.push({ x, y, w });
-        button.style.transform = `translate(${x}px,${y}px) translate(-50%,-50%)`;
-        button.setAttribute('aria-pressed', String(id === active));
-      });
-    if (!active) return;
+    for (const { button, id, width: w } of portals) {
+      point.copy(roots.get(id)!.position);
+      point.y += id === 'about' ? 2.5 : 2.1;
+      point.project(camera);
+      const x = id === active ? width / 2 : ((point.x + 1) * width) / 2;
+      let y = ((1 - point.y) * height) / 2;
+      if (id === active) y = width < 540 ? 146 : 106;
+      for (const previous of used) {
+        if (
+          Math.abs(x - previous.x) < (w + previous.w) / 2 + 6 &&
+          Math.abs(y - previous.y) < 34
+        )
+          y = previous.y + 35;
+      }
+      const show =
+        point.z < 1 &&
+        point.z > -1 &&
+        x >= w / 2 + 4 &&
+        x <= width - w / 2 - 4 &&
+        y > 100 &&
+        y < height - 72;
+      button.style.visibility = show ? 'visible' : 'hidden';
+      if (!show) continue;
+      used.push({ x, y, w });
+      button.style.transform = `translate(${x}px,${y}px) translate(-50%,-50%)`;
+    }
+    const positions = active && anchors[active as keyof typeof anchors];
+    if (!active || !positions) return;
     const island = roots.get(active)!;
-    const anchors =
-      active === 'bookflow' || active === 'assetflow'
-        ? [
-            new THREE.Vector3(-4, 2.6, -1.65),
-            new THREE.Vector3(4, 2.6, -1.65),
-            new THREE.Vector3(0, 2.6, 1.7),
-          ]
-        : active === 'journal'
-          ? [
-              new THREE.Vector3(-1.5, 2, -1.8),
-              new THREE.Vector3(1.5, 2, -1.8),
-              new THREE.Vector3(-1.5, 2, 1.5),
-              new THREE.Vector3(1.5, 2, 1.5),
-              new THREE.Vector3(0, 2, 2.8),
-            ]
-          : active === 'zailongchang'
-            ? [
-                new THREE.Vector3(0, 2, -0.5),
-                new THREE.Vector3(-1.5, 2, 1),
-                new THREE.Vector3(1.5, 2, 1),
-              ]
-            : active === 'portfolio'
-              ? portfolioExhibits.map(
-                  ({ x, z }) => new THREE.Vector3(x, 1.6, z + 0.2),
-                )
-              : active === 'about'
-                ? [
-                    new THREE.Vector3(0, 2.6, 1),
-                    new THREE.Vector3(-0.4, 1.1, 1.8),
-                    new THREE.Vector3(1.8, 2, 1.5),
-                  ]
-                : [new THREE.Vector3(0, 2.6, 1)];
     labels.forEach((button, index) => {
-      if (button.hidden || !anchors[index]) return;
-      const point = (
-        active === 'about' && index === 0
-          ? creator.group.position.clone().add(new THREE.Vector3(0, 1.8, 0))
-          : island.localToWorld(anchors[index]!.clone())
-      ).project(camera);
+      const position = positions[index];
+      if (button.hidden || !position) return;
+      point
+        .set(position[0]!, position[1]!, position[2]!)
+        .multiply(island.scale)
+        .add(island.position)
+        .project(camera);
       let x = ((point.x + 1) * width) / 2;
       let y = ((1 - point.y) * height) / 2;
-      // Keep the reading target stable while its character continues walking.
-      if (active === 'about' && index === 0) {
-        x = width / 2;
-        y = height * 0.35;
-      }
-      if (width < 600 && anchors.length === 2) x += index === 0 ? -22 : 22;
-      if (width < 900 && (active === 'journal' || active === 'portfolio')) {
-        x = width * (index % 2 === 0 ? 0.25 : 0.75);
-        y = height * 0.36 + Math.floor(index / 2) * 78;
-      }
-      if (width < 900 && active === 'about' && index > 0) {
-        x = width * (index === 1 ? 0.25 : 0.75);
-        y = height * 0.52;
-      }
       if (width < 900 && active === 'zailongchang') {
         x = index === 0 ? width / 2 : width * (index === 1 ? 0.25 : 0.75);
         y = height * 0.36 + (index === 0 ? 0 : 90);
       }
-      if (height < 500 && (active === 'journal' || active === 'zailongchang')) {
-        x = (width * (index + 0.5)) / anchors.length;
+      if (height < 500 && active === 'zailongchang') {
+        x = (width * (index + 0.5)) / positions.length;
         y = height * 0.55;
       }
       button.style.transform = `translate(${Math.max(64, Math.min(width - 64, x))}px,${Math.max(130, Math.min(height - 100, y))}px) translate(-50%,-50%)`;
@@ -1323,7 +1555,6 @@ export function createStudioScene(
       controls.target.copy(targetLook);
       controls.update();
     }
-    moving = false;
     completeMove?.();
     completeMove = undefined;
   }
@@ -1338,10 +1569,9 @@ export function createStudioScene(
     camera.position.lerpVectors(startCamera, targetCamera, e);
     controls.target.lerpVectors(startLook, targetLook, e);
     controls.update();
-    paint();
+    requestPaint();
     if (t < 1) cameraFrame = requestAnimationFrame(cameraTick);
     else {
-      moving = false;
       completeMove?.();
       completeMove = undefined;
     }
@@ -1352,13 +1582,12 @@ export function createStudioScene(
       camera.position.copy(targetCamera);
       controls.target.copy(targetLook);
       controls.update();
-      paint();
+      requestPaint();
       return Promise.resolve();
     }
     startCamera.copy(camera.position);
     startLook.copy(controls.target);
     cameraStarted = performance.now();
-    moving = true;
     return new Promise<void>((resolve) => {
       completeMove = resolve;
       cameraFrame = requestAnimationFrame(cameraTick);
@@ -1367,167 +1596,149 @@ export function createStudioScene(
   function setPhase(value: DayPhase, animated = true) {
     cancelAnimationFrame(lightingFrame);
     phase = value;
-    const config = phaseConfigs[value];
+    const config = phaseLight[value];
     const from = {
-      sky: (scene.background as THREE.Color).clone(),
-      water: waterMat.color.clone(),
+      sky: skyColor.clone(),
+      haze: fog.color.clone(),
+      fog: fogDensity,
       sun: sun.color.clone(),
       power: sun.intensity,
       ambient: hemi.intensity,
+      ambientSky: hemi.color.clone(),
+      ambientGround: hemi.groundColor.clone(),
+      shade: sun.shadow.intensity,
       night: nightLevel,
       position: sun.position.clone(),
     };
     const sky = new THREE.Color(config.sky),
-      sea = new THREE.Color(config.water),
-      color = new THREE.Color(config.sun);
+      haze = new THREE.Color('haze' in config ? config.haze : config.sky),
+      color = new THREE.Color(config.sun),
+      ambientSky = new THREE.Color(config.ambientSky),
+      ambientGround = new THREE.Color(config.ambientGround),
+      position = new THREE.Vector3(...config.position);
     const start = performance.now();
     const update = (now: number) => {
       lightingFrame = 0;
       const t = !animated || reduced ? 1 : Math.min(1, (now - start) / 1100);
       const e = t * t * (3 - 2 * t);
-      (scene.background as THREE.Color).lerpColors(from.sky, sky, e);
-      (scene.fog as THREE.FogExp2).color.copy(scene.background as THREE.Color);
-      waterMat.color.lerpColors(from.water, sea, e);
+      skyColor.lerpColors(from.sky, sky, e);
+      fog.color.lerpColors(from.haze, haze, e);
+      fogDensity = THREE.MathUtils.lerp(from.fog, config.fog, e);
+      fog.density = fogDensity * (portraitLayout ? 0.72 : 1);
       sun.color.lerpColors(from.sun, color, e);
-      sun.position.lerpVectors(from.position, config.position, e);
+      sun.position.lerpVectors(from.position, position, e);
       sun.intensity = THREE.MathUtils.lerp(from.power, config.power, e);
+      sun.shadow.intensity = THREE.MathUtils.lerp(from.shade, config.shade, e);
+      hemi.color.lerpColors(from.ambientSky, ambientSky, e);
+      hemi.groundColor.lerpColors(from.ambientGround, ambientGround, e);
       hemi.intensity = THREE.MathUtils.lerp(from.ambient, config.ambient, e);
       nightLevel = THREE.MathUtils.lerp(from.night, config.night, e);
-      windows.emissiveIntensity = nightLevel * 2.4;
-      pointLights.forEach((light) => (light.intensity = nightLevel * 2.5));
+      windows.emissiveIntensity = 0.08 + nightLevel * 1.42;
+      screens.emissiveIntensity = 0.14 + nightLevel * 0.41;
+      pointLights.forEach((light) => (light.intensity = nightLevel * 1.9));
       fireflies.forEach((fly) => (fly.visible = nightLevel > 0.5));
-      renderer.shadowMap.needsUpdate = true;
-      paint();
+      if (t === 1 || now - shadowLightAt >= 1000 / 12) {
+        renderer.shadowMap.needsUpdate = true;
+        shadowLightAt = now;
+      }
+      shadowsDirty = true;
+      requestPaint();
       if (t < 1 && !disposed && visible)
         lightingFrame = requestAnimationFrame(update);
     };
     update(start);
   }
+  const simulationStep = 1 / 30;
+  function simulate() {
+    const { domain, map, sea } = currentLayout;
+    peerMotions.forEach((motion, i) => {
+      savePose(previousPeople[i]!, motion);
+      motion.update(simulationStep, peerMotions);
+    });
+    if (peerMotions.some(({ position }) => domain.onBridge(position)))
+      bridgeCrossings++;
+    boatMotion.forEach((motion, i) => {
+      savePose(previousBoats[i]!, motion);
+      motion.update(simulationStep, boatMotion);
+      if (i !== 0 || !motion.arrived) return;
+      if (!dockOutbound) {
+        harborVisits++;
+        motion.goTo(
+          sea.nearest({ x: map.zailongchang.x - 7, z: map.zailongchang.z + 2 }),
+        );
+      } else motion.goTo(dock);
+      dockOutbound = !dockOutbound;
+    });
+  }
+  let lastStatusAt = -Infinity;
   function ambient(now: number) {
     ambientFrame = 0;
-    if (!visible || disposed || reduced || !ambientEnabled) {
-      ambientLast = 0;
-      return;
+    if (!visible || disposed || reduced || !ambientEnabled) return;
+    const delta = ambientLast ? Math.min((now - ambientLast) / 1000, 0.1) : 0;
+    ambientLast = now;
+    ambientTime += delta;
+    ambientAccumulator += delta;
+    while (ambientAccumulator >= simulationStep) {
+      simulate();
+      ambientAccumulator -= simulationStep;
     }
-    if (!ambientLast) ambientLast = now;
-    const elapsed = now - ambientLast;
-    if (elapsed >= 1000 / 30) {
-      const delta = Math.min(elapsed, 70) / 1000;
-      ambientTime += delta;
-      ambientLast = now;
-      const peers = [...walkers.map(({ motion }) => motion!), creatorMotion];
-      walkers.forEach(({ model, offset, motion: walkerMotion }) => {
-        const motion = walkerMotion!;
-        motion.update(delta, peers);
-        const stride = motion.moving ? 1 : 0;
-        model.group.position.set(
-          motion.position.x,
-          motion.height +
-            Math.abs(Math.sin(ambientTime * 5 + offset)) * 0.015 * stride,
-          motion.position.z,
-        );
-        model.group.rotation.y = motion.heading;
-        model.legs.forEach(
-          (leg, i) =>
-            (leg.rotation.x =
-              Math.sin(ambientTime * 5 + offset + i * Math.PI) * 0.38 * stride),
-        );
-        model.arms.forEach(
-          (arm, i) =>
-            (arm.rotation.x =
-              -Math.sin(ambientTime * 5 + offset + i * Math.PI) *
-              0.28 *
-              stride),
-        );
-      });
-      creatorMotion.update(delta, peers);
-      creator.group.position.set(
-        creatorMotion.position.x,
-        creatorMotion.height,
-        creatorMotion.position.z,
+    const alpha = ambientAccumulator / simulationStep;
+    poseDelta += delta;
+    boats.forEach((boat, i) => {
+      const motion = boatMotion[i]!,
+        before = previousBoats[i]!;
+      boat.position.set(
+        THREE.MathUtils.lerp(before.x, motion.position.x, alpha),
+        -0.73 + Math.sin(ambientTime + i) * 0.04,
+        THREE.MathUtils.lerp(before.z, motion.position.z, alpha),
       );
-      creator.group.rotation.y = creatorMotion.heading;
-      const creatorStride = creatorMotion.moving ? 1 : 0;
-      creator.legs.forEach(
-        (leg, i) =>
-          (leg.rotation.x =
-            Math.sin(ambientTime * 4 + i * Math.PI) * 0.3 * creatorStride),
+      boat.rotation.y = THREE.MathUtils.lerp(
+        before.heading,
+        motion.heading,
+        alpha,
       );
-      creator.arms.forEach((arm, i) => {
-        arm.rotation.z = 0;
-        arm.rotation.x =
-          -Math.sin(ambientTime * 4 + i * Math.PI) * 0.22 * creatorStride;
-      });
-      container.dataset.avatarDistance = creatorMotion.distance.toFixed(2);
-      const centers = islandLayout(width < 900 && height > width);
-      const onBridge = peers.some(
-        ({ position }) =>
-          !Object.entries(centers).some(([id, c]) => {
-            const [rx, rz] = islandRadii(id as IslandId);
-            return (
-              Math.hypot((position.x - c.x) / rx, (position.z - c.z) / rz) <= 1
-            );
-          }),
+    });
+    birds.forEach(({ group, wings }, i) => {
+      const motion = birdMotion[i]!;
+      motion.update(delta);
+      group.position.set(
+        motion.position.x,
+        4.5 + Math.sin(ambientTime * 0.3 + i) * 0.8,
+        motion.position.z,
       );
-      if (onBridge) bridgeCrossings++;
-      container.dataset.bridgeCrossings = String(bridgeCrossings);
-      boats.forEach((boat, i) => {
-        const motion = boatMotion[i]!;
-        motion.update(delta, boatMotion);
-        if (i === 0 && motion.arrived) {
-          if (!dockOutbound) {
-            harborVisits++;
-            motion.goTo(
-              seaNavigation.nearest({
-                x: centers.zailongchang.x - 7,
-                z: centers.zailongchang.z + 2,
-              }),
-            );
-          } else motion.goTo(dock);
-          dockOutbound = !dockOutbound;
-        }
-        boat.position.set(
-          motion.position.x,
-          -0.73 + Math.sin(ambientTime + i) * 0.04,
-          motion.position.z,
-        );
-        boat.rotation.y = motion.heading;
-      });
-      container.dataset.harborVisits = String(harborVisits);
-      birds.forEach(({ group, wings }, i) => {
-        const motion = birdMotion[i]!;
-        motion.update(delta);
-        group.position.set(
-          motion.position.x,
-          4.5 + Math.sin(ambientTime * 0.3 + i) * 0.8,
-          motion.position.z,
-        );
-        group.rotation.y = motion.heading;
-        wings.forEach(
-          (wing, j) =>
-            (wing.rotation.z =
-              Math.sin(ambientTime * 3 + i) * (j ? -0.35 : 0.35)),
-        );
-      });
-      leaves.forEach(
-        (leaf, i) =>
-          (leaf.rotation.z = Math.sin(ambientTime * 0.8 + i) * 0.025),
+      group.rotation.y = motion.heading;
+      wings.forEach(
+        (wing, j) =>
+          (wing.rotation.z =
+            Math.sin(ambientTime * 3 + i) * (j ? -0.35 : 0.35)),
       );
-      waterClock.value = ambientTime;
-      ripples.forEach(
-        (ripple, i) =>
-          (ripple.scale.y = 1 + Math.sin(ambientTime * 0.7 + i) * 0.16),
-      );
+    });
+    leaves.forEach(
+      (leaf, i) => (leaf.rotation.z = Math.sin(ambientTime * 0.8 + i) * 0.025),
+    );
+    waterClock.value = ambientTime;
+    shapeRipples(ambientTime);
+    if (nightLevel > 0.5) {
       fireflies.forEach((fly, i) => {
         const { motion, origin } = fireflyMotion[i]!;
         motion.update(delta);
-        fly.position.x = origin.x + motion.position.x;
-        fly.position.z = origin.z + motion.position.z;
-        fly.position.y = 0.9 + Math.sin(ambientTime + i) * 0.4;
+        fly.position.set(
+          origin.x + motion.position.x,
+          0.9 + Math.sin(ambientTime + i) * 0.4,
+          origin.z + motion.position.z,
+        );
         fly.scale.setScalar(0.6 + Math.sin(ambientTime * 2 + i) * 0.35);
       });
-      if (!moving) paint();
     }
+    if (now - lastStatusAt >= 250) {
+      lastStatusAt = now;
+      container.dataset.avatarDistance = creatorMotion.distance.toFixed(2);
+      container.dataset.bridgeCrossings = String(bridgeCrossings);
+      container.dataset.harborVisits = String(harborVisits);
+      container.dataset.shadowFrame = String(Math.round(ambientTime * 30));
+    }
+    shadowsDirty = true;
+    requestPaint();
     ambientFrame = requestAnimationFrame(ambient);
   }
   function schedule() {
@@ -1538,82 +1749,214 @@ export function createStudioScene(
       ambientFrame = requestAnimationFrame(ambient);
   }
   function resize() {
-    width = container.clientWidth;
-    height = container.clientHeight;
-    layout(width, height);
+    const nextWidth = Math.max(1, container.clientWidth);
+    const nextHeight = Math.max(1, container.clientHeight);
+    if (
+      portraitLayout !== undefined &&
+      width === nextWidth &&
+      height === nextHeight
+    )
+      return;
+    width = nextWidth;
+    height = nextHeight;
+    const portrait = width < 900 && height > width;
+    const arrangementChanged = portraitLayout !== portrait;
+    layout(portrait);
+    renderer.setPixelRatio(
+      Math.min(devicePixelRatio, width < 600 ? 1.25 : 1.65),
+    );
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    home();
-    stopCamera(true);
-    paint();
+    if (arrangementChanged) {
+      home();
+      stopCamera(true);
+    }
+    labelsDirty = true;
+    requestPaint();
   }
-  const observer = new ResizeObserver(resize);
-  observer.observe(container);
   resize();
+  const observer = new ResizeObserver((entries) => {
+    if (entries.some(({ target }) => target === container)) resize();
+    for (const entry of entries) {
+      const portal = portals.find(({ button }) => button === entry.target);
+      if (portal)
+        portal.width =
+          entry.borderBoxSize[0]?.inlineSize ?? entry.contentRect.width;
+    }
+    labelsDirty = true;
+    requestPaint();
+  });
+  observer.observe(container);
+  portals.forEach(({ button }) => observer.observe(button));
   const redraw = () => {
-    if (!moving) paint();
+    labelsDirty = true;
+    requestPaint();
   };
   const interrupt = () => stopCamera();
   controls.addEventListener('change', redraw);
   controls.addEventListener('start', interrupt);
   const raycaster = new THREE.Raycaster();
-  let downX = 0,
-    downY = 0;
-  const pointerDown = (event: PointerEvent) => {
-    downX = event.clientX;
-    downY = event.clientY;
-  };
-  const pointerUp = (event: PointerEvent) => {
-    if (Math.hypot(event.clientX - downX, event.clientY - downY) > 6) return;
-    const rect = renderer.domElement.getBoundingClientRect();
-    raycaster.setFromCamera(
-      new THREE.Vector2(
-        ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        (-(event.clientY - rect.top) / rect.height) * 2 + 1,
-      ),
-      camera,
-    );
-    const hit = raycaster.intersectObjects([...roots.values()], true)[0];
-    if (!hit) return;
-    let object: THREE.Object3D | null = hit.object;
-    let hotspot: number | undefined;
-    while (object && object.userData.island === undefined) {
-      if (object.userData.hotspot !== undefined)
-        hotspot = object.userData.hotspot as number;
-      else if (
-        object.userData.station !== undefined &&
-        [0, 2, 4].includes(object.userData.station as number)
-      )
-        hotspot = [0, 2, 4].indexOf(object.userData.station as number);
-      object = object.parent;
+  const pointer = new THREE.Vector2();
+  const canvas = renderer.domElement;
+  const interactions = new AbortController();
+  const listener = { signal: interactions.signal };
+  const projectProxies = () =>
+    active === 'bookflow' || active === 'assetflow' ? facilities[active] : [];
+  let hovered = -1;
+  let lit: THREE.Mesh | undefined;
+  function highlight() {
+    const next =
+      projectProxies()[
+        hovered >= 0
+          ? hovered
+          : labels.indexOf(document.activeElement as HTMLButtonElement)
+      ];
+    if (next === lit) return;
+    if (lit) {
+      const ring = lit.userData.ring as THREE.Mesh<
+        THREE.TorusGeometry,
+        THREE.MeshStandardMaterial
+      >;
+      const tint = lit.name.includes('bookflow') ? art.coral : art.teal;
+      ring.material.color.set(tint);
+      ring.material.emissive.set(tint);
+      ring.material.emissiveIntensity = 0.17;
     }
-    if (!object) return;
-    const id = object.userData.island as IslandId;
-    if (active === id && hotspot !== undefined) onSelect(hotspot);
-    else onEnter(id);
-  };
-  renderer.domElement.addEventListener('pointerdown', pointerDown);
-  renderer.domElement.addEventListener('pointerup', pointerUp);
+    lit = next;
+    if (lit) {
+      const ring = lit.userData.ring as THREE.Mesh<
+        THREE.TorusGeometry,
+        THREE.MeshStandardMaterial
+      >;
+      ring.material.color.set(0xf0bb63);
+      ring.material.emissive.set(0xffac50);
+      ring.material.emissiveIntensity = 0.45;
+    }
+    requestPaint();
+  }
+  function aim(event: PointerEvent) {
+    const rect = canvas.getBoundingClientRect();
+    pointer.set(
+      ((event.clientX - rect.left) / rect.width) * 2 - 1,
+      (-(event.clientY - rect.top) / rect.height) * 2 + 1,
+    );
+    raycaster.setFromCamera(pointer, camera);
+  }
+  function facilityAtPointer() {
+    const proxies = projectProxies();
+    const hit = raycaster.intersectObjects(proxies, false)[0];
+    return hit ? proxies.indexOf(hit.object as THREE.Mesh) : -1;
+  }
+  const pointDown = new THREE.Vector2();
+  let tap: number | undefined;
+  canvas.addEventListener(
+    'pointerdown',
+    (event) => {
+      tap = event.isPrimary && event.button === 0 ? event.pointerId : undefined;
+      pointDown.set(event.clientX, event.clientY);
+    },
+    listener,
+  );
+  canvas.addEventListener(
+    'pointercancel',
+    () => {
+      tap = undefined;
+    },
+    listener,
+  );
+  canvas.addEventListener(
+    'pointermove',
+    (event) => {
+      if (
+        event.buttons ||
+        event.pointerType === 'touch' ||
+        !projectProxies().length
+      )
+        return;
+      aim(event);
+      hovered = facilityAtPointer();
+      canvas.style.cursor = hovered >= 0 ? 'pointer' : '';
+      highlight();
+    },
+    listener,
+  );
+  function clearHover() {
+    hovered = -1;
+    canvas.style.cursor = '';
+    highlight();
+  }
+  canvas.addEventListener('pointerleave', clearHover, listener);
+  labels.forEach((label) => {
+    label.addEventListener('focus', highlight, listener);
+    label.addEventListener('blur', () => queueMicrotask(highlight), listener);
+  });
+  canvas.addEventListener(
+    'pointerup',
+    (event) => {
+      const select =
+        tap === event.pointerId &&
+        Math.hypot(event.clientX - pointDown.x, event.clientY - pointDown.y) <=
+          6;
+      tap = undefined;
+      if (!select) return;
+      aim(event);
+      const facility = facilityAtPointer();
+      if (facility >= 0) {
+        onSelect(facility);
+        return;
+      }
+      const hit = raycaster.intersectObjects([...roots.values()], true)[0];
+      if (!hit) return;
+      let object: THREE.Object3D | null = hit.object;
+      let hotspot: number | undefined;
+      while (object && object.userData.island === undefined) {
+        if (object.userData.hotspot !== undefined)
+          hotspot = object.userData.hotspot as number;
+        object = object.parent;
+      }
+      if (!object) return;
+      const id = object.userData.island as IslandId;
+      if (active === id && hotspot !== undefined && !directIslandView(id))
+        onSelect(hotspot);
+      else onEnter(id);
+    },
+    listener,
+  );
   const contextLost = (event: Event) => {
     event.preventDefault();
     onContextLost();
   };
   renderer.domElement.addEventListener('webglcontextlost', contextLost);
   return {
+    firstFrame() {
+      portals.forEach(
+        (portal) => (portal.width = portal.button.offsetWidth || portal.width),
+      );
+      container.prepend(renderer.domElement);
+      paint(true);
+      if (renderer.getContext().isContextLost())
+        throw new Error('3D context lost before first frame');
+    },
     focusAvatar() {
+      active = 'about';
+      clearHover();
+      labelsDirty = true;
       targetLook.copy(creator.group.position);
       targetCamera.copy(targetLook).add(new THREE.Vector3(2, 10, 10));
       return move();
     },
     focusIsland(id, animated = true) {
       active = id;
+      clearHover();
+      labelsDirty = true;
       home();
-      renderer.shadowMap.needsUpdate = true;
       return move(animated);
     },
     overview(animated = true) {
       active = null;
+      clearHover();
+      labelsDirty = true;
       home();
       return move(animated);
     },
@@ -1629,20 +1972,22 @@ export function createStudioScene(
     },
     setPhase,
     setVisible(value) {
+      if (visible === value) return;
       visible = value;
       schedule();
       if (!value) {
-        stopCamera(true);
-        cancelAnimationFrame(lightingFrame);
+        if (completeMove) stopCamera(true);
+        cancelAnimationFrame(paintFrame);
+        paintFrame = 0;
+        if (lightingFrame) setPhase(phase, false);
       } else {
-        setPhase(phase, false);
-        paint();
+        requestPaint();
       }
     },
     setReducedMotion(value) {
       reduced = value;
       if (value) {
-        stopCamera(true);
+        if (completeMove) stopCamera(true);
         setPhase(phase, false);
       }
       schedule();
@@ -1657,10 +2002,10 @@ export function createStudioScene(
       stopCamera();
       cancelAnimationFrame(ambientFrame);
       cancelAnimationFrame(lightingFrame);
+      cancelAnimationFrame(paintFrame);
       observer.disconnect();
       controls.dispose();
-      renderer.domElement.removeEventListener('pointerdown', pointerDown);
-      renderer.domElement.removeEventListener('pointerup', pointerUp);
+      interactions.abort();
       renderer.domElement.removeEventListener('webglcontextlost', contextLost);
       const geometries = new Set<THREE.BufferGeometry>(),
         mats = new Set<THREE.Material>();
@@ -1676,7 +2021,19 @@ export function createStudioScene(
       geometries.forEach((g) => g.dispose());
       mats.forEach((m) => m.dispose());
       materials.forEach((m) => m.dispose());
+      movingShadows.ground.dispose();
+      distantPeople.dispose();
+      ripples.dispose();
+      shores.dispose();
+      hills.dispose();
+      coast.dispose();
+      movingShadows.mesh.dispose();
+      headGeometry.dispose();
+      hairGeometry.dispose();
+      glassesGeometry.dispose();
+      sun.shadow.dispose();
       renderer.dispose();
+      if (!renderer.getContext().isContextLost()) renderer.forceContextLoss();
       renderer.domElement.remove();
     },
   };
