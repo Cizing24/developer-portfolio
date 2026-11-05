@@ -1249,7 +1249,7 @@ export function createStudioScene(
               : active === 'about'
                 ? [
                     new THREE.Vector3(0, 2.6, 1),
-                  new THREE.Vector3(-0.4, 1.1, 1.8),
+                    new THREE.Vector3(-0.4, 1.1, 1.8),
                     new THREE.Vector3(1.8, 2, 1.5),
                   ]
                 : [new THREE.Vector3(0, 2.6, 1)];
