@@ -181,9 +181,10 @@ export function initReader(
     ) {
       returnFocus.focus({ preventScroll: true });
     } else {
-      const selected = root.querySelector<HTMLElement>(
-        '[data-portal][aria-pressed=true]',
-      );
+      const selected =
+        root.dataset.renderer === 'loading'
+          ? null
+          : root.querySelector<HTMLElement>('[data-portal][aria-pressed=true]');
       (
         selected ?? root.querySelector<HTMLElement>('[data-menu-toggle]')
       )?.focus({ preventScroll: true });
