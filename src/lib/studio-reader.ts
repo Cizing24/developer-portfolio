@@ -1,6 +1,6 @@
 import { projectShowcaseView, projectView } from './world-config';
 import { initProjectShowcase } from './studio-showcase';
-import type { ProjectId as System } from './project-introductions';
+import type { IslandProjectId as System } from './project-introductions';
 
 export function initReader(
   root: HTMLElement,

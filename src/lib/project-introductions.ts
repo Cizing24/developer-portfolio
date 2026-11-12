@@ -1,5 +1,6 @@
 import type { Locale } from './i18n';
-export type ProjectId = 'bookflow' | 'assetflow';
+export type ProjectId = 'bookflow' | 'assetflow' | 'travelops';
+export type IslandProjectId = Exclude<ProjectId, 'travelops'>;
 export type ProjectTopic = 'purpose' | 'features' | 'architecture';
 export const projectTopics: ProjectTopic[] = [
   'purpose',
@@ -8,6 +9,86 @@ export const projectTopics: ProjectTopic[] = [
 ];
 export function projectIntroduction(project: ProjectId, locale: Locale) {
   const en = locale === 'en';
+  if (project === 'travelops')
+    return {
+      name: 'TravelOps',
+      tagline: en
+        ? 'Follow a ticket from sale to settlement.'
+        : '讓一張票，從售出到結算都有跡可循。',
+      audience: en
+        ? 'For customers, store staff, venue staff and operations teams in a synthetic ticketing scenario.'
+        : '以旅客、門市、場館與營運人員共用的合成售票情境為設計對象。',
+      purpose: en
+        ? 'Online and store sales share stock, while payment, issuance, redemption and refunds finish at different times. TravelOps keeps these steps in one transaction model so a duplicate callback, unavailable queue or concurrent refund cannot silently lose the work or bypass ticket rules.'
+        : '線上與門市共用庫存，付款、開券、核銷與退款卻在不同時間完成。TravelOps 將這些步驟放進同一套交易模型，處理重複回呼、佇列暫停與退款競爭，讓未完成的工作和票券狀態都能追查。',
+      features: en
+        ? [
+            {
+              title: 'Buy and follow a ticket',
+              text: 'Browse tickets, simulate payment, follow issuance and inspect each venue entitlement.',
+            },
+            {
+              title: 'Sell and redeem across channels',
+              text: 'POS uses the same checkout and stock rules. Authorized venues validate entitlements before redemption.',
+            },
+            {
+              title: 'Investigate and reconcile',
+              text: 'Operations reviews refunds, recovers work and compares internal transactions with separate local Mock statements.',
+            },
+          ]
+        : [
+            {
+              title: '購票與追蹤履約',
+              text: '瀏覽票券、模擬付款、追蹤開券，並查看每個場館的剩餘權益。',
+            },
+            {
+              title: '跨通路銷售與核銷',
+              text: 'POS 共用結帳及庫存規則；場館經授權後檢查權益並核銷。',
+            },
+            {
+              title: '營運調查與對帳',
+              text: '審核退款、追蹤可恢復工作，比較內部交易與獨立保存的本地 Mock 帳冊。',
+            },
+          ],
+      architecture: en
+        ? [
+            {
+              title: 'Authorized role interfaces',
+              tech: 'PHP 8.4 · Laravel · Livewire · Filament',
+              text: 'A modular monolith shares business services across customer, POS, venue and operations screens.',
+            },
+            {
+              title: 'Durable transaction state',
+              tech: 'MySQL 8.4 · InnoDB',
+              text: 'Transactions, row locks, Inbox and Outbox records protect stock, callback handling and persistent work.',
+            },
+            {
+              title: 'Recoverable delivery',
+              tech: 'Redis 7.4 · Worker · Scheduler · Docker',
+              text: 'The scheduler redispatches durable work. Workers call local Mock adapters outside order locks and confirm results in a new transaction.',
+            },
+          ]
+        : [
+            {
+              title: '依角色授權的操作介面',
+              tech: 'PHP 8.4 · Laravel · Livewire · Filament',
+              text: '以模組化單體共用業務服務，串起旅客、POS、場館與營運介面。',
+            },
+            {
+              title: '持久交易狀態',
+              tech: 'MySQL 8.4 · InnoDB',
+              text: '透過交易、列鎖、Inbox 與 Outbox 保存庫存、回呼判斷及待處理工作。',
+            },
+            {
+              title: '可恢復的工作派送',
+              tech: 'Redis 7.4 · Worker · Scheduler · Docker',
+              text: '排程重派持久工作；Worker 在訂單鎖外呼叫本地 Mock，再用新交易確認結果。',
+            },
+          ],
+      status: en
+        ? 'Independent project with private source, synthetic data and local Mock integrations. No production deployment or public login.'
+        : '私人原始碼的獨立作品，使用合成資料及本地 Mock 整合，沒有正式部署或公開登入。',
+    };
   if (project === 'bookflow')
     return {
       name: 'BookFlow',

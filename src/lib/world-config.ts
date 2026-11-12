@@ -1,5 +1,5 @@
 import type { Locale } from './i18n';
-import type { ProjectId } from './project-introductions';
+import type { IslandProjectId as ProjectId } from './project-introductions';
 export type IslandId =
   'portfolio' | ProjectId | 'journal' | 'contact' | 'about' | 'zailongchang';
 export type DayPhase = 'dawn' | 'noon' | 'sunset' | 'night';
@@ -107,6 +107,10 @@ export const projectFacilities = {
     },
   ],
 } as const;
+
+export function isProjectIsland(id: string): id is ProjectId {
+  return id === 'bookflow' || id === 'assetflow';
+}
 
 export function projectView(id: ProjectId, suffix = '') {
   return `project-${id}${suffix}`;
