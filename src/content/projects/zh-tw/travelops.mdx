@@ -1,0 +1,123 @@
+---
+locale: zh-tw
+translationKey: travelops
+title: TravelOps
+description: 以共用庫存、非同步開券、退款與核銷互斥及交易對帳，串起旅客購票、門市銷售、場館核銷與營運追蹤的獨立電子票券展示系統。
+category: TICKET FULFILLMENT & OPERATIONS
+tags: [PHP, Laravel, Livewire, Filament, MySQL, Redis, Docker]
+highlights:
+  ['線上與門市共用庫存', '可恢復的非同步開券', '退款互斥與內外帳冊對帳']
+status: 已實作・隔離展示
+visibility: private
+featured: false
+order: 3
+sourceCommit: 11c0e7ae5fa828a69438f807be220c4f37be41c9
+reviewedAt: '2026-11-12'
+cover: ../../../assets/travelops/travelops-catalog-desktop.png
+coverAlt: TravelOps 真實合成展示畫面，列出票券名稱、可使用場館數與新臺幣價格
+---
+
+import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
+import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
+import TravelOpsMedia from '../../../components/TravelOpsMedia.astro';
+
+<nav aria-label="案例閱讀導覽">
+  <a href="#travelops-demo">操作影片</a> ·{' '}
+  <a href="#travelops-architecture">系統架構</a> ·{' '}
+  <a href="#engineering-decisions">五項工程決策</a> ·{' '}
+  <a href="#verification">驗證與限制</a>
+</nav>
+
+<ProjectIntroduction project="travelops" locale="zh-tw" topic="purpose" />
+
+**展示範圍**：這是獨立開發的電子票券履約與營運模擬系統。所有場館、帳號與交易皆為合成資料，付款、供應商、退款與通知採本地 Mock，沒有正式營運或真實商業績效。
+
+<ProjectWorkflow project="travelops" locale="zh-tw" />
+
+<ProjectIntroduction project="travelops" locale="zh-tw" topic="features" />
+
+旅客查看單館票與聯票、確認 14 天效期的起算方式、建立訂單及申請整筆退款。門市經 membership 授權使用 POS，主管可看臺灣營業日結帳摘要。場館人員只能核銷指派場館的權益；展示採文字碼流程，未驗證實體相機掃碼。營運人員追蹤工作、處理退款、比較帳冊與篩選報表。
+
+### 門市與線上遵守同一套交易規則
+
+POS 的即時摘要幫助人員確認商品、數量與付款方式；最後金額和可售量仍由後端決定。圖中兩張單館票為 NT$ 640，只代表這筆合成交易。
+
+<TravelOpsMedia locale="zh-tw" section="pos" />
+
+<ProjectIntroduction project="travelops" locale="zh-tw" topic="architecture" />
+
+採用模組化單體，讓四種角色共用 Laravel 業務服務與授權邊界。Blade、Livewire 與 Filament 是同一個應用程式的介面，沒有為了展示拆成微服務。MySQL 8.4／InnoDB 提供交易與列鎖；Redis 7.4 負責工作派送，不能作為唯一的工作紀錄。
+
+來源 lockfile 為 Laravel 13.40.0、Livewire 4.4.8、Filament 5.11.2，搭配 PHP 8.4 與 Tailwind CSS 4。Docker Compose 分別執行 App、Worker、Scheduler、MySQL 與 Redis；GitHub Actions 用於品質與整合驗證，並非正式雲端部署架構。
+
+<TravelOpsMedia locale="zh-tw" section="architecture" />
+
+<h2 id="engineering-decisions">五項工程決策</h2>
+
+### Shared Inventory：最後一張票只能售出一次
+
+**問題**。線上與 POS 若各讀一次剩餘庫存再扣除，就可能同時售出最後一張票。
+
+**決策與實作**。兩個通路共用 Checkout。MySQL Transaction 內鎖定相關商品與庫存列，確認可售量後建立訂單快照與庫存預留，再一起提交。資料庫負責決定先後順序，前端顯示的庫存只是提示。
+
+**驗證**。來源的 MySQL 並行整合測試涵蓋庫存競爭；媒體操作另外展示 POS 與線上結帳流程。這些證據沒有提供每秒吞吐量。
+
+**取捨**。熱門商品的寫入會等待相同資料列。用短交易縮小鎖定範圍，但尚未量測正式負載下的容量。
+
+### Idempotency：同一付款事件不能重複開券
+
+**問題**。回呼可能重送；相同事件識別也可能附帶不同金額或內容，不能一律當成成功重試。
+
+**決策與實作**。先驗證簽章、參照、金額、幣別及 payload，再由 Inbox 的唯一事件與 body hash 區分相同重送與衝突內容。訂單與付款鎖協調狀態更新，合法重送沿用既有結果，不重新建立履約工作。
+
+**驗證**。來源付款測試涵蓋重複事件及衝突內容；影片呈現重複模擬付款後仍沿用訂單進度。只看影片無法取代伺服器端斷言。
+
+**取捨**。穩定事件鍵與內容驗證缺一不可。供應商及退款回呼另有時間窗驗證；付款入口未採相同時間窗，不能把防重放能力概括套用到所有入口。
+
+### Transactional Outbox：付款確認後，Redis 暫停也不能遺失工作
+
+**問題**。若先提交付款，再直接送出 Redis 工作，兩個動作之間 Redis 失效，就會留下「已付款、沒有開券工作」的訂單。
+
+**決策與實作**。付款狀態與 issuance Outbox 在同一筆 MySQL 交易提交。排程讀取到期持久列並重派 Redis 工作，主要 relay 每 10 秒執行。Worker 先以短交易取得 lease 與 trace，釋放訂單鎖後查詢本地 Mock 帳冊，再決定是否呼叫開券，最後以新交易鎖定並確認 lease 與有效狀態。
+
+**故障後的行為**。Redis 恢復後仍可從資料庫重建工作；供應商已完成但回應遺失時，query-before-replay 與穩定請求鍵協助找回結果。過期 Worker 不能憑舊 lease 覆寫新結果。這是可恢復派送，並不宣稱跨服務 exactly-once。
+
+**驗證**。來源 Redis Outbox 與供應商開券整合測試涵蓋重派、逾時查詢及延遲回呼。2026-11-12 的來源媒體驗證重跑整體 PHPUnit 為 34 tests／416 assertions；本作品集整合沒有再啟動來源資料庫重跑。
+
+**取捨**。需要持續運作的排程與 Worker，恢復也可能有延遲。POS 的本地 Mock capture 刻意放在外層交易內；這個做法不能直接照搬到真實網路金流。
+
+### Refund and Redemption：退款與核銷競爭同一把鎖
+
+**問題**。若退款審核和場館核銷各自讀取舊狀態，可能一邊退款，一邊讓同一張票被使用。
+
+**決策與實作**。退款核准與核銷共用 order lock，在鎖內重新檢查狀態。已核准但結果未確認的退款暫停核銷；退款確認後才撤銷權益、回補已售庫存並排程供應商取消，未確認的取消持續呈現給營運人員。
+
+**驗證**。來源退款功能測試及 MySQL 並行測試覆蓋退款／核銷競爭與狀態規則；不能以一次畫面操作宣稱所有並行排列皆已驗證。
+
+**取捨**。等待退款確認期間，旅客暫時無法使用該票。系統只支援整筆訂單退款，不支援部分退款。
+
+### Reconciliation：處理差異不應改寫原始事實
+
+**問題**。直接修改內部交易金額來「對平」帳冊，會讓差異來源與處理責任消失。
+
+**決策與實作**。內部交易、獨立保存的 Mock 外部帳冊、對帳 evidence 與人工處置分開記錄。重跑對帳會收斂差異；標記已處理只新增原因與處理紀錄，不覆寫原交易金額。
+
+**驗證**。來源對帳測試檢查差異及重跑行為，實際截圖呈現並列帳冊與處置入口。UI 使用新臺幣元，CSV 使用整數分；日期以臺灣營業日解讀。
+
+**取捨**。Mock 帳冊與業務紀錄雖分開保存，仍同在 MySQL，沒有證明獨立第三方金流的結算正確性；報表數字也不是實際營收。
+
+<TravelOpsMedia locale="zh-tw" section="operations" />
+
+<h2 id="verification">驗證、證據與目前限制</h2>
+
+| 證據層次             | 已有依據與適用範圍                                                                                    |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| 來源系統，2026-11-10 | V3 驗收記錄 34 tests／415 assertions、Windows Docker、Chrome 旅程及 1280／768／390 px；屬歷史驗證。   |
+| 媒體製作，2026-11-12 | 隔離環境重跑 34 tests／416 assertions；八張真實 PNG、影片解碼及播放／跳轉、架構圖目視與素材雜湊查核。 |
+| 本作品集             | 驗證雙語內容、路由、媒體播放、響應式與首頁資源隔離；不取代來源交易、正式負載或真實整合測試。          |
+
+原始碼為私人專案，不提供訪客可用的原始碼或登入入口。所有角色、場館、金額與帳冊皆為合成，沒有真實客戶、正式金流、正式供應商、Email／LINE 投遞或可驗證商業成效，尚未正式部署。
+
+來源未全面驗證手機實機、相機掃碼、讀屏及跨瀏覽器行為。此次作品集整合的實際驗證範圍另由交付報告記錄，不將桌面瀏覽器模擬當成實機驗收。
+
+Tanci 確認本批素材的公開範圍；Codex 協助依程式、測試與已審核媒體整理雙語案例及實作作品集。本頁不推定每段原始設計的人工作業與 AI 分工。圖中技術標誌屬原持有人，無廠商背書；[架構圖相關授權](/media/travelops/licenses/)。
