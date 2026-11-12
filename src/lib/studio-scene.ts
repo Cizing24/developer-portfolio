@@ -9,7 +9,7 @@ import {
 } from './world-config';
 import { phaseLight, pigments as art } from './studio-art';
 import { createMovingShadows } from './studio-shadows';
-import type { ProjectId } from './project-introductions';
+import type { IslandProjectId as ProjectId } from './project-introductions';
 import { createWander, rectangleArea } from './wander';
 import { createNavigation, createPedestrian } from './navigation';
 import {

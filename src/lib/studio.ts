@@ -317,8 +317,7 @@ export function initStudio(root: HTMLElement) {
   const observer = new IntersectionObserver(
     ([entry]) => {
       visible = !!entry?.isIntersecting;
-      if (visible && !attempted) void loadScene();
-      if (root.dataset.renderer === 'ready') visibility();
+      visibility();
     },
     { threshold: 0.05 },
   );
@@ -331,6 +330,8 @@ export function initStudio(root: HTMLElement) {
       ),
     );
   function visibility() {
+    if (visible && !document.hidden && !reader.isOpen() && !attempted)
+      void loadScene();
     if (root.dataset.renderer === 'ready')
       scene?.setVisible(visible && !document.hidden && !reader.isOpen());
   }

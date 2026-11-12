@@ -1,6 +1,6 @@
 import { projectShowcaseView, projectView } from './world-config';
 import { initProjectShowcase } from './studio-showcase';
-import type { ProjectId as System } from './project-introductions';
+import type { IslandProjectId as System } from './project-introductions';
 
 export function initReader(
   root: HTMLElement,
@@ -181,9 +181,10 @@ export function initReader(
     ) {
       returnFocus.focus({ preventScroll: true });
     } else {
-      const selected = root.querySelector<HTMLElement>(
-        '[data-portal][aria-pressed=true]',
-      );
+      const selected =
+        root.dataset.renderer === 'loading'
+          ? null
+          : root.querySelector<HTMLElement>('[data-portal][aria-pressed=true]');
       (
         selected ?? root.querySelector<HTMLElement>('[data-menu-toggle]')
       )?.focus({ preventScroll: true });

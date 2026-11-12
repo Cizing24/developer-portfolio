@@ -7,6 +7,7 @@ const paths = [
   'projects/',
   'projects/assetflow/',
   'projects/bookflow/',
+  'projects/travelops/',
   'notes/',
   'notes/booking-consistency/',
   'notes/date-contracts/',
@@ -60,16 +61,25 @@ test('notes category, tag, empty state, localized articles and reading navigatio
   for (const locale of ['zh-tw', 'en']) {
     await page.goto(`/${locale}/notes/`);
     await page
-      .getByLabel(locale === 'en' ? 'Category' : '分類', { exact: true })
+      .getByRole('combobox', {
+        name: locale === 'en' ? 'Category' : '分類',
+        exact: true,
+      })
       .selectOption('data');
     await page.locator('[data-lab-query]').fill('GiST');
     await expect(page.locator('[data-lab-item]:visible')).toHaveCount(1);
     await page
-      .getByLabel(locale === 'en' ? 'Tag' : '標籤', { exact: true })
+      .getByRole('combobox', {
+        name: locale === 'en' ? 'Tag' : '標籤',
+        exact: true,
+      })
       .selectOption('AssetFlow');
     await expect(page.locator('[data-lab-empty]')).toBeVisible();
     await page
-      .getByLabel(locale === 'en' ? 'Tag' : '標籤', { exact: true })
+      .getByRole('combobox', {
+        name: locale === 'en' ? 'Tag' : '標籤',
+        exact: true,
+      })
       .selectOption('');
     await page.locator('[data-lab-item]:visible a').click();
     await expect(page.locator('.prose pre')).toBeVisible();

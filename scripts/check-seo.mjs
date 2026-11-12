@@ -8,6 +8,7 @@ const paths = [
   'projects/',
   'projects/assetflow/',
   'projects/bookflow/',
+  'projects/travelops/',
   'notes/',
   'notes/booking-consistency/',
   'notes/date-contracts/',
@@ -66,5 +67,5 @@ for (const path of ['404.html', 'en/404/index.html', 'zh-tw/404/index.html'])
     /content="noindex,follow"/,
   );
 console.log(
-  'SEO: 18 localized pages, preview noindex, production canonical/alternates/OG/Article/sitemap, legacy and 404 excluded.',
+  `SEO: ${paths.length * 2} localized pages, preview noindex, production canonical/alternates/OG/Article/sitemap, legacy and 404 excluded.`,
 );

@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import type { Locale } from '../lib/i18n';
 import type { ProjectId } from '../lib/project-introductions';
+import TravelOpsMedia from './TravelOpsMedia.astro';
 import register from '../assets/workflows/asset-register.png';
 import offboarding from '../assets/workflows/asset-offboarding.png';
 import booking from '../assets/workflows/bookflow-booking.png';
@@ -49,42 +50,50 @@ const images =
       ];
 ---
 
-<section
-  id={shot === undefined ? 'product-workflow' : undefined}
-  class="workflow-screens"
->
-  {shot === undefined && <h2>{en ? 'Product walkthrough' : '操作展示'}</h2>}
-  <div class:list={['workflow-grid', { 'single-shot': shot !== undefined }]}>
-    {images
-      .filter((_, index) => shot === undefined || index === shot)
-      .map(({ src, caption, title }) => (
-        <figure>
-          {shot === undefined && <h3>{title}</h3>}
-          <Image
-            src={src}
-            alt={caption}
-            widths={[480, 800, 1200]}
-            sizes="(max-width:760px) 90vw,800px"
-            loading="lazy"
-            decoding="async"
-          />
-          <figcaption>{caption}</figcaption>
-          {shot !== undefined && (
-            <p data-shot-error hidden>
-              {en
-                ? 'The image could not be loaded. The written walkthrough is still available.'
-                : '截圖載入失敗，仍可閱讀文字導覽。'}
-            </p>
-          )}
-        </figure>
-      ))}
-  </div>
-  <p>
-    {en
-      ? 'Actual product screenshots from the public repository with synthetic test data.'
-      : '公開程式庫的實際產品截圖，畫面使用合成測試資料。'}
-  </p>
-</section>
+{project === 'travelops' ? (
+  <section id="product-workflow" class="workflow-screens">
+    <TravelOpsMedia {locale} section="video" />
+    <h2>{en ? 'From product to entitlement' : '從商品到票券權益'}</h2>
+    <TravelOpsMedia {locale} section="customer" />
+  </section>
+) : (
+  <section
+    id={shot === undefined ? 'product-workflow' : undefined}
+    class="workflow-screens"
+  >
+    {shot === undefined && <h2>{en ? 'Product walkthrough' : '操作展示'}</h2>}
+    <div class:list={['workflow-grid', { 'single-shot': shot !== undefined }]}>
+      {images
+        .filter((_, index) => shot === undefined || index === shot)
+        .map(({ src, caption, title }) => (
+          <figure>
+            {shot === undefined && <h3>{title}</h3>}
+            <Image
+              src={src}
+              alt={caption}
+              widths={[480, 800, 1200]}
+              sizes="(max-width:760px) 90vw,800px"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>{caption}</figcaption>
+            {shot !== undefined && (
+              <p data-shot-error hidden>
+                {en
+                  ? 'The image could not be loaded. The written walkthrough is still available.'
+                  : '截圖載入失敗，仍可閱讀文字導覽。'}
+              </p>
+            )}
+          </figure>
+        ))}
+    </div>
+    <p>
+      {en
+        ? 'Actual product screenshots from the public repository with synthetic test data.'
+        : '公開程式庫的實際產品截圖，畫面使用合成測試資料。'}
+    </p>
+  </section>
+)}
 <style>
   .workflow-grid {
     display: grid;

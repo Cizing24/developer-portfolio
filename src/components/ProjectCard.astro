@@ -32,7 +32,11 @@ const href = localizedPath(data.locale, `projects/${slug}`);
       loading="lazy"
     />
     <span class="picture-stamp mono">
-      {slug === 'assetflow' ? 'ASSET LIFECYCLE' : 'MULTI-TENANT BOOKING'}
+      {slug === 'travelops'
+        ? 'TICKET FULFILLMENT'
+        : slug === 'assetflow'
+          ? 'ASSET LIFECYCLE'
+          : 'MULTI-TENANT BOOKING'}
     </span>
   </a>
   <div class="project-meta">

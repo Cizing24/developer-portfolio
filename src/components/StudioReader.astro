@@ -9,14 +9,17 @@ import EngineeringLab from './EngineeringLab.astro';
 import TableOfContents from './TableOfContents.astro';
 import SkillsIndex from './SkillsIndex.astro';
 import WebsiteCases from './WebsiteCases.astro';
-import { projectView } from '../lib/world-config';
-import type { ProjectId } from '../lib/project-introductions';
+import { isProjectIsland, projectView } from '../lib/world-config';
+import type { IslandProjectId as ProjectId } from '../lib/project-introductions';
 const locale = localeFromPath(Astro.url.pathname);
 const en = locale === 'en';
+const allProjects = sortProjects(
+  await getCollection('projects', (p) => p.data.locale === locale),
+);
 const projects = await Promise.all(
-  sortProjects(
-    await getCollection('projects', (p) => p.data.locale === locale),
-  ).map(async (entry) => ({ entry, ...(await render(entry)) })),
+  allProjects
+    .filter((entry) => isProjectIsland(entrySlug(entry.id)))
+    .map(async (entry) => ({ entry, ...(await render(entry)) })),
 );
 const notes = await Promise.all(
   publishedNotes(
@@ -87,27 +90,32 @@ const notes = await Promise.all(
       <h2>{en ? 'Portfolio' : '作品集'}</h2>
 
       <div class="reader-project-grid">
-        {projects.map(({ entry }) => (
+        {allProjects.map((entry) => (
           <article>
-            <Image
-              src={entry.data.cover}
-              alt={entry.data.coverAlt}
-              width={680}
-              loading="lazy"
-            />
+            {isProjectIsland(entrySlug(entry.id)) && (
+              <Image
+                src={entry.data.cover}
+                alt={entry.data.coverAlt}
+                width={680}
+                loading="lazy"
+              />
+            )}
             <p class="eyebrow">{entry.data.category}</p>
             <h3>{entry.data.title}</h3>
             <p>{entry.data.description}</p>
             <div class="reader-actions">
-              <button type="button" data-enter-world={entrySlug(entry.id)}>
-                {en ? 'Enter the world' : '進入專案場景'}
-              </button>
+              {isProjectIsland(entrySlug(entry.id)) && (
+                <button type="button" data-enter-world={entrySlug(entry.id)}>
+                  {en ? 'Enter the world' : '進入專案場景'}
+                </button>
+              )}
               <a
                 class="text-link"
-                data-open={projectView(
-                  entrySlug(entry.id) as ProjectId,
-                  '-case',
-                )}
+                data-open={
+                  isProjectIsland(entrySlug(entry.id))
+                    ? projectView(entrySlug(entry.id) as ProjectId, '-case')
+                    : undefined
+                }
                 href={localizedPath(locale, `projects/${entrySlug(entry.id)}`)}
               >
                 {en ? 'Read case study' : '閱讀完整案例'}

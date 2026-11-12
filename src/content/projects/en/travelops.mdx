@@ -1,0 +1,127 @@
+---
+locale: en
+translationKey: travelops
+title: TravelOps
+description: An independent ticketing demo connecting online checkout, store sales, venue redemption and operations through shared inventory, recoverable issuance and reconciliation.
+category: TICKET FULFILLMENT & OPERATIONS
+tags: [PHP, Laravel, Livewire, Filament, MySQL, Redis, Docker]
+highlights:
+  [
+    'Shared online and POS inventory',
+    'Recoverable asynchronous issuance',
+    'Refund coordination and reconciliation',
+  ]
+status: Implemented · isolated showcase
+visibility: private
+featured: false
+order: 3
+sourceCommit: 11c0e7ae5fa828a69438f807be220c4f37be41c9
+reviewedAt: '2026-11-12'
+cover: ../../../assets/travelops/travelops-catalog-desktop.png
+coverAlt: Actual TravelOps synthetic catalog showing ticket names, venue counts and prices in New Taiwan dollars
+---
+
+import ProjectIntroduction from '../../../components/ProjectIntroduction.astro';
+import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
+import TravelOpsMedia from '../../../components/TravelOpsMedia.astro';
+
+<nav aria-label="Case study navigation">
+  <a href="#travelops-demo">Walkthrough</a> ·{' '}
+  <a href="#travelops-architecture">Architecture</a> ·{' '}
+  <a href="#engineering-decisions">Five engineering decisions</a> ·{' '}
+  <a href="#verification">Verification and limits</a>
+</nav>
+
+<ProjectIntroduction project="travelops" locale="en" topic="purpose" />
+
+**Showcase scope:** an independently developed simulation of ticket fulfillment and operations. All venues, accounts and transactions are synthetic. Payments, suppliers, refunds and notifications use local Mock implementations, with no production operation or verified commercial results.
+
+<ProjectWorkflow project="travelops" locale="en" />
+
+<ProjectIntroduction project="travelops" locale="en" topic="features" />
+
+Customers browse single-venue and bundle tickets, check how the 14-day validity starts, place orders and request full refunds. Store membership authorizes POS access; supervisors can inspect Taiwan-business-day closing summaries. Venue staff can redeem only assigned venue entitlements. The demonstration uses text codes; physical camera scanning was not verified. Operators investigate work, review refunds, compare statements and filter reports.
+
+### Store and online sales follow the same transaction rules
+
+The live POS summary helps staff confirm products, quantities and payment methods. Server-side rules remain authoritative for final pricing and stock. The illustrated NT$640 for two single-venue tickets belongs to one synthetic sale.
+
+<TravelOpsMedia locale="en" section="pos" />
+
+<ProjectIntroduction project="travelops" locale="en" topic="architecture" />
+
+A modular monolith lets all four roles share Laravel business services and authorization boundaries. Blade, Livewire and Filament are interfaces to the same application. MySQL 8.4/InnoDB supplies transactions and row locks; Redis 7.4 delivers work and is never its only durable record.
+
+The source lockfiles pin Laravel 13.40.0, Livewire 4.4.8 and Filament 5.11.2, alongside PHP 8.4 and Tailwind CSS 4. Docker Compose runs separate app, worker, scheduler, MySQL and Redis processes. GitHub Actions provides quality and integration checks; the diagram does not describe a production cloud deployment.
+
+<TravelOpsMedia locale="en" section="architecture" />
+
+<h2 id="engineering-decisions">Five engineering decisions</h2>
+
+### Shared Inventory: sell the last ticket only once
+
+**Problem.** If online checkout and POS each read available stock before decrementing it, both can sell the final ticket.
+
+**Decision and implementation.** Both channels call the same Checkout service. A MySQL transaction locks the relevant product and inventory rows, checks availability, creates the order snapshot and reserves stock before committing together. The database orders competing writes; the stock displayed in the browser is informational.
+
+**Verification.** Source MySQL concurrency integration tests exercise competing inventory writes. The captured workflows separately show online and POS checkout. Neither provides a transactions-per-second measurement.
+
+**Tradeoff.** Popular products serialize writes on the same rows. Short transactions limit lock duration, but production capacity has not been measured.
+
+### Idempotency: a repeated payment event must not issue tickets twice
+
+**Problem.** Callbacks can repeat. An event identifier can also arrive with different amounts or content, which must not be accepted as an ordinary retry.
+
+**Decision and implementation.** Validate signatures, references, amounts, currency and payloads first. Unique Inbox events and a body hash distinguish identical replay from conflicting content. Order and payment locks coordinate updates; valid replay retains the existing result without creating another fulfillment job.
+
+**Verification.** Source payment tests cover duplicate events and conflicting content. The video shows repeated simulated payment callbacks followed by the same order progress. Video observation does not replace server-side assertions.
+
+**Tradeoff.** Stable event keys and content validation are both necessary. Supplier and refund callbacks also enforce a timestamp window; the payment receiver does not use that same window, so the claim cannot be generalized to every callback.
+
+### Transactional Outbox: keep the work when Redis is unavailable
+
+**Problem.** Committing payment and then sending a Redis job leaves a failure gap: Redis can become unavailable after payment commits, leaving no issuance work.
+
+**Decision and implementation.** Payment state and the issuance Outbox commit in one MySQL transaction. The scheduler reads due durable rows and redispatches Redis jobs; the main relays run every ten seconds. A worker claims a lease and trace in a short transaction, releases order locks, queries the local Mock ledger before issuing, then opens a new transaction to validate its lease and the current state before confirmation.
+
+**Recovery behavior.** Database rows can rebuild delivery after Redis recovers. If a supplier completed work but its response was lost, query-before-replay and stable request keys help recover the result. A stale worker cannot overwrite a newer result using an old lease. This provides recoverable delivery without claiming cross-service exactly-once execution.
+
+**Verification.** Source Redis Outbox and supplier issuance integration tests cover redispatch, timeout queries and delayed callbacks. The source media run on 2026-11-12 reran the complete PHPUnit suite: 34 tests and 416 assertions. This portfolio integration did not start the source database and rerun those tests.
+
+**Tradeoff.** The scheduler and worker must remain running, and recovery can be delayed. POS deliberately keeps its local Mock capture inside an outer transaction; that choice does not justify placing real network payment calls inside locks.
+
+### Refund and Redemption: coordinate on the same order lock
+
+**Problem.** Independent refund approval and redemption can both read stale state, allowing the same entitlement to be refunded and used.
+
+**Decision and implementation.** Both operations acquire the order lock and recheck state inside it. An approved but unresolved refund pauses redemption. Confirmed settlement revokes entitlements, returns sold stock and schedules supplier cancellation. Unconfirmed cancellation stays visible to operators.
+
+**Verification.** Source refund feature tests and MySQL concurrency tests cover refund/redemption competition and state rules. A single captured interaction cannot establish every possible concurrent ordering.
+
+**Tradeoff.** Customers temporarily lose access while refund confirmation is pending. Only full-order refunds are supported.
+
+### Reconciliation: resolving a difference must preserve the facts
+
+**Problem.** Editing an internal amount to make statements agree removes evidence of the original difference and its handling.
+
+**Decision and implementation.** Internal transactions, separate Mock statements, reconciliation evidence and human dispositions remain separate records. Reconciliation reruns converge findings. Resolving a finding adds a reason and handling record without rewriting original amounts.
+
+**Verification.** Source reconciliation tests check findings and rerun behavior. Actual screenshots show side-by-side statements and disposition controls. The UI uses New Taiwan dollars, CSV exports use integer cents, and business dates follow Taiwan time.
+
+**Tradeoff.** Mock statements remain in the same MySQL database, despite being stored separately. This does not prove settlement against an independent payment provider. Report totals are synthetic, not actual revenue.
+
+<TravelOpsMedia locale="en" section="operations" />
+
+<h2 id="verification">Verification, evidence and current limits</h2>
+
+| Evidence layer            | Available evidence and scope                                                                                                                                                |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Source system, 2026-11-10 | Historical V3 acceptance: 34 tests / 415 assertions, Windows Docker, Chrome journeys and 1280 / 768 / 390-pixel checks.                                                     |
+| Media run, 2026-11-12     | Isolated rerun: 34 tests / 416 assertions; eight actual PNGs, video decoding, playback/seeking, diagram review and asset hashes.                                            |
+| This portfolio            | Bilingual content, routes, playback, responsive layout and homepage resource isolation; these do not replace source transaction, production load or real integration tests. |
+
+Source code is private, with no visitor-accessible repository or login. Roles, venues, amounts and statements are synthetic. There are no real customers, actual payments, live suppliers, external Email/LINE deliveries or verified commercial results. The project has no production deployment.
+
+The source has not undergone comprehensive physical-device, camera, screen-reader or cross-browser validation. The delivery report records the checks actually executed for this portfolio integration; desktop browser emulation is not physical-device acceptance.
+
+Tanci confirmed the publication scope of these assets. Codex helped trace code and tests, organize the approved media into bilingual material and implement the portfolio. This page does not infer human versus AI ownership of every original design. Technology marks belong to their owners and imply no endorsement; see [diagram licenses](/media/travelops/licenses/).
