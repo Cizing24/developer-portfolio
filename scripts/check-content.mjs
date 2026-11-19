@@ -14,7 +14,7 @@ for (const collection of ['projects', 'notes']) {
       const id = `${locale}/${key}`;
       assert.ok(!pairs.has(id), `Duplicate translation: ${id}`);
       pairs.set(id, body);
-      if (collection === 'projects' && /<ProjectIntroduction\s/.test(body)) {
+      if (collection === 'projects' && /^demoModule: /m.test(body)) {
         const intro = (topic) =>
           body.indexOf(
             `<ProjectIntroduction project="${key}" locale="${locale}" topic="${topic}" />`,

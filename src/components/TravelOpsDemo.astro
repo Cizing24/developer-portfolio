@@ -134,7 +134,7 @@ const t = (zh: string, english: string) => (en ? english : zh);
   <p role="status" data-travel-status></p>
   <h3>{t('本次操作紀錄', 'Session events')}</h3>
   <ol data-travel-events></ol>
-  <a href={localizedPath(locale, 'projects/travelops')}>
+  <a data-native-case href={localizedPath(locale, 'projects/travelops')}>
     {t(
       '閱讀已審核案例、影片與來源驗證限制',
       'Read the reviewed case, video and source verification limits',

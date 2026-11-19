@@ -245,7 +245,8 @@ export function initReader(
     if (
       !link ||
       link.hasAttribute('data-open') ||
-      link.hasAttribute('data-reader-locale')
+      link.hasAttribute('data-reader-locale') ||
+      link.hasAttribute('data-native-case')
     )
       return;
     const target = new URL(link.href);

@@ -28,7 +28,11 @@ test('TravelOps purchasing, refund exclusion and reconciliation are operable', a
   await action('issue');
   await action('request');
   await action('approve');
-  await demo.getByRole('button', { name: 'Redeem', exact: true }).click();
+  await demo.getByRole('button', { name: 'Redeem', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(
+    demo.getByRole('button', { name: 'Redeem', exact: true }),
+  ).toBeFocused();
   await expect(demo.locator('[data-travel-status]')).toContainText(
     'Redemption blocked',
   );

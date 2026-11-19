@@ -7,6 +7,7 @@ import {
   phaseName,
   islandItems,
   projectFacilities,
+  type IslandItem,
 } from '../lib/world-config';
 import { getCollection } from 'astro:content';
 import { sortProjects } from '../lib/content';
@@ -28,7 +29,9 @@ const harbor = projects
       ? undefined
       : localizedPath(locale, `projects/${entrySlug(p.id)}`),
   }));
-const menuItems = (id: (typeof islands)[number]['id']) =>
+const menuItems = (
+  id: (typeof islands)[number]['id'],
+): (IslandItem & { href?: string })[] =>
   id === 'harbor'
     ? projects.flatMap((p) =>
         p.data.demoModule === 'bookflow' || p.data.demoModule === 'assetflow'
@@ -38,7 +41,13 @@ const menuItems = (id: (typeof islands)[number]['id']) =>
             }))
           : p.data.demoModule
             ? [{ title: p.data.title, view: `project-${p.data.demoModule}` }]
-            : [],
+            : [
+                {
+                  title: p.data.title,
+                  view: 'projects',
+                  href: localizedPath(locale, `projects/${entrySlug(p.id)}`),
+                },
+              ],
       )
     : islandItems(id, locale);
 ---
@@ -247,15 +256,21 @@ const menuItems = (id: (typeof islands)[number]['id']) =>
           </button>
           {!directIslandView(island.id) && (
             <div class="index-details" data-index-details={island.id} hidden>
-              {menuItems(island.id).map((item) => (
-                <button
-                  type="button"
-                  class="index-content"
-                  data-open={item.view}
-                >
-                  {item.title}
-                </button>
-              ))}
+              {menuItems(island.id).map((item) =>
+                item.href ? (
+                  <a class="index-content" href={item.href}>
+                    {item.title}
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    class="index-content"
+                    data-open={item.view}
+                  >
+                    {item.title}
+                  </button>
+                ),
+              )}
             </div>
           )}
         </div>

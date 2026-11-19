@@ -1298,3 +1298,10 @@
   border-radius: 12px;
   font-weight: 600;
 }
+
+@media (max-width: 600px) {
+  .harbor-shortcut {
+    top: 8.5rem;
+    max-width: calc(100% - 2rem);
+  }
+}

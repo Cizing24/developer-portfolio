@@ -30,7 +30,7 @@ export function loadDemo(root: HTMLElement, initialize: () => Promise<void>) {
       const retry = document.createElement('button');
       retry.type = 'button';
       retry.textContent = en ? 'Retry' : '重試';
-      retry.addEventListener('click', () => void attempt(), { once: true });
+      retry.addEventListener('click', () => location.reload(), { once: true });
       status.append(retry);
     }
   }

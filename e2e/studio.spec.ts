@@ -625,6 +625,7 @@ test('portfolio, notes, contact and profile stay in the same reader with accessi
   await expect(reader).not.toBeVisible();
   await open(page, 'portfolio', 'projects');
   await page.keyboard.press('Escape');
+  await page.locator('[data-menu-close]').click();
   await page.locator('[data-portal=harbor]').click();
   await expect(reader).not.toBeVisible();
   await expect(page.locator('[data-studio]')).toHaveAttribute(
