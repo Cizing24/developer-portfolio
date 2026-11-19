@@ -42,6 +42,13 @@ for (const collection of ['projects', 'notes']) {
     const [locale, key] = id.split('/');
     const other = pairs.get(`${locale === 'en' ? 'zh-tw' : 'en'}/${key}`);
     assert.ok(other, `Missing complete translation: ${id}`);
+    if (collection === 'notes') {
+      assert.equal(
+        body.match(/^section: (.+)$/m)?.[1] ?? 'engineering',
+        other.match(/^section: (.+)$/m)?.[1] ?? 'engineering',
+        `Mismatched note section: ${id}`,
+      );
+    }
     if (collection === 'projects') {
       assert.equal(
         body.match(/^sourceCommit: (.+)$/m)?.[1],

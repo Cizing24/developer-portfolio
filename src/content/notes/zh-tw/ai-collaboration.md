@@ -1,5 +1,6 @@
 ---
 locale: zh-tw
+section: journal
 translationKey: ai-collaboration
 title: AI 協作：讓需求、實作與驗證各自有依據
 description: 以本次 AssetFlow 與 BookFlow 作品集整備為例，說明人的目標與公開決策、Codex 的查證與實作，以及尚不能認定的作者分工。

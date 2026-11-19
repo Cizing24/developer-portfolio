@@ -63,8 +63,8 @@ const notes = await Promise.all(
       <div class="prose">
         <p>
           {en
-            ? 'Welcome, Engineering Lab, Contact and CIZING open directly. Project Harbor has reusable project exhibits. Community has its own harbor.'
-            : '迎賓廣場、工程實驗室、聯絡和 CIZING 可直接閱讀。作品展館使用共用展台，在隆昌保留獨立港口。'}
+            ? 'Main Hall, Engineering Lab, Contact and CIZING open directly. Project Harbor has reusable project exhibits. Community has its own harbor.'
+            : '大展廳、工程實驗室、聯絡和 CIZING 可直接閱讀。作品展館使用共用展台，在隆昌保留獨立港口。'}
         </p>
         <p>
           {en
@@ -131,7 +131,41 @@ const notes = await Promise.all(
     >
       <p class="eyebrow">CIZING / ENGINEERING LAB</p>
       <h2>{en ? 'Engineering Lab' : '工程實驗室'}</h2>
-      <EngineeringLab locale={locale} notes={notes.map(({ entry }) => entry)} />
+      <EngineeringLab
+        locale={locale}
+        notes={notes.map(({ entry }) => entry)}
+        engineeringOnly
+      />
+    </section>
+    <section
+      data-view-panel="field-notes"
+      data-title={en ? 'Field Notes' : '開發手記'}
+      hidden
+    >
+      <h2>{en ? 'Field Notes' : '開發手記'}</h2>
+      <p class="reader-lead">
+        {en
+          ? 'Notes on collaboration, client workflows and building a maintainable local website. Technical constraints and test evidence live in Engineering Lab.'
+          : '記錄協作方式、接案流程與地方網站的維護思考。技術約束與測試證據另放在工程實驗室。'}
+      </p>
+      {notes
+        .filter(({ entry }) => entry.data.section === 'journal')
+        .map(({ entry }) => (
+          <article>
+            <h3>
+              <a
+                href={localizedPath(locale, `notes/${entrySlug(entry.id)}`)}
+                data-open={`note-${entrySlug(entry.id)}`}
+              >
+                {entry.data.title}
+              </a>
+            </h3>
+            <p>{entry.data.description}</p>
+            <p>
+              {entry.data.category} · {entry.data.publishedAt}
+            </p>
+          </article>
+        ))}
     </section>
     {notes.map(({ entry, Content, headings }) => (
       <article
@@ -141,10 +175,18 @@ const notes = await Promise.all(
       >
         <a
           class="text-link"
-          data-open="journal"
+          data-open={
+            entry.data.section === 'journal' ? 'field-notes' : 'journal'
+          }
           href={localizedPath(locale, 'notes')}
         >
-          {en ? 'Back to Engineering Lab' : '回工程實驗室'}
+          {entry.data.section === 'journal'
+            ? en
+              ? 'Back to Field Notes'
+              : '回開發手記'
+            : en
+              ? 'Back to Engineering Lab'
+              : '回工程實驗室'}
         </a>
         <p class="eyebrow">FIELD NOTE / {entry.data.category}</p>
         <h2>{entry.data.title}</h2>

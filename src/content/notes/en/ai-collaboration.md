@@ -1,5 +1,6 @@
 ---
 locale: en
+section: journal
 translationKey: ai-collaboration
 title: AI collaboration with traceable requirements, implementation and verification
 description: Two portfolio-editing cases distinguish human goals and publication decisions from Codex research and implementation, without inventing past authorship or personal mastery.

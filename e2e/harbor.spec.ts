@@ -42,7 +42,15 @@ test('TravelOps purchasing, refund exclusion and reconciliation are operable', a
   );
   await action('reconcile');
   await expect(demo.locator('[data-travel-differences] li')).toHaveCount(3);
-  await demo.getByLabel('Disposition reason').fill('Request provider evidence');
+  const reason = demo.getByLabel('Disposition reason');
+  await reason.scrollIntoViewIfNeeded();
+  const reasonBox = (await reason.boundingBox())!;
+  const statusBox = (await demo.locator('[data-travel-status]').boundingBox())!;
+  expect(
+    reasonBox.y + reasonBox.height <= statusBox.y ||
+      statusBox.y + statusBox.height <= reasonBox.y,
+  ).toBe(true);
+  await reason.fill('Request provider evidence');
   await demo.locator('[data-travel-resolution] button').click();
   await action('reconcile');
   await expect(demo.locator('[data-travel-differences] li')).toHaveCount(3);

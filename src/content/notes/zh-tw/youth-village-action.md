@@ -1,5 +1,6 @@
 ---
 locale: zh-tw
+section: journal
 translationKey: youth-village-action
 title: 青年村落文化行動計畫：我的個人申請紀錄
 description: 以在隆昌的地方知識轉譯與青年參與為主題，記錄個人提案的思考、網站與計畫的分工，以及申請與執行成果的界線。

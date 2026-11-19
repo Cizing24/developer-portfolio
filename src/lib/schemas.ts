@@ -49,6 +49,7 @@ export const projectSchema = z
     }
   });
 export const noteSchema = z.object({
+  section: z.enum(['engineering', 'journal']).default('engineering'),
   locale: z.enum(['zh-tw', 'en']),
   translationKey: z.string().regex(/^[a-z0-9-]+$/),
   title: z.string().min(1),

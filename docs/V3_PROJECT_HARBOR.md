@@ -4,7 +4,7 @@
 
 - Astro Content Collections：作品 metadata、案例路由、封面、語系配對與 SEO。
 - EngineeringStudio：建置時取得作品，輸出固定展台的名稱、view 與一般作品 href。Three.js 不認識 BookFlow、AssetFlow 或 TravelOps。
-- world-config / world-map：固定七個功能地塊與五條橋，Community 維持獨立海路。Welcome 分流、Harbor 選作品、Engineering Grounds 導向工程閱讀、Notes 集中長文、About 與 Contact 提供個人資訊。
+- world-config / world-map：固定七個功能地塊與五條橋，Community 維持獨立海路。Main Hall 分流、Harbor 選作品、Engineering Lab 導向工程閱讀、Notes 集中長文、About 與 Contact 提供個人資訊。
 - ProjectHarbor：每頁三件的 HTML 作品列。新增作品不增加 Geometry、Material 或 Texture。
 - BookFlowDemo、AssetFlowDemo、TravelOpsDemo：各自 markup。lib/demos 中的模型與控制器分開維護，控制器動態匯入。
 - loadDemo：下載期間停用控制項、阻擋原生 submit；失敗提供重試。
@@ -61,3 +61,10 @@ coverAlt: Screenshot using synthetic data in the example engineering tool
 V3 隔離 worktree 建立自 PR #14 head `9f7b0a1`，原目錄所有未提交修改維持原狀。PR #14 已包含與原工作目錄相同的 Modern Web Guidance 快照，毋須覆寫或重複 cherry-pick。PR #13 的 README 已由擁有者在執行期間合併至 main；本輪將 main 的文件更新合併進 V3 分支，保留其編排並補上現行功能分區。
 
 不修改來源產品 Repository、不合併 main、不發布 Production。
+
+## 預覽回饋調整（2026-11-20）
+
+- 大展廳（Main Hall）取代迎賓廣場名稱，保留 portfolio URL 識別。
+- 工程實驗室維持 view=journal 舊深連結，集中技術決策、測試與架構。筆記島改為開發手記（Field Notes），使用 view=field-notes。
+- 筆記 metadata 的 section 可設 engineering 或 journal，預設 engineering；開發手記由 section=journal 的雙語文章自動產生。筆記返回連結依 section 導回所屬區域。獨立 notes 總覽仍保留所有文章。
+- TravelOps 訊息不再 sticky；只有非空訊息有邊框及內距，保留 role=status 朗讀，避免遮擋下方表單。

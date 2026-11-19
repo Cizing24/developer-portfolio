@@ -33,8 +33,8 @@ async function open(page: Page, id: string, view: string) {
   await menu(page);
   await page.locator(`[data-island-go="${id}"]`).click();
   const panel = page.locator(`[data-view-panel="${view}"]`);
-  if (['portfolio', 'about', 'contact', 'journal'].includes(id)) {
-    if (id === 'journal' && view.startsWith('note-'))
+  if (['portfolio', 'about', 'contact', 'lab', 'journal'].includes(id)) {
+    if (id === 'lab' && view.startsWith('note-'))
       await page
         .locator(
           `[data-view-panel=journal] a[href$="/notes/${view.slice(5)}/"]`,
@@ -160,13 +160,13 @@ test('right menu searches islands, opens readers and restores keyboard focus', a
   const search = page.getByLabel('搜尋島嶼或內容');
   await search.fill('技術與證據');
   await expect(page.locator('[data-index-row]:visible')).toHaveCount(1);
-  await expect(page.locator('[data-index-row=journal]')).toBeVisible();
+  await expect(page.locator('[data-index-row=lab]')).toBeVisible();
   await search.fill('不存在xyz');
   await expect(page.locator('[data-index-empty]')).toBeVisible();
   await search.fill('');
   for (const [id, view] of [
     ['portfolio', 'projects'],
-    ['journal', 'journal'],
+    ['lab', 'journal'],
     ['about', 'about'],
     ['contact', 'contact'],
   ] as const) {
@@ -290,7 +290,7 @@ test('direct portal shortcuts and Engineering Lab preserve filters and reader hi
   await page.locator('[data-portal=about]').click();
   await expect(page.locator('[data-view-panel=about]')).toBeVisible();
   await page.keyboard.press('Escape');
-  await open(page, 'journal', 'journal');
+  await open(page, 'lab', 'journal');
   const lab = reader.locator('[data-lab]');
   await lab.locator('[data-lab-category]').selectOption('data');
   await lab.locator('[data-lab-query]').fill('GiST');
@@ -310,7 +310,7 @@ test('direct portal shortcuts and Engineering Lab preserve filters and reader hi
   await expect(specimen).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(reader).not.toBeVisible();
-  await open(page, 'journal', 'journal');
+  await open(page, 'lab', 'journal');
   await lab.locator('[data-lab-query]').clear();
   await lab.locator('[data-lab-category]').selectOption('evidence');
   await lab.locator('[data-lab-item]:visible a').click();
@@ -596,7 +596,7 @@ test('portfolio, notes, contact and profile stay in the same reader with accessi
   await page.keyboard.press('Escape');
   await expect(reader).not.toBeVisible();
   for (const [id, view] of [
-    ['journal', 'journal'],
+    ['lab', 'journal'],
     ['about', 'about'],
     ['contact', 'contact'],
   ]) {
@@ -765,7 +765,7 @@ test('phone rotation and short viewports keep controls, search and reading in re
       controls.filter((control) => !control.inside),
       `${width}×${height}`,
     ).toEqual([]);
-    await open(page, 'journal', 'note-date-contracts');
+    await open(page, 'lab', 'note-date-contracts');
     await expect(
       page.locator('[data-view-panel=note-date-contracts]'),
     ).toBeVisible();

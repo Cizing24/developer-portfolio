@@ -1,6 +1,6 @@
 # Developer Portfolio V3 · Project Harbor
 
-本輪改為固定功能分區：Welcome、Project Harbor、Engineering Grounds、Notes、Contact、CIZING 與 Community。作品由 Astro Content Collections 決定，新增作品不增加島嶼。TravelOps、BookFlow、AssetFlow 提供可操作的前端合成資料展示，完整案例另外提供工程證據。
+本輪改為固定功能分區：Main Hall、Project Harbor、Engineering Lab、Notes、Contact、CIZING 與 Community。作品由 Astro Content Collections 決定，新增作品不增加島嶼。TravelOps、BookFlow、AssetFlow 提供可操作的前端合成資料展示，完整案例另外提供工程證據。
 
 - 首頁左上「查看作品」直接開啟作品展館；`/zh-tw/projects/` 與 `/en/projects/` 提供不依賴 3D 的閱讀入口。
 - 展館每頁三件，可依 Featured／其他作品篩選；`featured`、`order` 與 `demoModule` 控制入口。

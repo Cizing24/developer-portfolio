@@ -1,5 +1,6 @@
 ---
 locale: zh-tw
+section: journal
 translationKey: cotton-booking
 title: 棉麻屋預約：把接案需求整理成清楚的預約流程
 description: 接案開發的公開摘要，記錄顧客預約、店家既有工作方式、資料一致性與錯誤回饋的取捨，保留客戶的內部資訊。

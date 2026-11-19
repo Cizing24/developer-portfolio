@@ -1,5 +1,6 @@
 ---
 locale: en
+section: journal
 translationKey: cotton-booking
 title: Cotton booking — turning client needs into a clear booking flow
 description: A limited public account of client work, covering booking flow, existing workflows, consistency and error feedback while protecting internal client information.

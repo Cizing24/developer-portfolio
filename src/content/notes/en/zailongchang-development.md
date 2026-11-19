@@ -1,5 +1,6 @@
 ---
 locale: en
+section: journal
 translationKey: zailongchang-development
 title: Zailongchang — a maintainable public home for local stories
 description: Development notes from the live Zailongchang website, covering information architecture, publication conditions, media permissions and long-term maintenance.

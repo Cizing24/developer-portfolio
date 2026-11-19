@@ -12,15 +12,15 @@ export type DayPhase = 'dawn' | 'noon' | 'sunset' | 'night';
 export const dayPhases: DayPhase[] = ['dawn', 'noon', 'sunset', 'night'];
 export const islands: { id: IslandId; zh: string; en: string; view: string }[] =
   [
-    { id: 'portfolio', zh: '迎賓廣場', en: 'Welcome', view: 'projects' },
+    { id: 'portfolio', zh: '大展廳', en: 'Main Hall', view: 'projects' },
     {
       id: 'harbor',
       zh: '作品展館',
       en: 'Project Harbor',
       view: 'projects',
     },
-    { id: 'lab', zh: '工程實驗場', en: 'Engineering Grounds', view: 'journal' },
-    { id: 'journal', zh: '筆記', en: 'Notes', view: 'journal' },
+    { id: 'lab', zh: '工程實驗室', en: 'Engineering Lab', view: 'journal' },
+    { id: 'journal', zh: '開發手記', en: 'Field Notes', view: 'field-notes' },
     { id: 'contact', zh: '聯絡', en: 'Contact', view: 'contact' },
     { id: 'about', zh: 'CIZING', en: 'CIZING', view: 'about' },
     {
@@ -143,7 +143,13 @@ export function islandItems(id: IslandId, locale: Locale): IslandItem[] {
         view: 'projects',
       },
     ];
-  if (id === 'journal') return [{ title: 'Engineering Lab', view: 'journal' }];
+  if (id === 'journal')
+    return [
+      {
+        title: locale === 'en' ? 'Field Notes' : '開發手記',
+        view: 'field-notes',
+      },
+    ];
   if (id === 'zailongchang')
     return [
       {
