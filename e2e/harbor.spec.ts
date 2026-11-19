@@ -64,6 +64,7 @@ test('TravelOps purchasing, refund exclusion and reconciliation are operable', a
   await expect(demo.locator('[data-travel-resolutions]')).toContainText(
     'Request provider evidence',
   );
+  await expect(demo.locator('[data-travel-differences] li')).toHaveCount(3);
   await expect(demo.locator('h3').first()).toHaveText('購票與共用庫存');
 });
 

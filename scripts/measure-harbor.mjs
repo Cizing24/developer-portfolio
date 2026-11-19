@@ -22,7 +22,7 @@ for (const width of [1440, 390]) {
     width,
     readyMs: Date.now() - start,
     resources: await page.evaluate(() =>
-      performance
+      globalThis.performance
         .getEntriesByType('resource')
         .map((r) => ({ name: r.name.split('/').pop(), bytes: r.transferSize })),
     ),

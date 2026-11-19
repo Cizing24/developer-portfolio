@@ -2,6 +2,7 @@ import { createTravelDemo, products, type Channel } from './travelops-model';
 
 export function initTravelOps(root: HTMLElement) {
   const demo = createTravelDemo();
+  let differences: ReturnType<typeof demo.reconcile> = [];
   const commands: { method: string; args: unknown[] }[] = [];
   const allowed = new Set([
     'checkout',
@@ -54,10 +55,15 @@ export function initTravelOps(root: HTMLElement) {
       demo,
       args,
     );
-    if (method === 'reset') commands.length = 0;
+    if (method === 'reset') {
+      commands.length = 0;
+      differences = [];
+    }
+    if (method === 'reconcile') differences = result as typeof differences;
     commands.push({ method, args });
     return result;
   }
+  // shortcut: language transfer replays up to 500 local actions; use a versioned snapshot for longer sessions.
   try {
     const saved: unknown = JSON.parse(
       sessionStorage.getItem('travelops-language') ?? 'null',
@@ -218,6 +224,13 @@ export function initTravelOps(root: HTMLElement) {
     list(
       '[data-travel-events]',
       demo.events.map((e) => messages[e] ?? e),
+    );
+    list(
+      '[data-travel-differences]',
+      differences.map(
+        (d) =>
+          `${d.reference} · ${d.kind} · ${d.internal ?? '—'} / ${d.external ?? '—'}`,
+      ),
     );
     if (result)
       query('[data-travel-status]').textContent = messages[result] ?? result;
