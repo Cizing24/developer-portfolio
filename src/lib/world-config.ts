@@ -1,24 +1,25 @@
 import type { Locale } from './i18n';
 import type { IslandProjectId as ProjectId } from './project-introductions';
 export type IslandId =
-  'portfolio' | ProjectId | 'journal' | 'contact' | 'about' | 'zailongchang';
+  | 'portfolio'
+  | 'harbor'
+  | 'lab'
+  | 'journal'
+  | 'contact'
+  | 'about'
+  | 'zailongchang';
 export type DayPhase = 'dawn' | 'noon' | 'sunset' | 'night';
 export const dayPhases: DayPhase[] = ['dawn', 'noon', 'sunset', 'night'];
 export const islands: { id: IslandId; zh: string; en: string; view: string }[] =
   [
-    { id: 'portfolio', zh: '作品集', en: 'Portfolio', view: 'projects' },
+    { id: 'portfolio', zh: '迎賓廣場', en: 'Welcome', view: 'projects' },
     {
-      id: 'bookflow',
-      zh: 'BookFlow',
-      en: 'BookFlow',
-      view: 'project-bookflow',
+      id: 'harbor',
+      zh: '作品展館',
+      en: 'Project Harbor',
+      view: 'projects',
     },
-    {
-      id: 'assetflow',
-      zh: 'AssetFlow',
-      en: 'AssetFlow',
-      view: 'project-assetflow',
-    },
+    { id: 'lab', zh: '工程實驗場', en: 'Engineering Grounds', view: 'journal' },
     { id: 'journal', zh: '筆記', en: 'Notes', view: 'journal' },
     { id: 'contact', zh: '聯絡', en: 'Contact', view: 'contact' },
     { id: 'about', zh: 'CIZING', en: 'CIZING', view: 'about' },
@@ -35,7 +36,8 @@ export function directIslandView(id: IslandId) {
     id === 'portfolio' ||
     id === 'about' ||
     id === 'contact' ||
-    id === 'journal'
+    id === 'journal' ||
+    id === 'lab'
   )
     return islands.find((island) => island.id === id)!.view;
 }
@@ -134,11 +136,13 @@ export interface IslandItem {
   view: string;
 }
 export function islandItems(id: IslandId, locale: Locale): IslandItem[] {
-  if (id === 'bookflow' || id === 'assetflow')
-    return projectFacilities[id].map((facility) => ({
-      title: locale === 'en' ? facility.en : facility.zh,
-      view: projectView(id, facility.suffix),
-    }));
+  if (id === 'harbor')
+    return [
+      {
+        title: locale === 'en' ? 'Choose projects' : '選擇作品',
+        view: 'projects',
+      },
+    ];
   if (id === 'journal') return [{ title: 'Engineering Lab', view: 'journal' }];
   if (id === 'zailongchang')
     return [

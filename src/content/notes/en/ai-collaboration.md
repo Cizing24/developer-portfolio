@@ -16,7 +16,7 @@ For this update, I specified the job-search direction, engineering priorities, p
 
 I requested an explanation of the existing workflow within source-publication boundaries. Codex confirmed the repository was Public before tracing Vue forms, Pinia session state, lifecycle transactions, date contracts and tests. The resulting case distinguishes returning equipment from confirming actual departure.
 
-Inspect the [case study](/en/projects/assetflow/), [date fix](https://github.com/Cizing24/assetflow-itam/commit/7a698fbcd8bbffb4e46ec434a310690973aab77a) and [historical CI](https://github.com/Cizing24/assetflow-itam/actions/runs/39593727102). They support rules and test records, but do not independently prove past human/AI authorship of each implementation detail.
+Inspect the [case study](/en/projects/assetflow/), date fix (private source) and historical CI (private source). They support rules and test records, but do not independently prove past human/AI authorship of each implementation detail.
 
 ## BookFlow: from booking interactions to concurrency protection
 

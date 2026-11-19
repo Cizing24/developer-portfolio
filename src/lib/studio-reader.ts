@@ -1,6 +1,7 @@
+import { loadDemo } from './demos/load';
 import { projectShowcaseView, projectView } from './world-config';
 import { initProjectShowcase } from './studio-showcase';
-import type { IslandProjectId as System } from './project-introductions';
+import type { IslandId as System } from './world-config';
 
 export function initReader(
   root: HTMLElement,
@@ -123,6 +124,13 @@ export function initReader(
         showcases.set(panel, update);
       }
       update(showcase.area);
+    }
+    if (panel.hasAttribute('data-travel-demo') && !panel.dataset.initialized) {
+      panel.dataset.initialized = 'true';
+      loadDemo(panel, async () => {
+        const { initTravelOps } = await import('./demos/travelops');
+        initTravelOps(panel);
+      });
     }
     panels.forEach((other) => (other.hidden = other !== panel));
     title.textContent = panel.dataset.title ?? '';
@@ -311,7 +319,13 @@ export function initReader(
           '',
           url,
         );
-        void hide().then(() => enter(button.dataset.enterWorld as System));
+        void hide().then(() =>
+          enter(
+            (['bookflow', 'assetflow'].includes(button.dataset.enterWorld!)
+              ? 'harbor'
+              : button.dataset.enterWorld) as System,
+          ),
+        );
         syncLinks();
       }),
     );

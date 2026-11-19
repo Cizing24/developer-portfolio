@@ -1,23 +1,53 @@
 ---
-import { localeFromPath, localizedPath } from '../lib/i18n';
+import { localeFromPath, localizedPath, entrySlug } from '../lib/i18n';
 import {
   islands,
   dayPhases,
   directIslandView,
   phaseName,
   islandItems,
+  projectFacilities,
 } from '../lib/world-config';
+import { getCollection } from 'astro:content';
+import { sortProjects } from '../lib/content';
 import StudioReader from './StudioReader.astro';
 import WorldIcon from './WorldIcon.astro';
 import '../styles/studio.css';
 const locale = localeFromPath(Astro.url.pathname);
 const en = locale === 'en';
+const projects = sortProjects(
+  await getCollection('projects', (p) => p.data.locale === locale),
+);
+const harbor = projects
+  .filter((p) => p.data.featured)
+  .slice(0, 3)
+  .map((p) => ({
+    title: p.data.title,
+    view: p.data.demoModule ? `project-${p.data.demoModule}` : 'projects',
+    href: p.data.demoModule
+      ? undefined
+      : localizedPath(locale, `projects/${entrySlug(p.id)}`),
+  }));
+const menuItems = (id: (typeof islands)[number]['id']) =>
+  id === 'harbor'
+    ? projects.flatMap((p) =>
+        p.data.demoModule === 'bookflow' || p.data.demoModule === 'assetflow'
+          ? projectFacilities[p.data.demoModule].map((f) => ({
+              title: `${p.data.title} · ${en ? f.en : f.zh}`,
+              view: `project-${p.data.demoModule}${f.suffix}`,
+            }))
+          : p.data.demoModule
+            ? [{ title: p.data.title, view: `project-${p.data.demoModule}` }]
+            : [],
+      )
+    : islandItems(id, locale);
 ---
 
 <div
   id="studio"
   class="studio"
   data-studio
+  data-harbor-items={JSON.stringify(harbor)}
   data-language={locale}
   data-mode="overview"
   data-renderer="loading"
@@ -25,6 +55,13 @@ const en = locale === 'en';
   data-menu="closed"
   data-traveling="false"
 >
+  <a
+    class="harbor-shortcut"
+    href={localizedPath(locale, 'projects')}
+    data-open="projects"
+  >
+    {en ? 'View projects' : '查看作品'}
+  </a>
   <header class="world-header">
     <h1>
       <span class="world-brand">CIZING</span>
@@ -205,12 +242,12 @@ const en = locale === 'en';
                 ? en
                   ? 'Read'
                   : '閱讀'
-                : islandItems(island.id, locale).length}
+                : menuItems(island.id).length}
             </span>
           </button>
           {!directIslandView(island.id) && (
             <div class="index-details" data-index-details={island.id} hidden>
-              {islandItems(island.id, locale).map((item) => (
+              {menuItems(island.id).map((item) => (
                 <button
                   type="button"
                   class="index-content"

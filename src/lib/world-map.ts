@@ -1,22 +1,18 @@
-import { projectFacilities, type IslandId } from './world-config';
+import { type IslandId } from './world-config';
 import { segmentDistance, type NavigationDomain } from './navigation';
 import type { Point } from './wander';
 
 export const bridgePairs: [IslandId, IslandId][] = [
-  ['portfolio', 'bookflow'],
-  ['portfolio', 'assetflow'],
+  ['portfolio', 'harbor'],
+  ['portfolio', 'lab'],
   ['portfolio', 'journal'],
   ['portfolio', 'contact'],
   ['portfolio', 'about'],
 ];
 export const islandScale = (id: IslandId) =>
-  id === 'bookflow' || id === 'assetflow'
-    ? 0.64
-    : id === 'zailongchang'
-      ? 1.35
-      : 1;
+  id === 'harbor' || id === 'lab' ? 0.64 : id === 'zailongchang' ? 1.35 : 1;
 export const islandRadii = (id: IslandId): [number, number] =>
-  id === 'bookflow' || id === 'assetflow'
+  id === 'harbor' || id === 'lab'
     ? [4.05, 2.58]
     : id === 'zailongchang'
       ? [3.8, 3.8]
@@ -26,7 +22,7 @@ export const islandRadii = (id: IslandId): [number, number] =>
           ? [3.4, 3.4]
           : [2.8, 2.8];
 export const islandElevation = (id: IslandId) =>
-  id === 'bookflow' || id === 'assetflow' ? -0.1 : 0.02;
+  id === 'harbor' || id === 'lab' ? -0.1 : 0.02;
 export const reefIslands = [
   { x: -19, z: -7, r: 1.4 },
   { x: -18, z: 7, r: 1.6 },
@@ -40,16 +36,16 @@ export function islandLayout(portrait: boolean): Record<IslandId, Point> {
     ? {
         portfolio: [0, 0],
         about: [0, -9.5],
-        bookflow: [-9.2, 0],
-        assetflow: [9.2, 0],
+        harbor: [-9.2, 0],
+        lab: [9.2, 0],
         journal: [-6.8, 9],
         contact: [6.8, 9],
         zailongchang: [0, 20],
       }
     : {
         portfolio: [0, 0],
-        bookflow: [-9.5, -3.2],
-        assetflow: [9.5, -3.2],
+        harbor: [-9.5, -3.2],
+        lab: [9.5, -3.2],
         journal: [-7.2, 8.5],
         contact: [6.8, 8],
         about: [0, -9.5],
@@ -91,7 +87,7 @@ export function bridgeRoutes(centers: Record<IslandId, Point>) {
       fromIsland?: IslandId;
       toIsland?: IslandId;
     }[] => {
-      if (b === 'bookflow' || b === 'assetflow') {
+      if (b === 'harbor' || b === 'lab') {
         const via = {
           x: centers[b].x + (centers[a].x > centers[b].x ? 5.2 : -5.2),
           z: centers[b].z,
@@ -111,7 +107,7 @@ export function bridgeRoutes(centers: Record<IslandId, Point>) {
 export function bridgeDecks(centers: Record<IslandId, Point>) {
   return bridgePairs.map(([a, b]) => {
     const points: Point[] = [{ ...centers[a] }];
-    if (b === 'bookflow' || b === 'assetflow')
+    if (b === 'harbor' || b === 'lab')
       points.push({
         x: centers[b].x + (centers[a].x > centers[b].x ? 5.2 : -5.2),
         z: centers[b].z,
@@ -189,29 +185,14 @@ function insideDeck(point: Point, outline: Point[], radius: number) {
 }
 function sceneryObstacles(id: IslandId) {
   const circles: { x: number; z: number; radius: number }[] = [];
-  const project = id === 'bookflow' || id === 'assetflow';
+  const project = id === 'harbor' || id === 'lab';
   if (project) {
-    for (const { x, z } of projectFacilities[id])
+    for (const { x, z } of [
+      { x: -4, z: -1.65 },
+      { x: 4, z: -1.65 },
+      { x: 0, z: 1.7 },
+    ])
       circles.push({ x, z, radius: 1.25 });
-    for (let i = 1; i < 22; i++) {
-      if (i === 11) continue;
-      const angle = (i / 22) * Math.PI * 2;
-      const size = 0.65 + (i % 4) * 0.15;
-      circles.push({
-        x: Math.cos(angle) * 5.8,
-        z: Math.sin(angle) * 3.6,
-        radius: 0.4 * size,
-      });
-    }
-    for (const [x, z] of [
-      [-5.6, -2.4],
-      [-4.9, -2.7],
-      [4.9, -2.8],
-      [5.5, -2.2],
-      [-5.5, 2.5],
-      [5.5, 2.5],
-    ] as const)
-      circles.push({ x, z, radius: 0.45 });
   } else {
     const treeRadius =
       id === 'portfolio' ? 3.65 : id === 'journal' ? 3.5 : 2.85;
@@ -298,13 +279,6 @@ export function createWorldDomain(
       )
     )
       return true;
-    if (
-      (id === 'bookflow' || id === 'assetflow') &&
-      Math.abs(x) < 4.8 &&
-      z < -2.5 &&
-      z > -4.5
-    )
-      return true; // Rocky northern ridge.
     return obstacles
       .get(id)!
       .some(

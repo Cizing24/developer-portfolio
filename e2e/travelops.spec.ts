@@ -170,12 +170,16 @@ test('homepage links to TravelOps without requesting or embedding its media', as
   await expect(page.locator('[data-view-panel=projects]')).toBeVisible();
   await expect(page.locator('[data-portal]')).toHaveCount(7);
   await expect(page.locator('video, [data-travelops-media]')).toHaveCount(0);
-  expect(travelopsRequests).toEqual([]);
-  const card = page.locator('.reader-project-grid article').filter({
+  expect(
+    travelopsRequests.every((url) =>
+      /travelops-catalog-desktop.*\.webp$/.test(url),
+    ),
+  ).toBe(true);
+  const card = page.locator('[data-harbor-entry]').filter({
     has: page.getByRole('heading', { name: 'TravelOps', exact: true }),
   });
   await expect(card.locator('[data-enter-world]')).toHaveCount(0);
-  await card.getByRole('link').click();
+  await card.getByRole('link', { name: '閱讀完整案例' }).click();
   await expect(page).toHaveURL('/zh-tw/projects/travelops/');
 });
 

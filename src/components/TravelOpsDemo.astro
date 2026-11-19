@@ -1,0 +1,181 @@
+---
+import type { Locale } from '../lib/i18n';
+import { localizedPath } from '../lib/i18n';
+import { products } from '../lib/demos/travelops-model';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const en = locale === 'en';
+const t = (zh: string, english: string) => (en ? english : zh);
+---
+
+<article
+  data-view-panel="project-travelops"
+  data-travel-demo
+  data-locale={locale}
+  data-title="TravelOps"
+  hidden
+>
+  <h2>TravelOps</h2>
+  <p>
+    {t(
+      '合成資料・瀏覽器循序模擬。沒有真實交易、Row Lock、Redis Queue 或金流，重新載入會重設。',
+      'Synthetic data · sequential browser simulation. No real transactions, row locks, Redis queues or payments. Reloading resets it.',
+    )}
+  </p>
+  <p>
+    {t(
+      '先建立訂單、確認付款及開券，再比較退款與核銷的操作順序。',
+      'Create an order, confirm payment and issue tickets, then compare refund and redemption order.',
+    )}
+  </p>
+  <form data-travel-checkout>
+    <h3>{t('購票與共用庫存', 'Purchase & shared inventory')}</h3>
+    <label>
+      {t('票券商品', 'Ticket product')}
+      <select name="product">
+        {products.map((p) => (
+          <option value={p.id}>
+            {en ? p.en : p.zh} · NT$ {p.price / 100}
+          </option>
+        ))}
+      </select>
+    </label>
+    <label>
+      {t('數量', 'Quantity')}
+      <input
+        name="quantity"
+        type="number"
+        min="1"
+        max="20"
+        value="1"
+        required
+      />
+    </label>
+    <label>
+      {t('通路', 'Channel')}
+      <select name="channel">
+        <option value="online">Online</option>
+        <option value="pos">POS</option>
+      </select>
+    </label>
+    <p data-travel-stock></p>
+    <button type="submit">{t('建立模擬訂單', 'Create demo order')}</button>
+    <button type="button" data-travel-action="last">
+      {t('重設為最後一張票', 'Reset to last ticket')}
+    </button>
+    <button type="button" data-travel-action="reset">
+      {t('重設全部', 'Reset all')}
+    </button>
+  </form>
+  <section>
+    <h3>{t('付款、開券與使用權益', 'Payment, issuance & entitlements')}</h3>
+    <label>
+      {t('目前訂單', 'Current order')}
+      <select data-travel-order></select>
+    </label>
+    <dl data-travel-order-state></dl>
+    <div class="reader-actions">
+      {[
+        [
+          'pay',
+          t('確認付款／重送相同通知', 'Confirm payment / repeat notification'),
+        ],
+        ['conflict', t('重送不同金額', 'Repeat with conflicting amount')],
+        ['issue', t('執行模擬開券', 'Issue demo tickets')],
+        ['request', t('申請整筆退款', 'Request full refund')],
+        ['approve', t('核准退款', 'Approve refund')],
+        ['confirm', t('確認退款結果', 'Confirm refund result')],
+      ].map(([action, label]) => (
+        <button type="button" data-travel-action={action}>
+          {label}
+        </button>
+      ))}
+    </div>
+    <p>
+      {t(
+        '退款申請尚未核准時仍可核銷；核准時重新檢查，進行中禁止核銷。確認退款才撤銷權益、回補庫存。',
+        'Redemption remains possible before approval. Approval rechecks used tickets and blocks further use. Confirmation revokes entitlements and restores stock.',
+      )}
+    </p>
+    <ul data-travel-tickets></ul>
+  </section>
+  <section>
+    <h3>{t('營運對帳', 'Operations reconciliation')}</h3>
+    <p>
+      {t(
+        '帳冊金額使用整數分。人工處置只新增原因，不改寫帳冊；未解決的差異在重跑後仍會出現。',
+        'Ledger amounts use integer cents. Disposition adds a reason without changing ledger facts. Uncorrected differences remain after rerunning.',
+      )}
+    </p>
+    <div data-travel-ledgers></div>
+    <button type="button" data-travel-action="reconcile">
+      {t('執行／重跑對帳', 'Run / rerun reconciliation')}
+    </button>
+    <ul data-travel-differences></ul>
+    <form data-travel-resolution>
+      <label>
+        {t('差異參照', 'Difference reference')}
+        <select name="reference">
+          <option>DEMO-101</option>
+          <option>DEMO-102</option>
+          <option>DEMO-103</option>
+        </select>
+      </label>
+      <label>
+        {t('處置原因', 'Disposition reason')}
+        <input name="reason" required maxlength="200" />
+      </label>
+      <button type="submit">{t('新增處置紀錄', 'Record disposition')}</button>
+    </form>
+    <ul data-travel-resolutions></ul>
+  </section>
+  <p role="status" data-travel-status></p>
+  <h3>{t('本次操作紀錄', 'Session events')}</h3>
+  <ol data-travel-events></ol>
+  <a href={localizedPath(locale, 'projects/travelops')}>
+    {t(
+      '閱讀已審核案例、影片與來源驗證限制',
+      'Read the reviewed case, video and source verification limits',
+    )}
+  </a>
+</article>
+<style>
+  form,
+  section {
+    margin-block: 1.75rem;
+  }
+  label {
+    display: block;
+    margin-block: 0.75rem;
+  }
+  input,
+  select {
+    display: block;
+    min-height: 44px;
+    width: 100%;
+    max-width: 28rem;
+  }
+  button {
+    min-height: 44px;
+    margin: 0.25rem;
+    white-space: normal;
+  }
+  dl {
+    overflow-wrap: anywhere;
+  }
+  [data-travel-status] {
+    position: sticky;
+    bottom: 0;
+    background: var(--paper, #fff);
+    padding: 1rem;
+    color: var(--ink, #172d32);
+  }
+  [data-travel-ledgers] {
+    overflow-wrap: anywhere;
+  }
+  li {
+    margin-block: 0.5rem;
+  }
+</style>

@@ -30,6 +30,7 @@ export const projectFields = {
   visibility: z.enum(['public', 'private']),
   repository: httpsUrl.optional(),
   demo: httpsUrl.optional(),
+  demoModule: z.enum(['bookflow', 'assetflow', 'travelops']).optional(),
   featured: z.boolean().default(false),
   order: z.number().int(),
   sourceCommit: z.string().regex(/^[a-f0-9]{40}$/),

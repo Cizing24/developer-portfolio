@@ -13,6 +13,10 @@ import {
 } from './world-config';
 
 export function initStudio(root: HTMLElement) {
+  const harborItems = JSON.parse(root.dataset.harborItems ?? '[]') as {
+    title: string;
+    view: string;
+  }[];
   const locale = root.dataset.language as Locale;
   const en = locale === 'en';
   const query = <T extends HTMLElement>(selector: string) =>
@@ -88,9 +92,13 @@ export function initStudio(root: HTMLElement) {
   function updateIsland() {
     root.dataset.mode = active ? 'explore' : 'overview';
     root.dataset.island = active ?? '';
-    root.dataset.system =
-      active === 'bookflow' || active === 'assetflow' ? active : '';
-    const items = active ? islandItems(active, locale) : [];
+    root.dataset.system = active === 'harbor' ? 'harbor' : '';
+    const items =
+      active === 'harbor'
+        ? harborItems
+        : active
+          ? islandItems(active, locale)
+          : [];
     nodes.forEach((node, i) => {
       node.hidden = !items[i];
       node.querySelector('[data-node-title]')!.textContent =
@@ -146,10 +154,14 @@ export function initStudio(root: HTMLElement) {
         : '群島全景';
   }
   function select(index: number) {
-    const item = active && islandItems(active, locale)[index];
+    const item =
+      active &&
+      (active === 'harbor' ? harborItems : islandItems(active, locale))[index];
     if (!item) return;
     nodes[index]?.focus({ preventScroll: true });
-    reader.show(item.view);
+    if ('href' in item && typeof item.href === 'string')
+      location.assign(item.href);
+    else reader.show(item.view);
   }
   function setPhase(value: DayPhase, animated = true, save = true) {
     phase = value;
@@ -179,7 +191,12 @@ export function initStudio(root: HTMLElement) {
   function restore(initial = false) {
     const params = new URL(location.href).searchParams;
     const id = params.get('island') ?? params.get('studio');
-    const next = isIsland(id) ? id : null;
+    const next =
+      id === 'bookflow' || id === 'assetflow'
+        ? 'harbor'
+        : isIsland(id)
+          ? id
+          : null;
     const nextPhase =
       dayPhases.find((item) => item === params.get('time')) ?? 'noon';
     if (phase !== nextPhase || initial) setPhase(nextPhase, !initial, false);

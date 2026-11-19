@@ -1286,3 +1286,15 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.harbor-shortcut {
+  position: absolute;
+  z-index: 5;
+  left: 1rem;
+  top: 5rem;
+  padding: 0.65rem 1rem;
+  background: #f4f1e6;
+  color: #193a3e;
+  border-radius: 12px;
+  font-weight: 600;
+}

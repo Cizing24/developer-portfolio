@@ -32,7 +32,7 @@ describe.each([false, true])('world navigation, portrait=%s', (portrait) => {
     const centers = islandLayout(portrait);
     const decks = bridgeDecks(centers);
     const domain = createWorldDomain(centers, decks);
-    for (const [index, id] of ['bookflow', 'assetflow'].entries()) {
+    for (const [index, id] of ['harbor', 'lab'].entries()) {
       const deck = decks[index]!;
       const start = deck.points.at(-2)!;
       const end = deck.points.at(-1)!;
@@ -40,8 +40,8 @@ describe.each([false, true])('world navigation, portrait=%s', (portrait) => {
       expect(domain.height(start)).toBeCloseTo(deck.height(start));
       expect(domain.height(middle)).toBeCloseTo(deck.height(middle));
       expect(domain.height(middle)).toBeLessThan(domain.height(start));
-      expect(domain.height(centers[id as 'bookflow' | 'assetflow'])).toBe(
-        islandElevation(id as 'bookflow' | 'assetflow'),
+      expect(domain.height(centers[id as 'harbor' | 'lab'])).toBe(
+        islandElevation(id as 'harbor' | 'lab'),
       );
     }
     expect(domain.surface({ x: 0, z: -21 })).toBeUndefined();
@@ -52,8 +52,8 @@ describe.each([false, true])('world navigation, portrait=%s', (portrait) => {
     const nav = createNavigation(createWorldDomain(centers), 0.17);
     const start = nav.nearest(centers.portfolio);
     for (const id of [
-      'bookflow',
-      'assetflow',
+      'harbor',
+      'lab',
       'journal',
       'contact',
       'about',
@@ -149,8 +149,8 @@ it('keeps a group of pedestrians separated from one another and from scenery ove
       'portfolio',
       'journal',
       'contact',
-      'bookflow',
-      'assetflow',
+      'harbor',
+      'lab',
       'zailongchang',
     ] as const
   ).flatMap((id) => Array.from({ length: id === 'about' ? 2 : 4 }, () => id))) {

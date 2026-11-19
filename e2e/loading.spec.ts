@@ -35,7 +35,7 @@ for (const locale of ['zh-tw', 'en']) {
     expect(sceneRequests).toHaveLength(1);
     await expect(page.locator('[data-studio]')).toHaveAttribute(
       'data-island',
-      'bookflow',
+      'harbor',
     );
     await expect(page.locator('[data-studio]')).toHaveAttribute(
       'data-phase',

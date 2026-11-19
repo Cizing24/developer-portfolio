@@ -108,14 +108,19 @@ test('seven fixed islands have small labels, no slogans and useful project topic
   await expect(page.locator('.world-header [data-world-locale]')).toHaveText(
     '繁中',
   );
-  await page.locator('[data-portal=bookflow]').click();
+  await page.locator('[data-portal=harbor]').click();
   const reader = page.locator('[data-reader]');
   for (const [index, area, title] of [
     [0, 'demo', 'Customer booking desk'],
     [1, 'secondary', 'Business calendar'],
     [2, 'architecture', 'How a change reaches the database'],
   ] as const) {
-    await page.locator(`[data-station="${index}"]`).click();
+    await menu(page);
+    await page
+      .locator(
+        `[data-index-details=harbor] [data-open=project-bookflow${index === 0 ? '' : index === 1 ? '-calendar' : '-architecture'}]`,
+      )
+      .click();
     await expect(
       reader.locator(
         `[data-view-panel=project-bookflow] [data-showcase-region="${area}"] h3`,
@@ -125,7 +130,7 @@ test('seven fixed islands have small labels, no slogans and useful project topic
     await page.keyboard.press('Escape');
     await expect(reader).not.toBeVisible();
   }
-  await visit(page, 'assetflow');
+  await visit(page, 'harbor');
   await page.locator('[data-menu-close]').click();
   const rects = await page.locator('[data-station]').evaluateAll((nodes) =>
     nodes.map((n) => {
@@ -170,7 +175,7 @@ test('right menu searches islands, opens readers and restores keyboard focus', a
     await expect(page.locator('[data-reader]')).not.toBeVisible();
     await expect(page.locator(`[data-island-go=${id}]`)).toBeFocused();
   }
-  for (const id of ['bookflow', 'assetflow', 'zailongchang']) {
+  for (const id of ['harbor', 'zailongchang']) {
     await visit(page, id);
     await expect(page.locator(`[data-index-details="${id}"]`)).toBeVisible();
   }
@@ -258,7 +263,7 @@ test('topic dialogs preserve project, language and history across reloads and le
   await reader.locator('[data-reader-close]').click();
   await expect(reader).not.toBeVisible();
   await ready(page);
-  await page.locator('[data-station="0"]').focus();
+  await page.locator('[data-station]').filter({ hasText: 'AssetFlow' }).focus();
   await page.keyboard.press('Enter');
   await expect(
     reader.locator('[data-view-panel="project-assetflow"]'),
@@ -341,7 +346,7 @@ test('camera travel and reader transitions run smoothly and allow rapid interrup
             .visibility === 'hidden',
       });
     }).observe(root, { attributes: true, attributeFilter: ['data-traveling'] });
-    document.querySelector('[data-portal=bookflow]')!.addEventListener(
+    document.querySelector('[data-portal=harbor]')!.addEventListener(
       'click',
       () => {
         setTimeout(
@@ -355,7 +360,7 @@ test('camera travel and reader transitions run smoothly and allow rapid interrup
       { once: true },
     );
   });
-  await page.locator('[data-portal=bookflow]').click();
+  await page.locator('[data-portal=harbor]').click();
   await expect(page.locator('[data-studio]')).toHaveAttribute(
     'data-island',
     'about',
@@ -384,7 +389,7 @@ test('camera travel and reader transitions run smoothly and allow rapid interrup
   expect(
     transitions.some(
       (event) =>
-        event.island === 'bookflow' && event.moving === 'true' && event.hidden,
+        event.island === 'harbor' && event.moving === 'true' && event.hidden,
     ),
   ).toBe(true);
   const start = transitions.find(
@@ -522,8 +527,13 @@ test('WebGL fallback retains all seven islands, topics, search and reading contr
     'data-renderer',
     'fallback',
   );
-  await page.locator('[data-portal=bookflow]').click();
-  await page.locator('[data-station="2"]').click();
+  await page.locator('[data-portal=harbor]').click();
+  await menu(page);
+  await page
+    .locator(
+      '[data-index-details=harbor] [data-open=project-bookflow-architecture]',
+    )
+    .click();
   await expect(
     page.locator(
       '[data-view-panel="project-bookflow"] [data-showcase-region="architecture"]',
@@ -554,9 +564,14 @@ test('3D context loss keeps current island and its content usable', async ({
   );
   await expect(page.locator('[data-studio]')).toHaveAttribute(
     'data-island',
-    'bookflow',
+    'harbor',
   );
-  await page.locator('[data-station="2"]').click();
+  await menu(page);
+  await page
+    .locator(
+      '[data-index-details=harbor] [data-open=project-bookflow-architecture]',
+    )
+    .click();
   await expect(
     page.locator(
       '[data-view-panel="project-bookflow"] [data-showcase-region="architecture"]',
@@ -609,11 +624,12 @@ test('portfolio, notes, contact and profile stay in the same reader with accessi
   await page.keyboard.press('Escape');
   await expect(reader).not.toBeVisible();
   await open(page, 'portfolio', 'projects');
-  await reader.locator('[data-enter-world=assetflow]').click();
+  await page.keyboard.press('Escape');
+  await page.locator('[data-portal=harbor]').click();
   await expect(reader).not.toBeVisible();
   await expect(page.locator('[data-studio]')).toHaveAttribute(
     'data-island',
-    'assetflow',
+    'harbor',
   );
 });
 

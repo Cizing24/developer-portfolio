@@ -42,10 +42,7 @@ test('project filtering, readable introductions, public source and honest demo s
     .getByRole('link')
     .click();
   await expect(page.locator('.project-introduction > section')).toHaveCount(3);
-  await expect(page.locator('.simple-project-source a')).toHaveAttribute(
-    'href',
-    'https://github.com/Cizing24/assetflow-itam',
-  );
+  await expect(page.locator('.simple-project-source a')).toHaveCount(0);
   await expect(page.locator('.workflow-screens figure')).toHaveCount(2);
   await expect(page.getByRole('link', { name: 'Live Demo' })).toHaveCount(0);
   await page.goto('/en/projects/bookflow/');

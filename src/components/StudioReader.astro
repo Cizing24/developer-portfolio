@@ -1,9 +1,10 @@
 ---
 import { getCollection, render } from 'astro:content';
-import { Image } from 'astro:assets';
 import { localeFromPath, entrySlug, localizedPath } from '../lib/i18n';
 import { sortProjects, publishedNotes } from '../lib/content';
 import { profile } from '../config';
+import TravelOpsDemo from './TravelOpsDemo.astro';
+import ProjectHarbor from './ProjectHarbor.astro';
 import ProjectShowcase from './ProjectShowcase.astro';
 import EngineeringLab from './EngineeringLab.astro';
 import TableOfContents from './TableOfContents.astro';
@@ -62,8 +63,8 @@ const notes = await Promise.all(
       <div class="prose">
         <p>
           {en
-            ? 'Portfolio, Engineering Lab, Contact and CIZING open directly. BookFlow, AssetFlow and Zailongchang have their own places to explore.'
-            : '作品集、工程實驗室、聯絡和 CIZING 可直接閱讀。BookFlow、AssetFlow 和在隆昌各有可探索的場景。'}
+            ? 'Welcome, Engineering Lab, Contact and CIZING open directly. Project Harbor has reusable project exhibits. Community has its own harbor.'
+            : '迎賓廣場、工程實驗室、聯絡和 CIZING 可直接閱讀。作品展館使用共用展台，在隆昌保留獨立港口。'}
         </p>
         <p>
           {en
@@ -89,41 +90,7 @@ const notes = await Promise.all(
     >
       <h2>{en ? 'Portfolio' : '作品集'}</h2>
 
-      <div class="reader-project-grid">
-        {allProjects.map((entry) => (
-          <article>
-            {isProjectIsland(entrySlug(entry.id)) && (
-              <Image
-                src={entry.data.cover}
-                alt={entry.data.coverAlt}
-                width={680}
-                loading="lazy"
-              />
-            )}
-            <p class="eyebrow">{entry.data.category}</p>
-            <h3>{entry.data.title}</h3>
-            <p>{entry.data.description}</p>
-            <div class="reader-actions">
-              {isProjectIsland(entrySlug(entry.id)) && (
-                <button type="button" data-enter-world={entrySlug(entry.id)}>
-                  {en ? 'Enter the world' : '進入專案場景'}
-                </button>
-              )}
-              <a
-                class="text-link"
-                data-open={
-                  isProjectIsland(entrySlug(entry.id))
-                    ? projectView(entrySlug(entry.id) as ProjectId, '-case')
-                    : undefined
-                }
-                href={localizedPath(locale, `projects/${entrySlug(entry.id)}`)}
-              >
-                {en ? 'Read case study' : '閱讀完整案例'}
-              </a>
-            </div>
-          </article>
-        ))}
-      </div>
+      <ProjectHarbor entries={allProjects} {locale} />
       <WebsiteCases locale={locale} />
     </section>
     {projects.map(({ entry, Content }) => (
@@ -139,7 +106,7 @@ const notes = await Promise.all(
           class="text-link"
           href={
             localizedPath(locale) +
-            `?island=${entrySlug(entry.id)}&view=project-${entrySlug(entry.id)}`
+            `?island=harbor&view=project-${entrySlug(entry.id)}`
           }
           data-open={projectView(entrySlug(entry.id) as ProjectId)}
         >
@@ -156,6 +123,7 @@ const notes = await Promise.all(
     {projects.map(({ entry }) => (
       <ProjectShowcase {entry} {locale} />
     ))}
+    <TravelOpsDemo {locale} />
     <section
       data-view-panel="journal"
       data-title={en ? 'Engineering Lab' : 'Engineering Lab 工程實驗室'}
