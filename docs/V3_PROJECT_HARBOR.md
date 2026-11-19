@@ -58,6 +58,6 @@ coverAlt: Screenshot using synthetic data in the example engineering tool
 
 ## 來源整合
 
-V3 隔離 worktree 建立自 PR #14 head `9f7b0a1`，原目錄所有未提交修改維持原狀。PR #14 已包含與原工作目錄相同的 Modern Web Guidance 快照，毋須覆寫或重複 cherry-pick。PR #13 只有 README，沒有合併或覆寫其遠端分支；本輪 README 以新的功能分區為準，合併時需對照其編排。
+V3 隔離 worktree 建立自 PR #14 head `9f7b0a1`，原目錄所有未提交修改維持原狀。PR #14 已包含與原工作目錄相同的 Modern Web Guidance 快照，毋須覆寫或重複 cherry-pick。PR #13 的 README 已由擁有者在執行期間合併至 main；本輪將 main 的文件更新合併進 V3 分支，保留其編排並補上現行功能分區。
 
 不修改來源產品 Repository、不合併 main、不發布 Production。
