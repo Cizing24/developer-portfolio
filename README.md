@@ -1,65 +1,86 @@
-# Developer Portfolio V3 · Project Harbor
+# Developer Portfolio · Project Harbor
 
-本輪改為固定功能分區：Main Hall、Project Harbor、Engineering Lab、Notes、Contact、CIZING 與 Community。作品由 Astro Content Collections 決定，新增作品不增加島嶼。TravelOps、BookFlow、AssetFlow 提供可操作的前端合成資料展示，完整案例另外提供工程證據。
+CIZING 的繁中／英文工程作品集：從 3D 群島探索作品，也能直接閱讀案例、操作展示及測試證據。
 
-- 首頁左上「查看作品」直接開啟作品展館；`/zh-tw/projects/` 與 `/en/projects/` 提供不依賴 3D 的閱讀入口。
-- 展館每頁三件，可依 Featured／其他作品篩選；`featured`、`order` 與 `demoModule` 控制入口。
-- `?view=project-travelops`、`?view=project-bookflow`、`?view=project-assetflow` 直接開啟展示並延後下載 3D。
-- 舊 `island=bookflow`、`island=assetflow`、`studio` 連結仍可回到 Project Harbor，既有 `view` 還原對應展示。
-- 保留原生 dialog、四時段、CIZING、船隻／人物通行、Reduced Motion、WebGL fallback 與 no-JS 案例閱讀。
-- AssetFlow 與 TravelOps 來源維持私人，公開內容只包含已審核素材及工程摘要。
-- OpsFlow Mini ERP 提供完整雙語案例、真實合成資料截圖、採購到成本流程、維護紀錄與本機 Benchmark；出現在作品展館、作品總覽、Engineering Lab 及相關案例導覽，沒有公開 ERP Demo。
+![目前 Project Harbor 版本的真實桌面首頁](docs/media/cover.png)
 
-OpsFlow 的來源版本、量測條件與本次驗證見 [整合紀錄](docs/OPSFLOW_INTEGRATION.md)。
+[中文網站](https://cizing24-portfolio-test.pages.dev/zh-tw/) · [English website](https://cizing24-portfolio-test.pages.dev/en/) · [中文作品總覽](https://cizing24-portfolio-test.pages.dev/zh-tw/projects/)
 
-完整模型、操作與維護教學見 [V3 架構](docs/V3_PROJECT_HARBOR.md)。本輪實測紀錄見 [V3 驗收](docs/V3_PROJECT_HARBOR_VALIDATION.md)。以下七島更新說明保留為前版歷史紀錄，舊作品專屬島描述已由上方功能分區取代。
+## 操作展示
 
----
+![作品展館與案例閱讀的真實操作節錄](docs/media/demo.gif)
 
-# Developer Portfolio · 專案群島
+[觀看完整操作影片](docs/media/demo.mp4) · [媒體、版本與本次驗證](docs/SHOWCASE_VALIDATION.md)
 
-CIZING 的雙語前端作品集。訪客可以從七座 3D 群島探索專案與工程筆記，也可以直接從選單閱讀案例，查看實際產品畫面、設計取捨與對應版本的實作及測試證據。
+影片與截圖來自本機正式建置。互動展示使用合成資料；瀏覽器內的購票、預約及資產操作，不連線來源產品的後端。影片檔隨 PR 交付，GitHub 若只顯示檔案頁，可下載播放。既有網站入口保留，本次沒有部署網站。
 
-![V3 七島桌面全景，顯示作品、BookFlow、AssetFlow、筆記、聯絡、CIZING 與在隆昌的入口](docs/screenshots/islands-update/desktop-overview.png)
+## 解決的問題與功能畫面
 
-_V3 七島更新時的實際截圖。_ [中文互動預覽](https://cizing24-portfolio-test.pages.dev/zh-tw/) · [English preview](https://cizing24-portfolio-test.pages.dev/en/)
+工程作品需要同時讓讀者看懂產品成果，以及往下追查實作與證據。網站提供互動探索和直接閱讀兩條入口，從作品展館找到案例，再查看流程、架構、技術取捨及對應來源版本。
 
-## 主要功能
+### Project Harbor：集中瀏覽作品
 
-- **3D 七島導航** — 拖曳、縮放或選擇島嶼，切換四個時段的光照，觀察人物走橋與船隻進出港口。
-- **雙語案例** — 提供繁體中文與英文內容，從案例讀取專案畫面、操作流程、程式碼與歷史驗證紀錄。
-- **互動展示** — 在 BookFlow 體驗選時段與預約，在 AssetFlow 操作資產清冊及離職交接。流程在瀏覽器內以合成資料模擬。
-- **Engineering Lab** — 依關鍵字、分類或標籤探索工程筆記、技術索引與相關案例。
-- **替代閱讀路徑** — 支援鍵盤操作與減少動態效果。WebGL 無法使用時保留替代地圖，停用 JavaScript 時仍能閱讀獨立內容頁。
+作品由 Content Collections 決定，展館每頁三件，可篩選 Featured／其他作品。新增案例不必增加島嶼或重做場景。
 
-## 技術與架構
+![Project Harbor 作品展館](docs/media/project-harbor.png)
 
-| 層級       | 技術                                                      |
-| ---------- | --------------------------------------------------------- |
-| 靜態網站   | Astro、TypeScript、Content Collections、MDX、Tailwind CSS |
-| 場景與互動 | Three.js、WebGL、HTML `dialog`                            |
-| 驗證       | Vitest、Playwright、axe、Lighthouse                       |
+### 互動展示：把規則變成可以操作的流程
 
-```text
-雙語內容與案例 → Astro 靜態頁面 → 獨立內容頁、群島選單與同頁閱覽室
-                              └→ 瀏覽器按需載入 Three.js 場景
+TravelOps、BookFlow、AssetFlow 依需求載入互動模組。訪客可觀察庫存不足、付款通知重送、退款互斥、重複預約或資產狀態限制；這些是前端依序模擬，不證明資料庫並行控制。
+
+![TravelOps 合成資料互動展示](docs/media/interactive-demo.png)
+
+### 案例閱讀：從產品流程追到工程證據
+
+OpsFlow、TravelOps、BookFlow、AssetFlow 的雙語案例提供真實產品畫面、業務流程與工程摘要。來源產品的測試證據與作品集自身測試分開記錄。
+
+![OpsFlow 雙語案例頁面](docs/media/case-study.png)
+
+### 桌面與手機：保留直接閱讀入口
+
+原生 dialog 支援 Escape、焦點返回與瀏覽器歷史。WebGL 無法使用時提供替代地圖；停用 JavaScript 時仍能閱讀獨立案例頁。
+
+<img src="docs/media/mobile.png" alt="390px 手機作品展館實際畫面" width="320" />
+
+## Architecture
+
+![雙語內容、Astro 靜態頁、同頁閱讀、Three.js 與前端展示的關係](docs/media/architecture.svg)
+
+網站使用 Astro 靜態輸出，沒有業務 API、資料庫或登入服務。`src/content.config.ts` 與 schema 驗證雙語內容；`studio-reader.ts` 處理閱讀與網址狀態，`studio.ts` 按需載入場景，`src/lib/demos/` 分別載入三個操作展示。
+
+[V3 架構與操作](docs/V3_PROJECT_HARBOR.md) · [本次程式碼查核](docs/SHOWCASE_VALIDATION.md) · [雙語內容維護](CONTENT_GUIDE.md)
+
+## Engineering Highlights 與技術決策
+
+- **用固定功能分區容納作品。** Main Hall、Project Harbor、Engineering Lab、Notes、Contact、CIZING 與 Community 各自負責入口；一般作品可不提供 `demoModule`。舊作品島網址保留相容導向。
+- **讓閱讀先開始。** 直接 `?view=projects` 或 `?view=project-travelops` 可延後下載 3D；展館先載封面，完整案例影片由使用者手動播放。互動 chunk 失敗時停用提交並提供重試。
+- **共用地形和導覽資料。** `world-config.ts`、`world-map.ts` 與導航邏輯共同支援場景定位、地面／水域及碰撞規則。過去尋路優化逐項核對 9,012 個節點的座標、連線與連通區；[量測範圍](V3_FINAL_OPTIMIZATION_PR_VALIDATION.md)限定該歷史版本。
+- **控制動畫生命週期。** 支援 Reduced Motion、動態暫停；開啟閱讀框、場景不可見或分頁隱藏時暫停更新，離頁釋放場景資源。
+- **雙語內容使用契約。** 對應案例共用 `translationKey`，來源版本與可見性一致。OpsFlow 案例不設定公開 ERP Demo，私人案例只保留已審核素材及工程摘要。
+
+## Testing & Results
+
+本次在 Windows／Node 24.22.1 重跑 `npm test`：**66／66 通過**；`npm run build`：**44 頁建置成功**。本次新增媒體的瀏覽器及文件檢查，見 [SHOWCASE_VALIDATION](docs/SHOWCASE_VALIDATION.md)。
+
+既有 [OpsFlow 整合驗證](docs/OPSFLOW_INTEGRATION.md)記錄首輪 188 項 E2E 中 180 通過，修正後重跑受影響的 24 項全數通過；沒有把兩輪描述成修正後完整重跑 188 項。[Project Harbor 驗收](docs/V3_PROJECT_HARBOR_VALIDATION.md)另保留互動規則、lazy loading、axe 及效能取樣限制。歷史效能數據不代表目前版本或真實裝置結果。
+
+```sh
+npm test
+npm run test:content
+npm run check:public
+npx playwright install chromium
+npm run verify
 ```
 
-共用島嶼設定把場景熱點對應到內容入口。 [場景、路徑與互動架構](docs/INTERACTIVE_WORLD.md) · [雙語內容維護](CONTENT_GUIDE.md)
+`verify` 包含 lint、格式、Astro check、TypeScript、Unit、雙語內容契約、build、SEO fixture 與四尺寸 Playwright。它不包含 `check:public`、`npm audit`、Lighthouse 或人工讀屏；[TESTING.md](TESTING.md)說明各自範圍。
 
-## 工程重點
+## Tech Stack
 
-- **讓畫面與路徑共用地形。** 島面、橋梁與障礙物資料同時支援場景定位和通行判斷。建立尋路圖前先算好固定障礙物及橋口淨空，避免每個取樣點重算。四組尋路圖共 9,012 個節點，優化前後的座標、連線與連通區逐項一致。 [效能取樣與路徑比對](V3_FINAL_OPTIMIZATION_PR_VALIDATION.md)
-- **減少 3D 初始化與背景繪製成本。** Three.js 場景按需載入，開啟閱覽室、場景離開可視範圍或分頁隱藏時暫停更新。本機 Chrome／SwiftShader 的場景首次可用時間中位數由 5.12 秒降至 3.12 秒，每版取樣三次。
-- **保留操作與閱讀狀態。** 原生 `dialog` 支援 Escape 與關閉後焦點返回，網址可分享並支援瀏覽器歷史。系統偏好減少動態效果時，預設停用自主動態。
+Astro 7.4.13、TypeScript strict、Content Collections、Markdown／MDX、Tailwind CSS 4、Three.js；Vitest、Playwright、axe、Lighthouse。確切解析版本以 `package-lock.json` 為準。
 
-## 開發與 AI 協作
+## Getting Started
 
-Tanci 設定求職展示方向、案例順序、雙語與無障礙需求，以及素材公開範圍。Codex 協助實作案例導航與證據索引、核對來源專案、執行代表性檢查並重構本頁。 [公開協作紀錄](docs/AI_COLLABORATION.md) · [V3 整合 PR](https://github.com/Cizing24/developer-portfolio/pull/12)
-
-## 快速啟動
-
-需要 Git、Node.js 24 與 npm。Windows 可使用 `npm.cmd`。
+需要 Git、Node.js 24 與 npm。Windows 可使用 `npm.cmd`／`npx.cmd`。
 
 ```sh
 git clone https://github.com/Cizing24/developer-portfolio.git
@@ -68,16 +89,24 @@ npm ci
 npm run dev
 ```
 
-開啟 [繁體中文](http://127.0.0.1:4321/zh-tw/) 或 [English](http://127.0.0.1:4321/en/)。可先從選單直接讀一篇案例，再從 BookFlow 或 AssetFlow 島開啟互動展示。
+開啟 [繁體中文](http://127.0.0.1:4321/zh-tw/) 或 [English](http://127.0.0.1:4321/en/)。首頁「查看作品」直接進入展館；`/zh-tw/projects/` 與 `/en/projects/` 可直接閱讀。
 
-執行 `npm run build` 產生靜態網站，再以 `npm run preview` 預覽建置結果。 [靜態建置與部署設定](DEPLOYMENT.md)
+```sh
+npm run build
+npm run preview
+```
 
-## 測試與技術文件
+[靜態建置與部署設定](DEPLOYMENT.md) · [互動網站維護](docs/INTERACTIVE_WORLD.md) · [前版七島更新紀錄](docs/LOCAL_ISLANDS_UPDATE.md)
 
-- [V3 本機驗證](docs/V3_LOCAL_VALIDATION.md) 與 [最終驗證報告](V3_FINAL_OPTIMIZATION_PR_VALIDATION.md) 記錄建置、尋路與模擬測試，以及桌機和手機尺寸的代表性操作檢查，包含鍵盤、Reduced Motion、WebGL 備援與 axe 抽查。
-- [PR #12 合併提交的 CI](https://github.com/Cizing24/developer-portfolio/actions/runs/42033004651) 在 E2E 步驟失敗。本機驗證範圍見上方報告。
-- `npm test` 跑單元測試。完整驗證前先執行 `npx playwright install chromium`，再執行 `npm run verify`。 [測試方式與各版本證據](TESTING.md)
+## Project Status
 
-## 目前範圍
+目前是雙語靜態作品集，四個案例中三個具前端互動展示。OpsFlow 只有案例與工程證據，沒有公開 ERP 登入服務。來源產品的權限、資料庫、金流與背景工作不在本站執行；棉麻屋的客戶畫面與部署網址維持私有。
 
-作品集為靜態網站。BookFlow 與 AssetFlow 的互動展示使用合成資料，來源產品的後端驗證由各自儲存庫提供。棉麻屋的客戶畫面與部署網址維持私有。效能數值限於報告中的本機環境，仍有場景 chunk 大小警示。
+未驗證 Safari／Firefox、真實手機、人工讀屏與正式負載。Three.js 場景仍有大於 500 kB 的 chunk 建置警示；本次只改善 README 與素材，不變更網站 UI 或部署設定。前版歷史效能資料保留在原文件，不能當作目前版本數據。
+
+<details>
+<summary>既有開發協作紀錄</summary>
+
+Tanci 設定求職展示方向、案例順序、雙語與無障礙需求，以及素材公開範圍。Codex 協助實作案例導航與證據索引、核對來源專案、執行代表性檢查並重構本頁。 [公開協作紀錄](docs/AI_COLLABORATION.md) · [V3 整合 PR](https://github.com/Cizing24/developer-portfolio/pull/12)
+
+</details>
