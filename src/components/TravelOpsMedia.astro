@@ -1,0 +1,348 @@
+---
+import { Image } from 'astro:assets';
+import type { Locale } from '../lib/i18n';
+import product from '../assets/travelops/travelops-product-mobile.png';
+import order from '../assets/travelops/travelops-order-progress.png';
+import ticket from '../assets/travelops/travelops-ticket-entitlements.png';
+import pos from '../assets/travelops/travelops-pos-summary.png';
+import posMobile from '../assets/travelops/travelops-pos-mobile.png';
+import reconciliation from '../assets/travelops/travelops-ops-reconciliation.png';
+import report from '../assets/travelops/travelops-ops-report.png';
+import overview from '../assets/travelops/architecture/travelops-system-overview.png';
+import overviewDark from '../assets/travelops/architecture/travelops-system-overview-dark.png';
+import flow from '../assets/travelops/architecture/travelops-transaction-flow.svg';
+
+interface Props {
+  locale: Locale;
+  section: 'video' | 'customer' | 'pos' | 'architecture' | 'operations';
+}
+const { locale, section } = Astro.props;
+const en = locale === 'en';
+const t = (zh: string, english: string) => (en ? english : zh);
+const groups = {
+  customer: [
+    {
+      src: product,
+      caption: t(
+        '手機票券詳情：效期起算、可售量與預估金額。',
+        'Mobile ticket details: validity, available stock and estimated total.',
+      ),
+    },
+    {
+      src: order,
+      caption: t(
+        '訂單進度：付款、開券與下一步；完整識別碼已遮蔽。',
+        'Order progress: payment, issuance and the next step; full identifiers are redacted.',
+      ),
+    },
+    {
+      src: ticket,
+      caption: t(
+        '場館權益：剩餘次數及狀態；QR 與核銷憑證已遮蔽。',
+        'Venue entitlements: remaining uses and status; QR and redemption credentials are redacted.',
+      ),
+    },
+  ],
+  pos: [
+    {
+      src: pos,
+      caption: t(
+        'POS 桌面：兩張單館票預估 NT$ 640，送出後由後端確認金額及庫存。',
+        'Desktop POS: two single-venue tickets estimated at NT$640; the server confirms price and stock on submission.',
+      ),
+    },
+    {
+      src: posMobile,
+      caption: t(
+        '390 px POS：商品、數量、模擬付款方式與即時摘要。',
+        '390-pixel POS: product, quantity, simulated payment method and live summary.',
+      ),
+    },
+  ],
+  operations: [
+    {
+      src: reconciliation,
+      caption: t(
+        '營運對帳：內部交易與 Mock 帳冊並列，差異與處置分開保存。',
+        'Reconciliation: internal transactions beside Mock statements, with separate findings and dispositions.',
+      ),
+    },
+    {
+      src: report,
+      caption: t(
+        '營運報表：依日期、通路、門市及供應商篩選；金額來自合成交易。',
+        'Operations reports: date, channel, store and supplier filters; amounts come from synthetic transactions.',
+      ),
+    },
+  ],
+};
+const shots =
+  section === 'customer' || section === 'pos' || section === 'operations'
+    ? groups[section]
+    : [];
+const fullSize = t(
+  '開啟原尺寸圖片（新分頁，可縮放）',
+  'Open full-size image (new tab, zoom available)',
+);
+---
+
+<div class="travelops-media" data-travelops-media={section}>
+  {section === 'video' && (
+    <>
+      <h2 id="travelops-demo">
+        {t(
+          '一筆票券交易的實際操作',
+          'Follow a ticket through the actual interface',
+        )}
+      </h2>
+      <p>
+        {t(
+          '74 秒，從旅客購票、付款與開券，到門市銷售及營運對帳。影片無音訊，繁中字幕已燒入畫面，可另外開啟英文字幕。',
+          'A 74-second walkthrough of customer checkout, payment and issuance, store sales and operations. The silent video has burned-in Traditional Chinese subtitles and an optional English track.',
+        )}
+      </p>
+      <video
+        controls
+        preload="metadata"
+        playsinline
+        width="1280"
+        height="720"
+        poster="/media/travelops/travelops-v3-demo-poster.png"
+        aria-label={t(
+          'TravelOps 合成資料操作影片',
+          'TravelOps walkthrough with synthetic data',
+        )}
+      >
+        <source src="/media/travelops/travelops-v3-demo.mp4" type="video/mp4" />
+        <track
+          kind="subtitles"
+          src="/media/travelops/travelops-v3-demo.en.vtt"
+          srclang="en"
+          label="English"
+          default={en}
+        />
+        {t(
+          '瀏覽器無法播放時，請閱讀下方文字分鏡。',
+          'If playback is unavailable, read the transcript below.',
+        )}
+      </video>
+      <details>
+        <summary>{t('閱讀影片文字分鏡', 'Read the video transcript')}</summary>
+        <ol>
+          <li>
+            {t(
+              '00:00–00:14：合成展示說明，瀏覽商品、場館、效期與預估金額。',
+              '00:00–00:14: synthetic-demo disclosure, catalog, venues, validity and estimated totals.',
+            )}
+          </li>
+          <li>
+            {t(
+              '00:14–00:33：建立訂單、重複模擬付款回呼、追蹤開券並查看遮蔽憑證後的場館權益。',
+              '00:14–00:33: create an order, simulate duplicate payment callbacks, follow issuance and inspect redacted entitlements.',
+            )}
+          </li>
+          <li>
+            {t(
+              '00:33–00:49：變更 POS 數量與付款方式，確認兩張票 NT$ 640。',
+              '00:33–00:49: change POS quantity and payment method; confirm two tickets at NT$640.',
+            )}
+          </li>
+          <li>
+            {t(
+              '00:49–01:14：追查工作、比較內外帳冊、篩選報表；結果不代表實際業績。',
+              '00:49–01:14: trace work, compare ledgers and filter reports; results do not represent real business performance.',
+            )}
+          </li>
+        </ol>
+      </details>
+    </>
+  )}
+  {shots.map(({ src, caption }) => (
+    <figure class:list={{ 'phone-shot': src.width === 390 }}>
+      <a
+        href={src.src}
+        target="_blank"
+        rel="noopener"
+        aria-label={`${caption} ${fullSize}`}
+      >
+        <Image
+          src={src}
+          alt={caption}
+          widths={src.width === 390 ? [390, 780] : [480, 850, 1440]}
+          sizes={
+            src.width === 390
+              ? '(max-width:480px) 90vw,390px'
+              : '(max-width:960px) 90vw,850px'
+          }
+          loading="lazy"
+          decoding="async"
+        />
+      </a>
+      <figcaption>
+        {caption}{' '}
+        <a href={src.src} target="_blank" rel="noopener">
+          {fullSize}
+        </a>
+      </figcaption>
+    </figure>
+  ))}
+  {section === 'architecture' && (
+    <>
+      <figure>
+        <a
+          href={overview.src}
+          target="_blank"
+          rel="noopener"
+          aria-label={`${t('系統總覽。', 'System overview.')} ${fullSize}`}
+        >
+          <Image
+            src={overview}
+            alt={t(
+              '旅客、POS、場館及營運經 Laravel 授權操作 MySQL；排程、Redis 與 Worker 處理本地 Mock 履約。',
+              'Customers, POS, venues and operations use authorized Laravel interfaces backed by MySQL; a scheduler, Redis and workers coordinate local Mock fulfillment.',
+            )}
+            widths={[850, 1400, 2800]}
+            sizes="(max-width:960px) 90vw,850px"
+            loading="lazy"
+          />
+        </a>
+        <figcaption>
+          {t(
+            '系統總覽：MySQL 保存持久工作，Redis 負責派送。圖中的 Mock 帳冊與業務紀錄同在 MySQL，分開保存。',
+            'System overview: MySQL owns durable work; Redis delivers it. Mock ledgers and business records are separate, within the same MySQL database.',
+          )}{' '}
+          <a href={overview.src} target="_blank" rel="noopener">
+            {fullSize}
+          </a>
+        </figcaption>
+      </figure>
+      <details>
+        <summary>
+          {t('查看深色架構圖', 'View the dark architecture diagram')}
+        </summary>
+        <a
+          href={overviewDark.src}
+          target="_blank"
+          rel="noopener"
+          aria-label={fullSize}
+        >
+          <Image
+            src={overviewDark}
+            alt={t(
+              '相同系統總覽的深色閱讀版本。',
+              'Dark reading variant of the same system overview.',
+            )}
+            widths={[850, 1400, 2800]}
+            sizes="(max-width:960px) 90vw,850px"
+            loading="lazy"
+          />
+        </a>
+      </details>
+      <p>
+        {t(
+          '交易流程摘要：共用鎖定庫存；付款與 Outbox 一起提交；Worker 先取得租約，再於訂單鎖外查詢／呼叫 Mock，以新交易確認。退款核准與核銷共用訂單鎖，退款確認後才撤銷權益並回補庫存。',
+          'Transaction summary: lock shared stock; commit payment and Outbox together; claim a lease, query/call Mock adapters outside order locks, then confirm in a new transaction. Refund approval and redemption share the order lock; confirmed refunds revoke entitlements and return stock.',
+        )}
+      </p>
+      <details>
+        <summary>
+          {t(
+            '展開交易流程圖（可捲動與開啟原圖）',
+            'Expand transaction flow (scroll or open full size)',
+          )}
+        </summary>
+        <p>
+          <a href={flow.src} target="_blank" rel="noopener">
+            {fullSize}
+          </a>
+        </p>
+        <div
+          class="flow-scroll"
+          tabindex="0"
+          role="region"
+          aria-label={t(
+            '交易流程圖，可水平與垂直捲動',
+            'Transaction flow, scroll horizontally and vertically',
+          )}
+        >
+          <img
+            src={flow.src}
+            width={flow.width}
+            height={flow.height}
+            loading="lazy"
+            alt={t(
+              '共用庫存、付款 Outbox、鎖外呼叫、新交易確認及退款與核銷互斥的完整流程。',
+              'Full flow of shared stock, payment Outbox, calls outside locks, confirmation transactions and refund/redemption coordination.',
+            )}
+          />
+        </div>
+      </details>
+    </>
+  )}
+  {shots.length > 0 && (
+    <p class="media-disclosure">
+      {t(
+        '實際介面，使用合成資料及本地 Mock 整合。點擊圖片可在新分頁放大閱讀。',
+        'Actual interface with synthetic data and local Mock integrations. Open any image in a new tab to zoom.',
+      )}
+    </p>
+  )}
+</div>
+
+{section === 'video' && <style is:inline>
+  .travelops-media {
+    min-width: 0;
+  }
+  .travelops-media figure {
+    margin: 40px 0;
+  }
+  .travelops-media .phone-shot {
+    max-width: 390px;
+    margin-inline: auto;
+  }
+  .travelops-media img {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line);
+  }
+  .travelops-media video {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    background: var(--text);
+  }
+  .travelops-media figcaption,
+  .travelops-media .media-disclosure {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+  .travelops-media figcaption a {
+    display: inline-block;
+    padding-block: 8px;
+  }
+  .travelops-media details {
+    border-block-end: 1px solid var(--line);
+    margin-block: 24px;
+    padding-block: 12px;
+  }
+  .travelops-media summary {
+    min-height: 44px;
+    padding-block: 8px;
+    color: var(--text);
+  }
+  .travelops-media .flow-scroll {
+    max-height: 70vh;
+    overflow: auto;
+    background: white;
+  }
+  .travelops-media .flow-scroll img {
+    width: 1000px;
+    max-width: none;
+  }
+  .travelops-media .flow-scroll:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
+  }
+</style>}

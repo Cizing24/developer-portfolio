@@ -843,6 +843,10 @@
     padding: 9px 11px;
     max-width: 128px;
   }
+  /* Wrapped English labels need clearance below the two workflow controls. */
+  .studio[data-island='assetflow'] [data-station='2'] {
+    margin-top: 12px;
+  }
 }
 @media (max-height: 500px) and (orientation: landscape) {
   .world-header {
@@ -1280,5 +1284,24 @@
 @media (max-width: 350px) {
   .showcase-fields {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.harbor-shortcut {
+  position: absolute;
+  z-index: 5;
+  left: 1rem;
+  top: 5rem;
+  padding: 0.65rem 1rem;
+  background: #f4f1e6;
+  color: #193a3e;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .harbor-shortcut {
+    top: 8.5rem;
+    max-width: calc(100% - 2rem);
   }
 }

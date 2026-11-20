@@ -1,0 +1,41 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:05.000
+Independent portfolio demo | Synthetic data and Mock integrations
+
+2
+00:00:05.000 --> 00:00:14.000
+Browse tickets, venues, validity and estimated totals.
+
+3
+00:00:14.000 --> 00:00:28.480
+Place an order, simulate duplicate payment callbacks and follow issuance.
+
+4
+00:00:28.480 --> 00:00:33.480
+Inspect venue entitlements; QR and redemption credentials are redacted.
+
+5
+00:00:33.480 --> 00:00:42.480
+Change POS quantity and payment method; check the live summary.
+
+6
+00:00:42.480 --> 00:00:49.160
+Confirm two tickets at NT$640; server pricing and shared stock remain authoritative.
+
+7
+00:00:49.160 --> 00:00:54.160
+Operations traces issuance work and failures.
+
+8
+00:00:54.160 --> 00:01:04.360
+Compare internal and Mock ledgers, with differences and disposition controls.
+
+9
+00:01:04.360 --> 00:01:09.360
+Filter operational reports; these are synthetic results, not real business performance.
+
+10
+00:01:09.360 --> 00:01:14.360
+Shared stock, Outbox and refund coordination | No production deployment

@@ -1,3 +1,13 @@
+# 2026-11-12 TravelOps 維護補充
+
+TravelOps 的 `translationKey` 為 `travelops`，來源原始碼維持私有，`visibility: private` 不隱藏公開案例。沿用現有 schema，不加入私人 repository 或未驗證的 demo 連結。
+
+共用介紹的 `ProjectId` 包含三個專案；`IslandProjectId` 只包含 BookFlow／AssetFlow。`StudioReader` 的作品總覽列出三案，但只渲染既有作品島的案例與模擬。TravelOps 以普通連結前往 `/zh-tw/projects/travelops/` 或 `/en/projects/travelops/`，不將完整媒體放進首頁隱藏的 dialog。
+
+`TravelOpsMedia.astro` 提供影片、旅客、POS、架構及營運五組展示。依現有案例順序先渲染影片組，該組同時輸出本案例共用樣式一次；其餘組共用樣式，首頁不輸出這份 CSS。PNG 由 Astro Image 產生尺寸與 WebP，原圖連結保留可放大版本；可信 SVG 僅用作圖片。影片為已審核 MP4，英文 WebVTT 由同批 SRT 轉換並檢查十段時間碼，影片本身不重製。
+
+網站維持原有暖紙主題；深色總覽以原生 details 提供獨立閱讀版本。長流程 SVG 放在可鍵盤捲動區域，另附文字摘要與原尺寸連結。擴充時保留雙語固定錨點與案例頁語言切換。
+
 # 2026-11-04 維護補充
 
 現行案例由 `ProjectIntroduction.astro` 的簡介與雙語 MDX 工程內容組成，`ProjectWorkflow.astro` 使用已審核的合成資料截圖。`WebsiteCases.astro` 共用實際網站經驗摘要，`SkillsIndex.astro` 將能力連到案例與筆記。新增內容須同時維護兩語，不增加產品後端或虛構操作展示。

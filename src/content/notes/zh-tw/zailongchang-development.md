@@ -1,5 +1,6 @@
 ---
 locale: zh-tw
+section: journal
 translationKey: zailongchang-development
 title: 在隆昌：讓地方內容有可維護的公開入口
 description: 從已上線的在隆昌網站，整理地方品牌、文化內容與展覽的資訊架構，以及發布、素材授權和長期維護的開發取捨。

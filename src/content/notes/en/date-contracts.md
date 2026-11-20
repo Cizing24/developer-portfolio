@@ -45,8 +45,8 @@ Field validation cannot replace concurrency control. Concurrency control cannot 
 
 The source project records regression coverage for date conversion, Taiwan midnight and offboarding. This update did not rerun AssetFlow tests or assume historical wrong dates can be corrected automatically; that requires external personnel facts. The repository was confirmed Public on 2026-11-04.
 
-- [Shared date utilities](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/packages/shared/src/dates.ts)
-- [Date regression tests](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/test/dates.test.ts)
-- [Handover transaction](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/api/src/services/lifecycle.ts) and [revision-specific CI](https://github.com/Cizing24/assetflow-itam/actions/runs/39593727102)
+- Shared date utilities (private source)
+- Date regression tests (private source)
+- Handover transaction (private source) and revision-specific CI (private source)
 
 [Read the AssetFlow case study](/en/projects/assetflow/)

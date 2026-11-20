@@ -1,22 +1,26 @@
 ---
 import { getCollection, render } from 'astro:content';
-import { Image } from 'astro:assets';
 import { localeFromPath, entrySlug, localizedPath } from '../lib/i18n';
 import { sortProjects, publishedNotes } from '../lib/content';
 import { profile } from '../config';
+import TravelOpsDemo from './TravelOpsDemo.astro';
+import ProjectHarbor from './ProjectHarbor.astro';
 import ProjectShowcase from './ProjectShowcase.astro';
 import EngineeringLab from './EngineeringLab.astro';
 import TableOfContents from './TableOfContents.astro';
 import SkillsIndex from './SkillsIndex.astro';
 import WebsiteCases from './WebsiteCases.astro';
-import { projectView } from '../lib/world-config';
-import type { ProjectId } from '../lib/project-introductions';
+import { isProjectIsland, projectView } from '../lib/world-config';
+import type { IslandProjectId as ProjectId } from '../lib/project-introductions';
 const locale = localeFromPath(Astro.url.pathname);
 const en = locale === 'en';
+const allProjects = sortProjects(
+  await getCollection('projects', (p) => p.data.locale === locale),
+);
 const projects = await Promise.all(
-  sortProjects(
-    await getCollection('projects', (p) => p.data.locale === locale),
-  ).map(async (entry) => ({ entry, ...(await render(entry)) })),
+  allProjects
+    .filter((entry) => isProjectIsland(entrySlug(entry.id)))
+    .map(async (entry) => ({ entry, ...(await render(entry)) })),
 );
 const notes = await Promise.all(
   publishedNotes(
@@ -59,8 +63,8 @@ const notes = await Promise.all(
       <div class="prose">
         <p>
           {en
-            ? 'Portfolio, Engineering Lab, Contact and CIZING open directly. BookFlow, AssetFlow and Zailongchang have their own places to explore.'
-            : '作品集、工程實驗室、聯絡和 CIZING 可直接閱讀。BookFlow、AssetFlow 和在隆昌各有可探索的場景。'}
+            ? 'Main Hall, Engineering Lab, Contact and CIZING open directly. Project Harbor has reusable project exhibits. Community has its own harbor.'
+            : '大展廳、工程實驗室、聯絡和 CIZING 可直接閱讀。作品展館使用共用展台，在隆昌保留獨立港口。'}
         </p>
         <p>
           {en
@@ -86,36 +90,7 @@ const notes = await Promise.all(
     >
       <h2>{en ? 'Portfolio' : '作品集'}</h2>
 
-      <div class="reader-project-grid">
-        {projects.map(({ entry }) => (
-          <article>
-            <Image
-              src={entry.data.cover}
-              alt={entry.data.coverAlt}
-              width={680}
-              loading="lazy"
-            />
-            <p class="eyebrow">{entry.data.category}</p>
-            <h3>{entry.data.title}</h3>
-            <p>{entry.data.description}</p>
-            <div class="reader-actions">
-              <button type="button" data-enter-world={entrySlug(entry.id)}>
-                {en ? 'Enter the world' : '進入專案場景'}
-              </button>
-              <a
-                class="text-link"
-                data-open={projectView(
-                  entrySlug(entry.id) as ProjectId,
-                  '-case',
-                )}
-                href={localizedPath(locale, `projects/${entrySlug(entry.id)}`)}
-              >
-                {en ? 'Read case study' : '閱讀完整案例'}
-              </a>
-            </div>
-          </article>
-        ))}
-      </div>
+      <ProjectHarbor entries={allProjects} {locale} />
       <WebsiteCases locale={locale} />
     </section>
     {projects.map(({ entry, Content }) => (
@@ -131,7 +106,7 @@ const notes = await Promise.all(
           class="text-link"
           href={
             localizedPath(locale) +
-            `?island=${entrySlug(entry.id)}&view=project-${entrySlug(entry.id)}`
+            `?island=harbor&view=project-${entrySlug(entry.id)}`
           }
           data-open={projectView(entrySlug(entry.id) as ProjectId)}
         >
@@ -148,6 +123,7 @@ const notes = await Promise.all(
     {projects.map(({ entry }) => (
       <ProjectShowcase {entry} {locale} />
     ))}
+    <TravelOpsDemo {locale} />
     <section
       data-view-panel="journal"
       data-title={en ? 'Engineering Lab' : 'Engineering Lab 工程實驗室'}
@@ -155,7 +131,41 @@ const notes = await Promise.all(
     >
       <p class="eyebrow">CIZING / ENGINEERING LAB</p>
       <h2>{en ? 'Engineering Lab' : '工程實驗室'}</h2>
-      <EngineeringLab locale={locale} notes={notes.map(({ entry }) => entry)} />
+      <EngineeringLab
+        locale={locale}
+        notes={notes.map(({ entry }) => entry)}
+        engineeringOnly
+      />
+    </section>
+    <section
+      data-view-panel="field-notes"
+      data-title={en ? 'Field Notes' : '開發手記'}
+      hidden
+    >
+      <h2>{en ? 'Field Notes' : '開發手記'}</h2>
+      <p class="reader-lead">
+        {en
+          ? 'Notes on collaboration, client workflows and building a maintainable local website. Technical constraints and test evidence live in Engineering Lab.'
+          : '記錄協作方式、接案流程與地方網站的維護思考。技術約束與測試證據另放在工程實驗室。'}
+      </p>
+      {notes
+        .filter(({ entry }) => entry.data.section === 'journal')
+        .map(({ entry }) => (
+          <article>
+            <h3>
+              <a
+                href={localizedPath(locale, `notes/${entrySlug(entry.id)}`)}
+                data-open={`note-${entrySlug(entry.id)}`}
+              >
+                {entry.data.title}
+              </a>
+            </h3>
+            <p>{entry.data.description}</p>
+            <p>
+              {entry.data.category} · {entry.data.publishedAt}
+            </p>
+          </article>
+        ))}
     </section>
     {notes.map(({ entry, Content, headings }) => (
       <article
@@ -165,10 +175,18 @@ const notes = await Promise.all(
       >
         <a
           class="text-link"
-          data-open="journal"
+          data-open={
+            entry.data.section === 'journal' ? 'field-notes' : 'journal'
+          }
           href={localizedPath(locale, 'notes')}
         >
-          {en ? 'Back to Engineering Lab' : '回工程實驗室'}
+          {entry.data.section === 'journal'
+            ? en
+              ? 'Back to Field Notes'
+              : '回開發手記'
+            : en
+              ? 'Back to Engineering Lab'
+              : '回工程實驗室'}
         </a>
         <p class="eyebrow">FIELD NOTE / {entry.data.category}</p>
         <h2>{entry.data.title}</h2>

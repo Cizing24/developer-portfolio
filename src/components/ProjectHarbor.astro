@@ -1,0 +1,164 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import { entrySlug, localizedPath, type Locale } from '../lib/i18n';
+interface Props {
+  entries: CollectionEntry<'projects'>[];
+  locale: Locale;
+}
+const { entries, locale } = Astro.props;
+const en = locale === 'en';
+---
+
+<div data-harbor>
+  <p>
+    {en
+      ? 'Choose a project, try its workflow, then inspect the evidence.'
+      : '選擇作品、操作流程，再閱讀工程證據。'}
+  </p>
+  <label>
+    {en ? 'Project group' : '作品分類'}
+    <select data-harbor-filter>
+      <option value="all">{en ? 'All projects' : '全部作品'}</option>
+      <option value="featured">Featured Projects</option>
+      <option value="other">{en ? 'Other Projects' : '其他作品'}</option>
+    </select>
+  </label>
+  <div class="harbor-rows">
+    {entries.map((entry) => (
+      <article data-harbor-entry data-featured={String(entry.data.featured)}>
+        <Image
+          src={entry.data.cover}
+          alt={entry.data.coverAlt}
+          widths={[320, 640]}
+          sizes="(max-width: 600px) 85vw, 260px"
+          loading="lazy"
+        />
+        <div>
+          <h3>{entry.data.title}</h3>
+          <p>{entry.data.description}</p>
+          <p>{entry.data.tags.join(' · ')}</p>
+          <p>
+            {entry.data.status} ·{' '}
+            {entry.data.featured
+              ? 'Featured'
+              : en
+                ? 'Other project'
+                : '一般作品'}
+          </p>
+          <div class="reader-actions">
+            {entry.data.demoModule && (
+              <a
+                href={
+                  localizedPath(locale) +
+                  `?view=project-${entry.data.demoModule}`
+                }
+                data-open={`project-${entry.data.demoModule}`}
+              >
+                {en ? 'Try interactive demo' : '操作互動展示'}
+              </a>
+            )}
+            <a
+              data-native-case
+              data-open={
+                entry.data.demoModule && entry.data.demoModule !== 'travelops'
+                  ? `project-${entry.data.demoModule}-case`
+                  : undefined
+              }
+              href={localizedPath(locale, `projects/${entrySlug(entry.id)}`)}
+            >
+              {en ? 'Read case study' : '閱讀完整案例'}
+            </a>
+          </div>
+        </div>
+      </article>
+    ))}
+  </div>
+  <div class="reader-actions">
+    <button type="button" data-harbor-prev>
+      {en ? 'Previous projects' : '上一頁作品'}
+    </button>
+    <p role="status" data-harbor-status></p>
+    <button type="button" data-harbor-next>
+      {en ? 'Next projects' : '下一頁作品'}
+    </button>
+  </div>
+  <p>
+    {en
+      ? 'Three exhibits per page. A new project only needs content and metadata.'
+      : '每頁三個展台；新增作品只需內容與 Metadata。'}
+  </p>
+</div>
+<script>
+  document.querySelectorAll<HTMLElement>('[data-harbor]').forEach((root) => {
+    const entries = [
+      ...root.querySelectorAll<HTMLElement>('[data-harbor-entry]'),
+    ];
+    const filter = root.querySelector<HTMLSelectElement>(
+      '[data-harbor-filter]',
+    )!;
+    const prev = root.querySelector<HTMLButtonElement>('[data-harbor-prev]')!;
+    const next = root.querySelector<HTMLButtonElement>('[data-harbor-next]')!;
+    let page = 0;
+    function update() {
+      const selected = entries.filter(
+        (e) =>
+          filter.value === 'all' ||
+          e.dataset.featured === String(filter.value === 'featured'),
+      );
+      entries.forEach(
+        (e) => (e.hidden = !selected.slice(page * 3, page * 3 + 3).includes(e)),
+      );
+      prev.disabled = page === 0;
+      next.disabled = (page + 1) * 3 >= selected.length;
+      root.querySelector('[data-harbor-status]')!.textContent =
+        `${selected.length} · ${page + 1} / ${Math.max(1, Math.ceil(selected.length / 3))}`;
+    }
+    filter.addEventListener('change', () => {
+      page = 0;
+      update();
+    });
+    prev.addEventListener('click', () => {
+      page--;
+      update();
+    });
+    next.addEventListener('click', () => {
+      page++;
+      update();
+    });
+    update();
+  });
+</script>
+<style>
+  .harbor-rows article {
+    display: grid;
+    grid-template-columns: minmax(120px, 260px) 1fr;
+    gap: 1.5rem;
+    padding: 1.75rem 0;
+    border-bottom: 1px solid currentColor;
+  }
+  img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/10;
+    object-fit: cover;
+    border-radius: 12px;
+  }
+  h3 {
+    margin-top: 0;
+  }
+  select,
+  button {
+    min-height: 44px;
+    max-width: 100%;
+  }
+  .reader-actions {
+    flex-wrap: wrap;
+  }
+  @media (max-width: 600px) {
+    .harbor-rows article {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+</style>

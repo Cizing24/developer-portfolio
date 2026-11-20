@@ -3,6 +3,7 @@ import { getCollection, render, type CollectionEntry } from 'astro:content';
 import { Image } from 'astro:assets';
 import Base from '../../../layouts/Base.astro';
 import { entrySlug, localizedPath } from '../../../lib/i18n';
+import { isProjectIsland } from '../../../lib/world-config';
 export async function getStaticPaths() {
   return (await getCollection('projects')).map((project) => ({
     params: { locale: project.data.locale, slug: entrySlug(project.id) },
@@ -23,6 +24,9 @@ const ids = [
   `${slug}-purpose`,
   `${slug}-features`,
   `${slug}-architecture`,
+  ...(slug === 'travelops'
+    ? ['travelops-demo', 'engineering-decisions', 'verification']
+    : []),
 ];
 ---
 
@@ -37,10 +41,21 @@ const ids = [
       <p class="eyebrow">PROJECT / {data.category}</p>
       <h1>{data.title}</h1>
       <p>{data.description}</p>
-      <a class="text-link" href={localizedPath(locale) + `?studio=${slug}`}>
-        {en
-          ? 'Explore this project in the islands'
-          : '在互動群島中探索這個專案'}
+      <a
+        class="text-link"
+        href={
+          isProjectIsland(slug)
+            ? localizedPath(locale) + `?studio=${slug}`
+            : localizedPath(locale, 'projects')
+        }
+      >
+        {isProjectIsland(slug)
+          ? en
+            ? 'Explore this project in the islands'
+            : '在互動群島中探索這個專案'
+          : en
+            ? 'All projects'
+            : '作品總覽'}
       </a>
     </section>
     <figure class="case-cover">
@@ -55,6 +70,13 @@ const ids = [
         {en
           ? 'Actual product screen with synthetic test data.'
           : '實際產品畫面，使用合成測試資料。'}
+        {slug === 'travelops' && (
+          <a href={data.cover.src} target="_blank" rel="noopener">
+            {en
+              ? ' Open full-size catalog (new tab)'
+              : ' 開啟原尺寸目錄（新分頁）'}
+          </a>
+        )}
       </figcaption>
     </figure>
     <div class="prose engineering-case">

@@ -13,7 +13,11 @@ const slug = entrySlug(project.id);
 const href = localizedPath(data.locale, `projects/${slug}`);
 ---
 
-<article class="project-card" data-tags={JSON.stringify(data.tags)}>
+<article
+  class="project-card"
+  data-tags={JSON.stringify(data.tags)}
+  data-featured={String(data.featured)}
+>
   <div class="project-top mono">
     <span>FIELD STUDY / 0{index + 1}</span>
     <span>{data.visibility === 'private' ? copy.private : copy.public}</span>
@@ -31,9 +35,7 @@ const href = localizedPath(data.locale, `projects/${slug}`);
       sizes="(max-width: 760px) 90vw, 55vw"
       loading="lazy"
     />
-    <span class="picture-stamp mono">
-      {slug === 'assetflow' ? 'ASSET LIFECYCLE' : 'MULTI-TENANT BOOKING'}
-    </span>
+    <span class="picture-stamp mono">{data.category}</span>
   </a>
   <div class="project-meta">
     <span class="eyebrow">{data.category}</span>
@@ -54,5 +56,20 @@ const href = localizedPath(data.locale, `projects/${slug}`);
   <a class="text-link" href={href}>
     {copy.case}
   </a>
+  {data.demoModule && (
+    <a
+      class="text-link"
+      href={localizedPath(data.locale) + `?view=project-${data.demoModule}`}
+    >
+      {data.locale === 'en' ? 'Try interactive demo' : '操作互動展示'}
+    </a>
+  )}
+  <p>
+    {data.featured
+      ? 'Featured Project'
+      : data.locale === 'en'
+        ? 'Other Project'
+        : '一般作品'}
+  </p>
   <p class="project-note">{copy.notDeployed}</p>
 </article>

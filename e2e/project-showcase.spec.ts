@@ -8,7 +8,11 @@ async function enter(page: Page, island: string) {
   await expect(studio).toHaveAttribute('data-renderer', 'ready', {
     timeout: 20000,
   });
-  await page.locator(`[data-portal=${island}]`).click();
+  await page
+    .locator(
+      `[data-portal=${island === 'bookflow' || island === 'assetflow' ? 'harbor' : island}]`,
+    )
+    .click();
   await expect(studio).toHaveAttribute('data-traveling', 'false');
 }
 
@@ -46,11 +50,13 @@ test('BookFlow facility opens the booking desk and preserves history across sect
   expect(
     loadedImages.some((url) => /bookflow-calendar|bookflow-booking/.test(url)),
   ).toBe(false);
-  const station = page.locator('[data-station="0"]');
+  const station = page
+    .locator('[data-station]')
+    .filter({ hasText: 'BookFlow' });
   if (info.project.name === 'mobile') await station.tap();
   else {
     await page.screenshot({ path: info.outputPath('bookflow-island.png') });
-    await clickModel(page, 0);
+    await clickModel(page, Number(await station.getAttribute('data-station')));
   }
 
   const reader = page.locator('[data-reader]');
@@ -138,12 +144,17 @@ test('AssetFlow inventory and handover update the same state and audit log', asy
     'ready',
     { timeout: 20000 },
   );
-  const station = page.locator('[data-station="1"]');
+  const station = page
+    .locator('[data-station]')
+    .filter({ hasText: 'AssetFlow' });
   if (info.project.name === 'mobile') await station.tap();
   else {
     await page.screenshot({ path: info.outputPath('assetflow-island.png') });
-    await clickModel(page, 1);
+    await clickModel(page, Number(await station.getAttribute('data-station')));
   }
+  await reader
+    .getByRole('link', { name: 'Run a handover', exact: true })
+    .click();
   await expect(page).toHaveURL(/view=project-assetflow-handover/);
   const form = assets.locator('form');
   const apply = form.getByRole('button', { name: 'Apply equipment change' });
@@ -199,7 +210,7 @@ test('AssetFlow inventory and handover update the same state and audit log', asy
   await page.locator('[data-menu-toggle]').click();
   await page
     .locator(
-      '[data-index-details=assetflow] [data-open=project-assetflow-handover]',
+      '[data-index-details=harbor] [data-open=project-assetflow-handover]',
     )
     .click();
   await expect(page).toHaveURL(/view=project-assetflow-handover/);

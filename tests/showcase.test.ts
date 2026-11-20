@@ -4,7 +4,10 @@ import {
   createAssetDemo,
   createBookingDemo,
 } from '../src/lib/showcase-simulations';
-import { islandItems, projectShowcaseView } from '../src/lib/world-config';
+import {
+  projectFacilities,
+  projectShowcaseView,
+} from '../src/lib/world-config';
 
 it('updates availability, rejects duplicate reservations and resets booking state', () => {
   const demo = createBookingDemo();
@@ -49,7 +52,9 @@ it('validates asset transitions and clears all changes on reset', () => {
 it('routes the shared facilities and both legacy topic aliases', () => {
   for (const id of ['bookflow', 'assetflow'] as const) {
     expect(
-      islandItems(id, 'en').map(({ view }) => projectShowcaseView(view)),
+      projectFacilities[id].map(({ suffix }) =>
+        projectShowcaseView(`project-${id}${suffix}`),
+      ),
     ).toEqual(
       ['demo', 'secondary', 'architecture'].map((area) => ({ id, area })),
     );

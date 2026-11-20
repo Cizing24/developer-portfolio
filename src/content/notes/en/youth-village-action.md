@@ -1,5 +1,6 @@
 ---
 locale: en
+section: journal
 translationKey: youth-village-action
 title: Youth Village Cultural Action — my personal application record
 description: A personal proposal about local knowledge and youth participation in Longchang, with clear boundaries between the live website, an application and completed work.

@@ -1,3 +1,18 @@
+# Developer Portfolio V3 · Project Harbor
+
+本輪改為固定功能分區：Main Hall、Project Harbor、Engineering Lab、Notes、Contact、CIZING 與 Community。作品由 Astro Content Collections 決定，新增作品不增加島嶼。TravelOps、BookFlow、AssetFlow 提供可操作的前端合成資料展示，完整案例另外提供工程證據。
+
+- 首頁左上「查看作品」直接開啟作品展館；`/zh-tw/projects/` 與 `/en/projects/` 提供不依賴 3D 的閱讀入口。
+- 展館每頁三件，可依 Featured／其他作品篩選；`featured`、`order` 與 `demoModule` 控制入口。
+- `?view=project-travelops`、`?view=project-bookflow`、`?view=project-assetflow` 直接開啟展示並延後下載 3D。
+- 舊 `island=bookflow`、`island=assetflow`、`studio` 連結仍可回到 Project Harbor，既有 `view` 還原對應展示。
+- 保留原生 dialog、四時段、CIZING、船隻／人物通行、Reduced Motion、WebGL fallback 與 no-JS 案例閱讀。
+- AssetFlow 與 TravelOps 來源維持私人，公開內容只包含已審核素材及工程摘要。
+
+完整模型、操作與維護教學見 [V3 架構](docs/V3_PROJECT_HARBOR.md)。本輪實測紀錄見 [V3 驗收](docs/V3_PROJECT_HARBOR_VALIDATION.md)。以下七島更新說明保留為前版歷史紀錄，舊作品專屬島描述已由上方功能分區取代。
+
+---
+
 # Developer Portfolio · 專案群島
 
 CIZING 的雙語前端作品集。訪客可以從七座 3D 群島探索專案與工程筆記，也可以直接從選單閱讀案例，查看實際產品畫面、設計取捨與對應版本的實作及測試證據。

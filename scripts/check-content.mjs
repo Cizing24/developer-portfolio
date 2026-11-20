@@ -14,7 +14,7 @@ for (const collection of ['projects', 'notes']) {
       const id = `${locale}/${key}`;
       assert.ok(!pairs.has(id), `Duplicate translation: ${id}`);
       pairs.set(id, body);
-      if (collection === 'projects') {
+      if (collection === 'projects' && /^demoModule: /m.test(body)) {
         const intro = (topic) =>
           body.indexOf(
             `<ProjectIntroduction project="${key}" locale="${locale}" topic="${topic}" />`,
@@ -42,6 +42,13 @@ for (const collection of ['projects', 'notes']) {
     const [locale, key] = id.split('/');
     const other = pairs.get(`${locale === 'en' ? 'zh-tw' : 'en'}/${key}`);
     assert.ok(other, `Missing complete translation: ${id}`);
+    if (collection === 'notes') {
+      assert.equal(
+        body.match(/^section: (.+)$/m)?.[1] ?? 'engineering',
+        other.match(/^section: (.+)$/m)?.[1] ?? 'engineering',
+        `Mismatched note section: ${id}`,
+      );
+    }
     if (collection === 'projects') {
       assert.equal(
         body.match(/^sourceCommit: (.+)$/m)?.[1],

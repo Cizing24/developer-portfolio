@@ -4,8 +4,9 @@ import { entrySlug, localizedPath, t, type Locale } from '../lib/i18n';
 interface Props {
   locale: Locale;
   notes: CollectionEntry<'notes'>[];
+  engineeringOnly?: boolean;
 }
-const { locale, notes } = Astro.props;
+const { locale, notes, engineeringOnly = false } = Astro.props;
 const en = locale === 'en';
 const copy = t(locale);
 const noteItem = (entry: CollectionEntry<'notes'>) => ({
@@ -26,7 +27,7 @@ const caseItem = (
   tags,
   href: localizedPath(locale, `projects/${project}`) + section,
 });
-const groups = [
+const allGroups = [
   {
     id: 'frontend',
     title: en ? 'Frontend engineering' : '前端工程',
@@ -57,11 +58,7 @@ const groups = [
     id: 'data',
     title: en ? 'Backend & data' : '後端與資料庫',
     items: notes
-      .filter((note) =>
-        ['booking-consistency', 'date-contracts'].includes(
-          note.data.translationKey,
-        ),
-      )
+      .filter((note) => note.data.section === 'engineering')
       .map(noteItem),
   },
   {
@@ -124,6 +121,9 @@ const groups = [
       .map(noteItem),
   },
 ];
+const groups = engineeringOnly
+  ? allGroups.filter((group) => !['ai', 'field'].includes(group.id))
+  : allGroups;
 const tags = [
   ...new Set(groups.flatMap(({ items }) => items.flatMap(({ tags }) => tags))),
 ].sort();

@@ -1,25 +1,26 @@
 import type { Locale } from './i18n';
-import type { ProjectId } from './project-introductions';
+import type { IslandProjectId as ProjectId } from './project-introductions';
 export type IslandId =
-  'portfolio' | ProjectId | 'journal' | 'contact' | 'about' | 'zailongchang';
+  | 'portfolio'
+  | 'harbor'
+  | 'lab'
+  | 'journal'
+  | 'contact'
+  | 'about'
+  | 'zailongchang';
 export type DayPhase = 'dawn' | 'noon' | 'sunset' | 'night';
 export const dayPhases: DayPhase[] = ['dawn', 'noon', 'sunset', 'night'];
 export const islands: { id: IslandId; zh: string; en: string; view: string }[] =
   [
-    { id: 'portfolio', zh: '作品集', en: 'Portfolio', view: 'projects' },
+    { id: 'portfolio', zh: '大展廳', en: 'Main Hall', view: 'projects' },
     {
-      id: 'bookflow',
-      zh: 'BookFlow',
-      en: 'BookFlow',
-      view: 'project-bookflow',
+      id: 'harbor',
+      zh: '作品展館',
+      en: 'Project Harbor',
+      view: 'projects',
     },
-    {
-      id: 'assetflow',
-      zh: 'AssetFlow',
-      en: 'AssetFlow',
-      view: 'project-assetflow',
-    },
-    { id: 'journal', zh: '筆記', en: 'Notes', view: 'journal' },
+    { id: 'lab', zh: '工程實驗室', en: 'Engineering Lab', view: 'journal' },
+    { id: 'journal', zh: '開發手記', en: 'Field Notes', view: 'field-notes' },
     { id: 'contact', zh: '聯絡', en: 'Contact', view: 'contact' },
     { id: 'about', zh: 'CIZING', en: 'CIZING', view: 'about' },
     {
@@ -35,7 +36,8 @@ export function directIslandView(id: IslandId) {
     id === 'portfolio' ||
     id === 'about' ||
     id === 'contact' ||
-    id === 'journal'
+    id === 'journal' ||
+    id === 'lab'
   )
     return islands.find((island) => island.id === id)!.view;
 }
@@ -108,6 +110,10 @@ export const projectFacilities = {
   ],
 } as const;
 
+export function isProjectIsland(id: string): id is ProjectId {
+  return id === 'bookflow' || id === 'assetflow';
+}
+
 export function projectView(id: ProjectId, suffix = '') {
   return `project-${id}${suffix}`;
 }
@@ -130,12 +136,20 @@ export interface IslandItem {
   view: string;
 }
 export function islandItems(id: IslandId, locale: Locale): IslandItem[] {
-  if (id === 'bookflow' || id === 'assetflow')
-    return projectFacilities[id].map((facility) => ({
-      title: locale === 'en' ? facility.en : facility.zh,
-      view: projectView(id, facility.suffix),
-    }));
-  if (id === 'journal') return [{ title: 'Engineering Lab', view: 'journal' }];
+  if (id === 'harbor')
+    return [
+      {
+        title: locale === 'en' ? 'Choose projects' : '選擇作品',
+        view: 'projects',
+      },
+    ];
+  if (id === 'journal')
+    return [
+      {
+        title: locale === 'en' ? 'Field Notes' : '開發手記',
+        view: 'field-notes',
+      },
+    ];
   if (id === 'zailongchang')
     return [
       {

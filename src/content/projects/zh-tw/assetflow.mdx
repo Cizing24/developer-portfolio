@@ -7,10 +7,10 @@ category: IT ASSET MANAGEMENT
 tags: [Vue 3, TypeScript, Pinia, Fastify, PostgreSQL, Prisma]
 highlights: ['整理設備清冊', '辦理領用與歸還', '追蹤離職交接']
 status: 已實作・隔離展示
-visibility: public
-repository: https://github.com/Cizing24/assetflow-itam
+visibility: private
+demoModule: assetflow
 featured: true
-order: 1
+order: 2
 sourceCommit: 7a698fbcd8bbffb4e46ec434a310690973aab77a
 reviewedAt: '2026-11-04'
 cover: ../../../assets/assetflow.png
@@ -48,14 +48,14 @@ import ProjectWorkflow from '../../../components/ProjectWorkflow.astro';
 <details id="engineering-evidence">
 <summary>閱讀實作、測試與 CI 證據</summary>
 
-- [Vue 領還表單](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/src/pages/Assignments.vue)與 [Pinia 登入狀態](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/web/src/stores/auth.ts)
-- [生命週期交易](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/api/src/services/lifecycle.ts)與 [PostgreSQL 整合測試](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/apps/api/test/integration.test.ts)
-- [日期契約修正 Commit](https://github.com/Cizing24/assetflow-itam/commit/7a698fbcd8bbffb4e46ec434a310690973aab77a)與[工程筆記](/zh-tw/notes/date-contracts/)
-- [該版本成功的 GitHub Actions](https://github.com/Cizing24/assetflow-itam/actions/runs/39593727102)與 [TESTING](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/TESTING.md)
+- Vue 領還表單（私人來源）與 Pinia 登入狀態（私人來源）
+- 生命週期交易（私人來源）與 PostgreSQL 整合測試（私人來源）
+- 日期契約修正 Commit（私人來源）與[工程筆記](/zh-tw/notes/date-contracts/)
+- 該版本成功的 GitHub Actions（私人來源）與 TESTING（私人來源）
 
 來源測試涵蓋同設備競爭領用、稽核失敗回滾、日期邊界與桌面／手機流程。CI 為該版本的歷史結果；本次作品集整備沒有重跑 AssetFlow 測試。
 
-- [此版本的本機重現說明](https://github.com/Cizing24/assetflow-itam/blob/7a698fbcd8bbffb4e46ec434a310690973aab77a/README.md)
+- 此版本的本機重現說明（私人來源）
 
 </details>
 

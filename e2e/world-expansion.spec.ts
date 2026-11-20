@@ -67,6 +67,9 @@ test('independent harbor island exposes bounded bilingual notes and a richer pro
     await page.goto(`/${locale}/?island=zailongchang`);
     await ready(page);
     await expect(page.locator('[data-portal]')).toHaveCount(7);
+    await expect(page.locator('[data-portal=portfolio]')).toContainText(
+      locale === 'en' ? 'Main Hall' : '大展廳',
+    );
     await expect(page.locator('[data-viewport]')).toHaveAttribute(
       'data-bridge-count',
       '5',
@@ -93,11 +96,22 @@ test('independent harbor island exposes bounded bilingual notes and a richer pro
       locale === 'en' ? 'Personal application in progress' : '個人申請中',
     );
     await page.keyboard.press('Escape');
+    await visit(page, 'lab');
+    await expect(page.locator('[data-lab-group]:visible')).toHaveCount(4);
+    await expect(
+      page.locator(
+        '[data-view-panel=journal] a[href$="/notes/ai-collaboration/"]',
+      ),
+    ).toHaveCount(0);
+    await page.keyboard.press('Escape');
     await visit(page, 'journal');
-    await expect(page.locator('[data-lab-group]:visible')).toHaveCount(6);
-    await page.locator('[data-lab-category]').selectOption('field');
+    await expect(
+      page.locator('[data-view-panel=field-notes] article'),
+    ).toHaveCount(4);
     await page
-      .locator('[data-view-panel=journal] a[href$="/notes/cotton-booking/"]')
+      .locator(
+        '[data-view-panel=field-notes] a[href$="/notes/cotton-booking/"]',
+      )
       .click();
     const client = page.locator('[data-view-panel=note-cotton-booking]');
     await expect(client).toContainText(

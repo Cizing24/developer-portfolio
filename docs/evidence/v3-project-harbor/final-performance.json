@@ -1,0 +1,56 @@
+[
+  {
+    "width": 1440,
+    "readyMs": 2082,
+    "resources": [
+      {
+        "name": "Base.7C3CUc3H.css",
+        "bytes": 6582
+      },
+      {
+        "name": "index.DlqWEkNx.css",
+        "bytes": 5679
+      },
+      {
+        "name": "FlowSimulation.astro_astro_type_script_index_0_lang.Clop3Zdj.js",
+        "bytes": 3574
+      },
+      {
+        "name": "EngineeringStudio.astro_astro_type_script_index_0_lang.C_Pi3Hfc.js",
+        "bytes": 7324
+      },
+      {
+        "name": "studio-scene.DPYTDuOc.js",
+        "bytes": 165383
+      }
+    ],
+    "requests": 6
+  },
+  {
+    "width": 390,
+    "readyMs": 1587,
+    "resources": [
+      {
+        "name": "Base.7C3CUc3H.css",
+        "bytes": 6582
+      },
+      {
+        "name": "index.DlqWEkNx.css",
+        "bytes": 5679
+      },
+      {
+        "name": "FlowSimulation.astro_astro_type_script_index_0_lang.Clop3Zdj.js",
+        "bytes": 3574
+      },
+      {
+        "name": "EngineeringStudio.astro_astro_type_script_index_0_lang.C_Pi3Hfc.js",
+        "bytes": 7324
+      },
+      {
+        "name": "studio-scene.DPYTDuOc.js",
+        "bytes": 165383
+      }
+    ],
+    "requests": 6
+  }
+]

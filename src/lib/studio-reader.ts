@@ -1,6 +1,7 @@
+import { loadDemo } from './demos/load';
 import { projectShowcaseView, projectView } from './world-config';
 import { initProjectShowcase } from './studio-showcase';
-import type { ProjectId as System } from './project-introductions';
+import type { IslandId as System } from './world-config';
 
 export function initReader(
   root: HTMLElement,
@@ -124,6 +125,13 @@ export function initReader(
       }
       update(showcase.area);
     }
+    if (panel.hasAttribute('data-travel-demo') && !panel.dataset.initialized) {
+      panel.dataset.initialized = 'true';
+      loadDemo(panel, async () => {
+        const { initTravelOps } = await import('./demos/travelops');
+        initTravelOps(panel);
+      });
+    }
     panels.forEach((other) => (other.hidden = other !== panel));
     title.textContent = panel.dataset.title ?? '';
     if (changed) scroll.scrollTop = 0;
@@ -181,9 +189,10 @@ export function initReader(
     ) {
       returnFocus.focus({ preventScroll: true });
     } else {
-      const selected = root.querySelector<HTMLElement>(
-        '[data-portal][aria-pressed=true]',
-      );
+      const selected =
+        root.dataset.renderer === 'loading'
+          ? null
+          : root.querySelector<HTMLElement>('[data-portal][aria-pressed=true]');
       (
         selected ?? root.querySelector<HTMLElement>('[data-menu-toggle]')
       )?.focus({ preventScroll: true });
@@ -236,7 +245,8 @@ export function initReader(
     if (
       !link ||
       link.hasAttribute('data-open') ||
-      link.hasAttribute('data-reader-locale')
+      link.hasAttribute('data-reader-locale') ||
+      link.hasAttribute('data-native-case')
     )
       return;
     const target = new URL(link.href);
@@ -310,7 +320,13 @@ export function initReader(
           '',
           url,
         );
-        void hide().then(() => enter(button.dataset.enterWorld as System));
+        void hide().then(() =>
+          enter(
+            (['bookflow', 'assetflow'].includes(button.dataset.enterWorld!)
+              ? 'harbor'
+              : button.dataset.enterWorld) as System,
+          ),
+        );
         syncLinks();
       }),
     );

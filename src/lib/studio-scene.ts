@@ -1,15 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import {
-  directIslandView,
-  projectFacilities,
-  type IslandId,
-  type DayPhase,
-} from './world-config';
+import { directIslandView, type IslandId, type DayPhase } from './world-config';
 import { phaseLight, pigments as art } from './studio-art';
 import { createMovingShadows } from './studio-shadows';
-import type { ProjectId } from './project-introductions';
+type ProjectId = 'harbor' | 'lab';
 import { createWander, rectangleArea } from './wander';
 import { createNavigation, createPedestrian } from './navigation';
 import {
@@ -118,7 +113,6 @@ function buildScene(
   scene.add(sun, hemi);
   const cream = art.limestone,
     wine = 0x982d36,
-    sage = art.foliage[1],
     ink = art.ink,
     gold = art.brass,
     rose = 0xd9ad9b;
@@ -228,202 +222,65 @@ function buildScene(
     roughness: 0.35,
   });
   const roots = new Map<IslandId, THREE.Group>();
-  const facilities = { bookflow: [], assetflow: [] } as Record<
-    ProjectId,
-    THREE.Mesh[]
-  >;
+  const facilities = { harbor: [], lab: [] } as Record<ProjectId, THREE.Mesh[]>;
   const facilityGeometry = new THREE.BoxGeometry(1.85, 2, 1.45);
   const facilityMaterial = new THREE.MeshBasicMaterial();
   function createProject(id: ProjectId) {
     const world = new THREE.Group();
-    const ground = new THREE.Group();
-    world.add(ground);
-    const bookflow = id === 'bookflow';
-    const trim = bookflow ? art.coral : art.teal;
-    cylinder(ground, 7.1, 0.45, art.stone, 0, -0.43, 0, 14).scale.z = 0.64;
-    cylinder(ground, 6.9, 0.25, art.sand, 0, -0.1, 0, 14).scale.z = 0.64;
-    turf(ground, 6.5, 0.1, 0.03, 14, bookflow ? art.olive : art.grass).scale.z =
-      0.64;
-    // Walkways connect the facilities to the island landings.
-    box(ground, 8.4, 0.035, 0.38, cream, 0, 0.064, -1.65);
-    box(ground, 8.4, 0.035, 0.38, cream, 0, 0.064, 1.7);
-    box(ground, 0.38, 0.035, 3.35, cream, 4, 0.064, 0);
-    box(ground, 0.38, 0.035, 3.35, cream, -4, 0.064, 0);
-    for (const x of [-6, 6])
-      for (const z of [-3.4, 3.4])
-        cylinder(ground, 0.055, 0.04, gold, x, 0.03, z);
-    function tree(x: number, z: number, size: number) {
-      cylinder(ground, 0.07, 0.55 * size, art.bark, x, 0.27 * size, z, 8);
-      const canopy = mesh(
-        ground,
-        new THREE.IcosahedronGeometry(0.38 * size, 0),
-        art.foliage[Math.abs(Math.round(x * 7 + z * 13)) % art.foliage.length]!,
-        x,
-        0.7 * size,
-        z,
-      );
-      canopy.userData.canopy = true;
-      cylinder(ground, 0.27 * size, 0.18, art.sand, x, 0.08, z, 8);
-    }
-    [
-      [-5.6, -2.4],
-      [-4.9, -2.7],
-      [4.9, -2.8],
-      [5.5, -2.2],
-      [-5.5, 2.5],
-      [5.5, 2.5],
-    ].forEach(([x, z], i) => tree(x!, z!, 0.8 + (i % 3) * 0.18));
-    const screen = 0x8fbbba;
-    function terminal(parent: THREE.Group, x: number, y: number, z: number) {
-      box(parent, 0.57, 0.34, 0.09, ink, x, y, z);
-      box(parent, 0.47, 0.24, 0.025, screen, x, y, z + 0.055).material =
-        screens;
-      box(parent, 0.55, 0.05, 0.33, ink, x, y - 0.18, z + 0.1);
-    }
-    const ringGeometry = new THREE.TorusGeometry(0.99, 0.041, 6, 24);
-    const models = projectFacilities[id].map(({ x, z }, index) => {
+    const trim = id === 'harbor' ? art.coral : art.teal;
+    world.userData.island = id;
+    cylinder(world, 7.1, 0.45, art.stone, 0, -0.43, 0, 14).scale.z = 0.64;
+    cylinder(world, 6.9, 0.25, art.sand, 0, -0.1, 0, 14).scale.z = 0.64;
+    turf(world, 6.5, 0.1, 0.03, 14).scale.z = 0.64;
+    box(world, 10.5, 0.04, 0.65, cream, 0, 0.08, 0);
+    for (const [index, { x, z }] of [
+      { x: -4, z: -1.65 },
+      { x: 4, z: -1.65 },
+      { x: 0, z: 1.7 },
+    ].entries()) {
       const group = new THREE.Group();
       group.position.set(x, 0, z);
       world.add(group);
-      cylinder(group, 1.18, 0.22, art.sand, 0, 0.12, 0, 6);
-      cylinder(group, 1.1, 0.07, cream, 0, 0.26, 0, 6);
+      cylinder(group, 1.18, 0.22, cream, 0, 0.12, 0, 6);
       const ring = new THREE.Mesh(
-        ringGeometry.clone(),
+        new THREE.TorusGeometry(0.99, 0.041, 6, 24),
         new THREE.MeshStandardMaterial({
           color: trim,
           emissive: trim,
           emissiveIntensity: 0.17,
-          roughness: 0.85,
         }),
       );
       ring.rotation.x = -Math.PI / 2;
       ring.position.y = 0.31;
       ring.userData.animated = true;
       group.add(ring);
-
+      if (id === 'harbor') {
+        box(group, 1.45, 0.18, 1.1, ink, 0, 0.42);
+        box(group, 1.55, 0.12, 1.25, trim, 0, 1.9);
+        for (const x of [-0.65, 0.65])
+          box(group, 0.08, 1.4, 0.08, cream, x, 1.15);
+        const screen = box(group, 1.1, 0.72, 0.08, trim, 0, 1.12);
+        screen.material = screens;
+      } else {
+        box(group, 1.4, 0.8, 0.9, cream, 0, 0.7);
+        for (let row = 0; row < 3; row++)
+          box(group, 1.1, 0.1, 0.08, trim, 0, 0.5 + row * 0.24, 0.5);
+        cylinder(group, 0.25, 0.6, trim, 0, 1.4, 0, 8);
+      }
       const proxy = new THREE.Mesh(facilityGeometry, facilityMaterial);
-      proxy.name = `facility-${id}-${index}`;
-      proxy.position.y = 1.28;
       proxy.visible = false;
+      proxy.position.y = 1.28;
+      proxy.name = `facility-${id}-${index}`;
       proxy.userData.ring = ring;
       group.add(proxy);
       facilities[id].push(proxy);
-
-      const model = new THREE.Group();
-      model.position.y = 0.31;
-      group.add(model);
-      return model;
-    });
-    ringGeometry.dispose();
-    const [entry, counter, systems] = models as [
-      THREE.Group,
-      THREE.Group,
-      THREE.Group,
-    ];
-    if (bookflow) {
-      // Booking counter with a striped canopy and customer terminal.
-      box(entry, 1.45, 0.66, 0.69, cream, 0, 0.35);
-      box(entry, 1.62, 0.12, 0.82, trim, 0, 0.72);
-      for (const x of [-0.68, 0.68])
-        box(entry, 0.08, 1, 0.08, ink, x, 1.21, -0.28);
-      for (let i = 0; i < 6; i++)
-        box(
-          entry,
-          0.28,
-          0.12,
-          0.92,
-          i % 2 ? cream : trim,
-          (i - 2.5) * 0.28,
-          1.74,
-        );
-      terminal(entry, 0.19, 0.97, 0.14);
-      box(entry, 0.58, 0.12, 0.045, gold, -0.26, 0.45, 0.36);
-
-      // A desk beneath a wall calendar. Color blocks mark bookings and time off.
-      box(counter, 1.55, 0.13, 0.75, art.timber, 0, 0.65);
-      for (const x of [-0.62, 0.62]) box(counter, 0.1, 0.67, 0.6, ink, x, 0.33);
-      box(counter, 1.45, 1.04, 0.1, cream, 0, 1.22, -0.3);
-      box(counter, 1.45, 0.21, 0.12, trim, 0, 1.7, -0.24);
-      for (let row = 0; row < 2; row++)
-        for (let col = 0; col < 4; col++)
-          box(
-            counter,
-            0.24,
-            0.18,
-            0.045,
-            (row + col) % 3 ? art.steel : trim,
-            (col - 1.5) * 0.29,
-            1.06 + row * 0.26,
-            -0.22,
-          );
-      terminal(counter, -0.42, 0.9, 0.18);
-    } else {
-      // Equipment shelf with open laptops and upright desktop towers.
-      for (const x of [-0.72, 0.72]) box(entry, 0.09, 1.68, 0.69, ink, x, 0.84);
-      for (const y of [0.2, 0.77, 1.36])
-        box(entry, 1.53, 0.085, 0.73, art.steel, 0, y);
-      for (const x of [-0.37, 0.37]) {
-        terminal(entry, x, 1.01, 0.08);
-        box(entry, 0.38, 0.41, 0.42, x < 0 ? ink : art.steel, x, 0.45);
-        box(entry, 0.11, 0.04, 0.035, gold, x, 0.54, 0.22);
-      }
-
-      // Two trays and a terminal give the handover desk distinct sides.
-      box(counter, 1.64, 0.61, 0.69, art.steel, 0, 0.32);
-      box(counter, 1.8, 0.14, 0.89, trim, 0, 0.68);
-      terminal(counter, 0, 1.07, -0.23);
-      for (const x of [-0.56, 0.56]) {
-        box(counter, 0.47, 0.08, 0.4, x < 0 ? sage : rose, x, 0.8, 0.15);
-        box(counter, 0.34, 0.05, 0.26, cream, x, 0.87, 0.15);
-        box(counter, 0.49, 0.12, 0.05, x < 0 ? art.steel : gold, x, 0.42, 0.36);
-      }
     }
-    // Server bays and a service monitor distinguish both engineering rooms.
-    box(systems, 1.55, 1.62, 0.76, trim, 0, 0.82);
-    box(systems, 1.65, 0.08, 0.82, gold, 0, 1.65);
-    for (let row = 0; row < 4; row++) {
-      const y = 0.38 + row * 0.28;
-      box(systems, 1.24, 0.17, 0.09, 0x465449, 0, y, 0.4);
-      box(systems, 0.09, 0.06, 0.04, screen, 0.44, y, 0.46).material =
-        row === 2 ? windows : screens;
-    }
-    if (!bookflow) terminal(systems, 0, 1.91, 0.04);
-    // Forested ridges, small workshops and a harbor give the system a landscape.
-    for (let i = 0; i < 22; i++) {
-      if (i === 0 || i === 11) continue; // Clear landings on both sides.
-      const angle = (i / 22) * Math.PI * 2;
-      const x = Math.cos(angle) * 5.8;
-      const z = Math.sin(angle) * 3.6;
-      tree(x, z, 0.65 + (i % 4) * 0.15);
-    }
-    for (let i = 0; i < 5; i++) {
-      const ridge = mesh(
-        ground,
-        new THREE.ConeGeometry(1.1 + i * 0.06, 1.2 + (i % 3) * 0.5, 5),
-        sage,
-        -3.5 + i * 1.7,
-        0.5,
-        -3.3,
-      );
-      ridge.rotation.y = i * 0.8;
-    }
-    const harbor = new THREE.Group();
-    ground.add(harbor);
-    box(harbor, 2.4, 0.12, 1.2, art.timber, 0, -0.01, 4.2);
-    for (const x of [-0.95, 0.95])
-      cylinder(harbor, 0.07, 0.7, ink, x, -0.2, 4.5, 8);
-    cylinder(harbor, 0.28, 1.3, cream, 1.6, 0.6, 3.6, 12);
-    cylinder(harbor, 0.3, 0.18, trim, 1.6, 1, 3.6, 12);
-    mesh(harbor, new THREE.ConeGeometry(0.4, 0.32, 12), trim, 1.6, 1.43, 3.6);
-
     world.scale.setScalar(0.64);
-    world.userData.island = id;
     scene.add(world);
     roots.set(id, world);
-    return world;
   }
-  createProject('bookflow');
-  createProject('assetflow');
+  createProject('harbor');
+  createProject('lab');
   function pane(
     parent: THREE.Object3D,
     w: number,
@@ -708,7 +565,7 @@ function buildScene(
     for (let i = 0; i < 5; i++) {
       const angle = (i / 5) * Math.PI * 2 + 0.3;
       const radius =
-        id === 'bookflow' || id === 'assetflow'
+        id === 'harbor' || id === 'lab'
           ? 5.5
           : id === 'portfolio'
             ? 3.85
@@ -719,7 +576,7 @@ function buildScene(
         z =
           Math.sin(angle) *
           radius *
-          (id === 'bookflow' || id === 'assetflow' ? 0.61 : 1);
+          (id === 'harbor' || id === 'lab' ? 0.61 : 1);
       if (isAccessLane(id, x, z)) continue;
       cylinder(island, 0.035, 0.8, ink, x, 0.4, z, 6);
       const lamp = mesh(
@@ -890,11 +747,7 @@ function buildScene(
     updateCoast(map);
     for (const [id, island] of roots) {
       const { x, z } = map[id];
-      island.position.set(
-        x,
-        id === 'bookflow' || id === 'assetflow' ? -0.18 : 0,
-        z,
-      );
+      island.position.set(x, id === 'harbor' || id === 'lab' ? -0.18 : 0, z);
     }
     bridgeRoot.traverse((object) => {
       if (object instanceof THREE.Mesh) object.geometry.dispose();
@@ -1340,16 +1193,16 @@ function buildScene(
     width: 90,
   }));
   const anchors = {
-    bookflow: projectFacilities.bookflow.map(({ x, z, labelY }) => [
-      x,
-      labelY,
-      z,
-    ]),
-    assetflow: projectFacilities.assetflow.map(({ x, z, labelY }) => [
-      x,
-      labelY,
-      z,
-    ]),
+    harbor: [
+      [-4, 2.55, -1.65],
+      [4, 2.65, -1.65],
+      [0, 2.45, 1.7],
+    ],
+    lab: [
+      [-4, 2.55, -1.65],
+      [4, 2.65, -1.65],
+      [0, 2.45, 1.7],
+    ],
     journal: [[0, 2.2, 1.1]],
     zailongchang: [
       [0, 2, -0.5],
@@ -1524,7 +1377,7 @@ function buildScene(
     camera.clearViewOffset();
     if (active) {
       const island = roots.get(active)!;
-      const large = active === 'bookflow' || active === 'assetflow';
+      const large = active === 'harbor' || active === 'lab';
       const d =
         large || active === 'zailongchang' || active === 'journal' ? 12 : 10;
       const distance =
@@ -1802,7 +1655,7 @@ function buildScene(
   const interactions = new AbortController();
   const listener = { signal: interactions.signal };
   const projectProxies = () =>
-    active === 'bookflow' || active === 'assetflow' ? facilities[active] : [];
+    active === 'harbor' || active === 'lab' ? facilities[active] : [];
   let hovered = -1;
   let lit: THREE.Mesh | undefined;
   function highlight() {
@@ -1818,7 +1671,7 @@ function buildScene(
         THREE.TorusGeometry,
         THREE.MeshStandardMaterial
       >;
-      const tint = lit.name.includes('bookflow') ? art.coral : art.teal;
+      const tint = lit.name.includes('harbor') ? art.coral : art.teal;
       ring.material.color.set(tint);
       ring.material.emissive.set(tint);
       ring.material.emissiveIntensity = 0.17;

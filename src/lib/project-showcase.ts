@@ -1,5 +1,5 @@
 import type { Locale } from './i18n';
-import type { ProjectId } from './project-introductions';
+import type { IslandProjectId as ProjectId } from './project-introductions';
 
 export function showcaseEngineering(id: ProjectId, locale: Locale) {
   const en = locale === 'en';

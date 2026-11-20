@@ -7,6 +7,7 @@ const paths = [
   'projects/',
   'projects/assetflow/',
   'projects/bookflow/',
+  'projects/travelops/',
   'notes/',
   'notes/booking-consistency/',
   'notes/date-contracts/',
@@ -41,10 +42,7 @@ test('project filtering, readable introductions, public source and honest demo s
     .getByRole('link')
     .click();
   await expect(page.locator('.project-introduction > section')).toHaveCount(3);
-  await expect(page.locator('.simple-project-source a')).toHaveAttribute(
-    'href',
-    'https://github.com/Cizing24/assetflow-itam',
-  );
+  await expect(page.locator('.simple-project-source a')).toHaveCount(0);
   await expect(page.locator('.workflow-screens figure')).toHaveCount(2);
   await expect(page.getByRole('link', { name: 'Live Demo' })).toHaveCount(0);
   await page.goto('/en/projects/bookflow/');
@@ -60,16 +58,25 @@ test('notes category, tag, empty state, localized articles and reading navigatio
   for (const locale of ['zh-tw', 'en']) {
     await page.goto(`/${locale}/notes/`);
     await page
-      .getByLabel(locale === 'en' ? 'Category' : '分類', { exact: true })
+      .getByRole('combobox', {
+        name: locale === 'en' ? 'Category' : '分類',
+        exact: true,
+      })
       .selectOption('data');
     await page.locator('[data-lab-query]').fill('GiST');
     await expect(page.locator('[data-lab-item]:visible')).toHaveCount(1);
     await page
-      .getByLabel(locale === 'en' ? 'Tag' : '標籤', { exact: true })
+      .getByRole('combobox', {
+        name: locale === 'en' ? 'Tag' : '標籤',
+        exact: true,
+      })
       .selectOption('AssetFlow');
     await expect(page.locator('[data-lab-empty]')).toBeVisible();
     await page
-      .getByLabel(locale === 'en' ? 'Tag' : '標籤', { exact: true })
+      .getByRole('combobox', {
+        name: locale === 'en' ? 'Tag' : '標籤',
+        exact: true,
+      })
       .selectOption('');
     await page.locator('[data-lab-item]:visible a').click();
     await expect(page.locator('.prose pre')).toBeVisible();
