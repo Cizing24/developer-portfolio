@@ -642,7 +642,10 @@ test('readable product introductions remain available without JavaScript', async
   await page.goto('http://127.0.0.1:4321/en/');
   await expect(page.locator('.world-nojs')).toBeVisible();
   await page.locator('.world-nojs a[href="/en/projects/"]').click();
-  await expect(page.locator('.project-card')).toHaveCount(3);
+  await expect(page.locator('.project-card')).toHaveCount(4);
+  await expect(
+    page.locator('.project-card h3 a[href="/en/projects/opsflow/"]'),
+  ).toHaveText('OpsFlow Mini ERP');
   await page.goto('http://127.0.0.1:4321/en/projects/bookflow/');
   await expect(page.locator('.project-introduction > section')).toHaveCount(3);
   await context.close();

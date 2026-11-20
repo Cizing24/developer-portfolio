@@ -19,6 +19,9 @@ const locale = data.locale;
 const en = locale === 'en';
 const slug = entrySlug(project.id);
 const { Content } = await render(project);
+const related = (await getCollection('projects')).filter(
+  (entry) => entry.data.locale === locale && entry.id !== project.id,
+);
 const ids = [
   'main',
   `${slug}-purpose`,
@@ -26,6 +29,18 @@ const ids = [
   `${slug}-architecture`,
   ...(slug === 'travelops'
     ? ['travelops-demo', 'engineering-decisions', 'verification']
+    : []),
+  ...(slug === 'opsflow'
+    ? [
+        'business-workflow',
+        'product-screenshots',
+        'data-sources',
+        'benchmarks',
+        'maintenance',
+        'verification',
+        'engineering-decisions',
+        'project-resources',
+      ]
     : []),
 ];
 ---
@@ -99,6 +114,24 @@ const ids = [
         <code>{data.sourceCommit}</code> · {data.reviewedAt}
       </p>
     </details>
+    <nav
+      class="simple-project-related"
+      aria-label={en ? 'Related projects' : '相關專案'}
+    >
+      <h2>{en ? 'Continue with another project' : '繼續閱讀其他專案'}</h2>
+      <ul>
+        {related.map((entry) => (
+          <li>
+            <a
+              class="text-link"
+              href={localizedPath(locale, `projects/${entrySlug(entry.id)}`)}
+            >
+              {entry.data.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   </div>
 </Base>
 <style is:global>
@@ -117,5 +150,16 @@ const ids = [
   }
   .simple-project-source summary {
     min-height: 44px;
+  }
+  .simple-project-related {
+    max-width: 850px;
+    margin: 40px auto;
+  }
+  .simple-project-related ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    list-style: none;
+    padding: 0;
   }
 </style>

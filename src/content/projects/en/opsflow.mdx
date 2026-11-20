@@ -1,0 +1,163 @@
+---
+locale: en
+translationKey: opsflow
+title: OpsFlow Mini ERP
+description: A simulated ERP for small engineering and systems integration companies, connecting procurement to project costs through consistent transactions, real bug fixes and traceable benchmark evidence.
+category: ENGINEERING OPERATIONS & RESOURCE MANAGEMENT
+tags:
+  [
+    Vue 3,
+    TypeScript,
+    Vite,
+    Element Plus,
+    Pinia,
+    NestJS,
+    Prisma 7,
+    MySQL,
+    Docker,
+  ]
+highlights:
+  [
+    'Consistent procurement and stock transactions',
+    'Real bug analysis and regression tests',
+    'Local measurements over 100,706 movements',
+  ]
+status: Implemented · isolated showcase
+visibility: public
+repository: https://github.com/Cizing24/opsflow-mini-erp
+featured: true
+order: 3
+sourceCommit: bc922605f9d71ad7fae3b133c005bba85c70363f
+reviewedAt: '2026-11-20'
+cover: ../../../assets/opsflow/desktop.png
+coverAlt: Actual OpsFlow portal displaying synthetic approvals, purchase receipts and project costs
+---
+
+import OpsFlowEvidence from '../../../components/OpsFlowEvidence.astro';
+
+<nav aria-label="OpsFlow case contents">
+  <a href="#business-workflow">Business workflow</a> ·{' '}
+  <a href="#opsflow-architecture">Architecture</a> ·{' '}
+  <a href="#benchmarks">Benchmarks</a> ·{' '}
+  <a href="#maintenance">Maintenance and quality</a> ·{' '}
+  <a href="#verification">Test evidence</a>
+</nav>
+
+<h2 id="opsflow-purpose">
+  Connect cross-team documents to traceable project costs
+</h2>
+
+OpsFlow is an independently developed Mini ERP simulating a small engineering and systems integration company. Engineers request materials, managers enforce approval and budget rules, purchasing creates orders, warehouses receive partial deliveries, and project members issue materials. Managers can trace commitments and actual costs through the same document chain.
+
+The project demonstrates ERP business understanding, full-stack Vue and NestJS development, MySQL consistency, maintenance and measured verification. The company, projects, people and transactions are synthetic. There are no real business operations, payments or public live demo. The delivered implementation is in [PR #10](https://github.com/Cizing24/opsflow-mini-erp/pull/10), merged on November 20, 2026; this case retains verified commit `bc92260` as its review version.
+
+<h2 id="business-workflow">From engineering requirements to material costs</h2>
+
+<OpsFlowEvidence locale="en" section="workflow" />
+
+For a request of 10 units, approval records a commitment using the request's price snapshot. Creating a PO does not count that commitment again. Receiving 4 units sets the PO to PARTIAL, leaves 6 outstanding and adds 4 to warehouse stock. Only the final receipt sets RECEIVED. Issuing 1 unit to a project reduces stock by 1 and increases actual cost by its fixed standard unit cost.
+
+- Managers approve other people in their own department; administrators may cross departments but still cannot self-approve. Approval re-reads lines and budget commitments under locks.
+- Each approved request can produce only one PO. Over-receipt, repeat approval, resubmitting a non-returned request and insufficient stock return 409; invalid roles or project membership return 403.
+- ReceiptLine links to an inbound Movement; outbound Movements link to a Project. Receiving stock does not directly recognize project cost, preventing double counting at receipt and issue. Commitments and actual costs must also remain separate.
+
+Source: [Business workflow and rules](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/business-process/WORKFLOW.md).
+
+<h2 id="opsflow-architecture">
+  A modular monolith with shared contracts and database transactions
+</h2>
+
+<OpsFlowEvidence locale="en" section="architecture" />
+
+Vue 3, TypeScript, Vite, Element Plus and Pinia provide the interface. The NestJS Modular Monolith uses one Nest module with domain files for authentication, master data, procurement, inventory, reports and integrations. `packages/shared` holds Zod input contracts, roles and states. Prisma 7 connects to MySQL 8.4 through the official MariaDB driver adapter. Docker Compose runs the local app, database and isolated supplier simulation; GitHub Actions runs quality checks.
+
+The server enforces Cookie Sessions, Origin/CSRF checks, RBAC, Audit Logs and Request IDs. Interface hints do not replace authorization. This is a local demonstration architecture without microservices, a message broker or a claimed production deployment.
+
+Sources: [System architecture](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/architecture/SYSTEM_ARCHITECTURE.md), [ERD](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/architecture/ERD.md).
+
+<h2 id="product-screenshots">
+  Actual product screens with synthetic operating data
+</h2>
+
+<OpsFlowEvidence locale="en" section="screens" />
+
+These captures come from the source project's `docs/screenshots/desktop.png` and `mobile.png`. They show the portal, pending work, partial receipts and project costs. They are actual screens, not generated images. Their KPIs and amounts are database results for a synthetic company and do not represent commercial outcomes. The source product interface is in Traditional Chinese; this case provides English descriptions.
+
+<h2 id="data-sources">
+  Separate public product data from simulated ERP transactions
+</h2>
+
+The UCI Online Retail transformation processed **541,909 historical retail rows**. After filtering, product codes were uppercased, deduplicated and sorted to import **100 derived catalog items**. Only product codes and names were retained; customers, invoices and historical transactions were not imported.
+
+TWD standard costs, units and reorder points are synthetic fields. GBP retail prices were not converted into engineering procurement costs. Company, project, supplier and approval transactions come from deterministic seeds. Microsoft WideWorldImporters was researched but **was not imported** into MySQL.
+
+Attribution: Chen, D. (2015), [Online Retail, UCI Machine Learning Repository](https://doi.org/10.24432/C5BW33), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). OpsFlow normalized and prefixed source product codes and added synthetic costs. This portfolio summarizes the transformation without copying the dataset. See [Data Sources and transformation records](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/data-sources/DATA_SOURCES.md).
+
+<h2 id="benchmarks">Engineering measurements with explicit conditions</h2>
+
+<OpsFlowEvidence locale="en" section="benchmarks" />
+
+**Environment**: November 19, 2026, 21:34 UTC, benchmark commit `7cdf742`, clean working tree. Windows 10.0.26300, Ryzen 5 5600H, 12 logical CPUs, 15.41 GiB RAM, Node 24.22.1, Docker 29.9.3 and MySQL 8.4.13. The API and Node load process shared the Windows host; the database ran in Docker Desktop. Data: 50 projects, 1,000 POs and 100,706 movements.
+
+**SQL index observation**: The same Movement JOIN Project query, 30 samples before and 30 after, averaged **4.324 ms to 2.179 ms** with the `(projectId, createdAt)` composite index. Raw results include EXPLAIN. Index removal and restoration were confined to the isolated benchmark database.
+
+**Project aggregation observation**: At concurrency 16, `/api/projects?page=1&pageSize=20` P95 changed from **2,291.71 ms to 303.19 ms**. The baseline was `3a98e22`, the later run `7cdf742`. Loading OUT rows for Node aggregation was replaced by parameterized SQL `GROUP BY SUM`. These figures refer to the project list; the later cost-report P95 is 315.39 ms.
+
+Runs were not randomly interleaved, and host/cache conditions were uncontrolled. Unchanged endpoints also varied, so the entire difference cannot be attributed to the SQL change. This is a short closed-loop local observation without confidence intervals, a long soak or internet measurements. It is not a production SLA or user-capacity promise. A k6 script is supplied but **was not executed**.
+
+Sources: [Benchmark results](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/RESULTS.md), [methodology](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/METHODOLOGY.md), [raw samples and EXPLAIN](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/results.json).
+
+<h2 id="maintenance">Maintenance backed by reproducible evidence</h2>
+
+The following three bugs were naturally found during development and verification. They are not invented historical business incidents. Each preserves a failure, Root Cause Analysis, a fix and Regression Testing. The [real bug records](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/REAL_BUG_RECORDS.md) link Issues, fix commits and RED/GREEN evidence.
+
+### Approval versus resubmission: validate the lines that will be approved
+
+**Problem**: A manager could read old low-cost lines but approve a newly resubmitted, higher-cost request. **Root cause**: Line reads and the resubmission transaction lacked a coordinated lock order. **Fix**: Lock PurchaseRequest before reading lines, then lock Project to calculate current commitments. **Verification**: A real MySQL test observes waiting SQL through PROCESSLIST, commits the higher-cost resubmission and confirms approval returns 409 instead of the erroneous 201, leaving the request SUBMITTED. **Value**: A reproducible race protects the budget invariant. See [Issue #5](https://github.com/Cizing24/opsflow-mini-erp/issues/5), fix `35d49c3` and the [MySQL regression suite](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/tests/integration/workflow.test.ts).
+
+### Stale search responses: version the whole result state
+
+**Problem**: A slower old search overwrote a newer result. **Root cause**: Promise completion order was treated as input order. **Fix**: An increasing version allows only the latest request to update items, total, error and loading. **Verification**: A minimal unit case first reproduced the late old response as RED, then passed GREEN; the complete E2E suite was rerun. **Value**: Data, loading and error states stay coherent. See [Issue #3](https://github.com/Cizing24/opsflow-mini-erp/issues/3), fix `575e37e` and the [search regression test](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/tests/unit/search-regression.test.ts).
+
+### Expired sessions: recover without clearing a newer login
+
+**Problem**: After a 401, the interface retained the user and logout also failed. **Root cause**: The shared API client did not clear expired session state. **Fix**: Clear state only when the 401 belongs to the session that issued the request, so a delayed old response cannot log out a new session. **Verification**: Both unit scenarios went RED then GREEN; Chromium verified clearing cookies, returning to login after an action and signing in again. **Value**: Failure recovery becomes part of normal navigation. See [Issue #13](https://github.com/Cizing24/opsflow-mini-erp/issues/13), fix `7eadd36` and the [session recovery tests](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/tests/unit/session-recovery.test.ts).
+
+### Isolated fault injection and recovery
+
+These are **simulations, separate from naturally discovered bugs or production incidents**: 8 requests sharing a key produce one receipt and one ledger entry; 12 requests for the last unit yield 1 success and 11 responses with 409; a late receipt failure rolls back documents, stock and the key together. A migration drill deliberately runs failing DDL in a random isolated database, marks it rolled back and applies a forward fix. A nonresponsive supplier and an intentionally broken pricing fixture verify timeout handling and regression detection.
+
+Backup/restore has a separate measured comparison: 5 projects, 120 materials, 30 POs and 60 movements, zero data-quality anomalies, matching restored results and an unchanged source database. Sources: [Fault Injection](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/FAULT_INJECTION.md), [Migration Guide](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/MIGRATION_GUIDE.md), [Backup/Restore](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/BACKUP_RESTORE.md).
+
+<h2 id="verification">
+  Separate source-system tests from portfolio verification
+</h2>
+
+| Source verification    | Verified result                          |
+| ---------------------- | ---------------------------------------- |
+| Unit                   | 7/7                                      |
+| Real MySQL Integration | 27/27                                    |
+| Chromium E2E           | 4/4                                      |
+| Total                  | 38 passing cases, no skips               |
+| GitHub Actions         | Run 44629535764: success, head `bc92260` |
+
+The [successful CI for the reviewed revision](https://github.com/Cizing24/opsflow-mini-erp/actions/runs/44629535764) and delivery records were checked on November 20, 2026. The 38 cases are historical source-ERP verification. This portfolio checks content, routes, images, accessibility and responsive behavior; it does not represent rerunning the ERP backend.
+
+Safari, Firefox, real phones, screen readers, long-duration load and complete penetration testing remain unverified. The system does not include a general ledger, taxes, moving-average valuation, inventory period snapshots, SSO or a distributed limiter. See [Known Limitations](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/KNOWN_LIMITATIONS.md).
+
+<h2 id="engineering-decisions">
+  Five decisions supported by implementation and tests
+</h2>
+
+1. **Stock consistency and concurrency**: Reading before deducting creates a race. An atomic `UPDATE Stock ... WHERE quantity >= requested` returns 409 when no row is affected. Hot rows still contend; the real MySQL last-unit test confirms only one of 12 requests succeeds. See [inventory.ts](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/inventory.ts).
+2. **Idempotency**: Network retries must not receive twice. Key, actor, scope and payload identify an identical request and replay its committed result; different content returns 409. This requires persisted keys and request identity rather than indiscriminate write retries. Eight concurrent same-key requests verify one receipt. See [transactions.ts](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/transactions.ts).
+3. **Transactions and rollback**: A receipt's key, PO, Stock, ReceiptLine, Movement and Audit must commit together. READ COMMITTED and a PO row lock provide the boundary. The multi-step transaction must remain short and avoid external network waits. Late-failure tests check complete rollback. See [receipt implementation](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/inventory.ts).
+4. **SQL query optimization**: Returning all OUT rows to Node made aggregation expensive. Parameterized `GROUP BY SUM` and query-specific indexes reduce that work, with a tradeoff of SQL-specific reporting and remaining deep-OFFSET costs. Integration checks compare amounts and quantities with individual ledger rows; benchmarks separately document measurement limits. See [resources.ts](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/resources.ts).
+5. **Maintenance through regression testing**: Preserve a reproducible failure before a minimal fix, and separate real bugs from deliberate fault fixtures. Isolated databases and evidence require upkeep, but verify existing rules without lowering test thresholds. See [Test Strategy](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/testing/TEST_STRATEGY.md).
+
+<h2 id="project-resources">Source code and project resources</h2>
+
+- [Public repository](https://github.com/Cizing24/opsflow-mini-erp) · [Delivery PR #10](https://github.com/Cizing24/opsflow-mini-erp/pull/10) · [Revision CI](https://github.com/Cizing24/opsflow-mini-erp/actions/runs/44629535764)
+- [Technical delivery report](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/DELIVERY_REPORT.md) · [Benchmark report](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/RESULTS.md) · [Maintenance records](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/REAL_BUG_RECORDS.md)
+
+Related cases: [TravelOps ticket fulfillment and operations](/en/projects/travelops/), [AssetFlow equipment lifecycle](/en/projects/assetflow/) and [BookFlow booking consistency](/en/projects/bookflow/). Return to [Engineering Lab](/en/notes/) to browse by technology and quality topics.

@@ -38,6 +38,11 @@ const en = locale === 'en';
           <h3>{entry.data.title}</h3>
           <p>{entry.data.description}</p>
           <p>{entry.data.tags.join(' · ')}</p>
+          <ul>
+            {entry.data.highlights.map((highlight) => (
+              <li>{highlight}</li>
+            ))}
+          </ul>
           <p>
             {entry.data.status} ·{' '}
             {entry.data.featured
@@ -47,6 +52,9 @@ const en = locale === 'en';
                 : '一般作品'}
           </p>
           <div class="reader-actions">
+            {entry.data.repository && (
+              <a href={entry.data.repository}>GitHub</a>
+            )}
             {entry.data.demoModule && (
               <a
                 href={
