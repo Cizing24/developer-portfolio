@@ -57,14 +57,38 @@ const allGroups = [
   {
     id: 'data',
     title: en ? 'Backend & data' : '後端與資料庫',
-    items: notes
-      .filter((note) => note.data.section === 'engineering')
-      .map(noteItem),
+    items: [
+      ...notes
+        .filter((note) => note.data.section === 'engineering')
+        .map(noteItem),
+      caseItem(
+        'opsflow',
+        en
+          ? 'OpsFlow transactions and query measurements'
+          : 'OpsFlow 交易一致性與查詢量測',
+        en
+          ? 'Trace MySQL stock rules and 100,706-movement benchmark conditions.'
+          : '追查 MySQL 庫存規則與 100,706 筆異動的量測條件。',
+        ['NestJS', 'Prisma 7', 'MySQL', 'Benchmark'],
+        '#benchmarks',
+      ),
+    ],
   },
   {
     id: 'quality',
     title: en ? 'Testing & quality' : '測試與工程品質',
     items: [
+      caseItem(
+        'opsflow',
+        en
+          ? 'OpsFlow maintenance and regression evidence'
+          : 'OpsFlow 維護與回歸測試證據',
+        en
+          ? 'Real bug root causes, concurrency, idempotency, migrations and recovery drills.'
+          : '真實 Bug 根因、並行、冪等、Migration 與復原演練。',
+        ['MySQL', 'Regression', 'CI', 'Maintenance'],
+        '#maintenance',
+      ),
       caseItem(
         'bookflow',
         en ? 'BookFlow scheduling evidence' : 'BookFlow 排程測試證據',

@@ -8,6 +8,7 @@ const paths = [
   'projects/assetflow/',
   'projects/bookflow/',
   'projects/travelops/',
+  'projects/opsflow/',
   'notes/',
   'notes/booking-consistency/',
   'notes/date-contracts/',
@@ -36,7 +37,12 @@ test('project filtering, readable introductions, public source and honest demo s
 }) => {
   await page.goto('/zh-tw/projects/');
   await page.getByLabel('依技術篩選').selectOption('Vue 3');
-  await expect(page.locator('.project-card:visible')).toHaveCount(1);
+  await expect(page.locator('.project-card:visible')).toHaveCount(2);
+  await expect(
+    page
+      .locator('.project-card:visible')
+      .filter({ hasText: 'OpsFlow Mini ERP' }),
+  ).toHaveCount(1);
   await page
     .getByRole('heading', { name: 'AssetFlow ITAM' })
     .getByRole('link')

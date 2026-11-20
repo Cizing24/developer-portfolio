@@ -1,0 +1,371 @@
+---
+import { Image } from 'astro:assets';
+import desktop from '../assets/opsflow/desktop.png';
+import mobile from '../assets/opsflow/mobile.png';
+import type { Locale } from '../lib/i18n';
+interface Props {
+  locale: Locale;
+  section: 'workflow' | 'architecture' | 'screens' | 'benchmarks';
+}
+const { locale, section } = Astro.props;
+const en = locale === 'en';
+const workflow = en
+  ? [
+      'Engineering project',
+      'Purchase request',
+      'Manager approval',
+      'Purchase order',
+      'Partial receipt',
+      'Stock entry',
+      'Project material issue',
+      'Cost report',
+    ]
+  : [
+      '工程專案',
+      '請購',
+      '主管簽核',
+      '採購單',
+      '部分收貨',
+      '入庫',
+      '專案領料',
+      '成本報表',
+    ];
+const apis = [
+  {
+    label: en ? 'Inventory movements' : '庫存異動',
+    endpoint: '/api/movements?page=1&pageSize=20',
+    p95: 137.55,
+  },
+  {
+    label: en ? 'Project list' : '專案列表',
+    endpoint: '/api/projects?page=1&pageSize=20',
+    p95: 303.19,
+  },
+  {
+    label: en ? 'Cost report' : '成本報表',
+    endpoint: '/api/reports/costs',
+    p95: 315.39,
+  },
+];
+---
+
+{section === 'workflow' && (
+  <figure class="opsflow-flow">
+    <ol aria-label={en ? 'Business workflow in order' : '依序執行的業務流程'}>
+      {workflow.map((step, index) => (
+        <li>
+          <span class="mono">{index + 1}</span>
+          {step}
+        </li>
+      ))}
+    </ol>
+    <figcaption>
+      {en
+        ? 'Engineering, management, purchasing and warehouse roles share the same document chain. Based on the source workflow document.'
+        : '工程、主管、採購與倉庫共用同一條單據鏈；依來源業務流程文件整理。'}
+    </figcaption>
+  </figure>
+)}
+
+{section === 'architecture' && (
+  <figure class="opsflow-architecture">
+    <ol aria-label={en ? 'Request and data flow' : '請求與資料流'}>
+      <li>
+        <strong>Vue 3 · TypeScript · Vite</strong>
+        <span>Element Plus · Pinia</span>
+        <small>
+          {en
+            ? 'Same-origin fetch / Cookie / CSRF'
+            : '同源 fetch／Cookie／CSRF'}
+        </small>
+      </li>
+      <li>
+        <strong>NestJS Modular Monolith</strong>
+        <span>
+          {en
+            ? 'Authentication · Projects · Procurement · Inventory · Reports · Audit'
+            : '認證 · 專案 · 採購 · 庫存 · 報表 · 稽核'}
+        </span>
+        <small>Prisma 7 · MariaDB driver adapter</small>
+      </li>
+      <li>
+        <strong>MySQL 8.4</strong>
+        <span>
+          {en
+            ? 'Transactions · Row locks · Stock ledger'
+            : 'Transaction · 列鎖 · 庫存異動帳'}
+        </span>
+      </li>
+    </ol>
+    <figcaption>
+      Docker Compose · GitHub Actions.{' '}
+      {en
+        ? 'Adapted from SYSTEM_ARCHITECTURE.md. One Nest module with domain files; the supplier timeout service is an isolated simulation.'
+        : '依 SYSTEM_ARCHITECTURE.md 重排；單一 Nest module 以業務分檔，供應商逾時服務為隔離模擬。'}
+    </figcaption>
+  </figure>
+)}
+
+{section === 'screens' && (
+  <div class="opsflow-screens" data-opsflow-screens>
+    <figure>
+      <a
+        href={desktop.src}
+        target="_blank"
+        rel="noopener"
+        aria-label={
+          en
+            ? 'Open original desktop screenshot (new tab)'
+            : '開啟桌機原始截圖（新分頁）'
+        }
+      >
+        <Image
+          src={desktop}
+          alt={
+            en
+              ? 'Actual OpsFlow desktop portal showing pending approvals, partial receipts and synthetic project costs in Traditional Chinese'
+              : 'OpsFlow 真實桌機工作台，呈現待簽核、部分收貨與合成專案成本'
+          }
+          widths={[640, 960, 1440]}
+          sizes="(max-width: 760px) 90vw, 650px"
+          loading="lazy"
+        />
+      </a>
+      <figcaption>
+        {en
+          ? 'Desktop · Actual local product screen, synthetic company and transactions. Open the original in a new tab.'
+          : '桌機 · 本機實際產品介面，企業與交易皆為合成資料；可開啟原圖。'}
+      </figcaption>
+    </figure>
+    <figure>
+      <a
+        href={mobile.src}
+        target="_blank"
+        rel="noopener"
+        aria-label={
+          en
+            ? 'Open original mobile screenshot (new tab)'
+            : '開啟手機原始截圖（新分頁）'
+        }
+      >
+        <Image
+          src={mobile}
+          alt={
+            en
+              ? 'Actual OpsFlow mobile-width portal with stacked approval and warehouse tasks; the source product interface is in Traditional Chinese'
+              : 'OpsFlow 手機寬度實際畫面，簽核與倉庫待辦依序堆疊'
+          }
+          widths={[320, 390]}
+          sizes="(max-width: 760px) 60vw, 195px"
+          loading="lazy"
+        />
+      </a>
+      <figcaption>
+        {en
+          ? 'Mobile width · Chromium capture; real-device testing is unverified. The product UI is in Traditional Chinese.'
+          : '手機寬度 · Chromium 截圖，未代表實機驗證。'}
+      </figcaption>
+    </figure>
+  </div>
+)}
+
+{section === 'benchmarks' && (
+  <figure class="opsflow-benchmarks" data-opsflow-benchmarks>
+    <figcaption>
+      {en
+        ? 'Read API P95 at concurrency 16 · milliseconds · shorter is faster'
+        : '16 並行讀 API P95 · 毫秒 · 越短越快'}
+    </figcaption>
+    <dl>
+      {apis.map(({ label, endpoint, p95 }) => (
+        <div class="benchmark-row">
+          <dt>
+            {label}
+            <code>{endpoint}</code>
+          </dt>
+          <dd>
+            <strong>
+              {p95.toFixed(2)} <small>ms</small>
+            </strong>
+            <span class="benchmark-track" aria-hidden="true">
+              <span style={`width:${(p95 / 400) * 100}%`}></span>
+            </span>
+          </dd>
+        </div>
+      ))}
+    </dl>
+    <p class="benchmark-scale mono">
+      0 <span>400 ms</span>
+    </p>
+    <p>
+      {en
+        ? '100,706 movements · 1,080 measured API samples · concurrency 1 / 4 / 16 · 0% request errors in this run.'
+        : '100,706 筆異動 · 1,080 個正式 API 樣本 · 並行 1／4／16 · 本次請求錯誤率 0%。'}
+    </p>
+    <p>
+      {en
+        ? 'Each endpoint/concurrency scenario: 5 warm-ups, then 120 samples; nearest-rank percentiles, authenticated sessions. These are read measurements, separate from write-consistency tests.'
+        : '每端點／並行情境先暖機 5 次，再取 120 個樣本；採 nearest-rank 分位數與已登入 Session。讀取量測與寫入一致性測試分開。'}
+    </p>
+  </figure>
+)}
+
+<style>
+  figure {
+    margin: 1.5rem 0;
+  }
+  figcaption {
+    color: var(--muted);
+    font-size: 0.88rem;
+    margin-block: 0.75rem;
+  }
+  .opsflow-flow ol {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    padding: 0;
+  }
+  .opsflow-flow li {
+    position: relative;
+    display: grid;
+    gap: 0.4rem;
+    padding: 1rem;
+    border-top: 2px solid var(--accent);
+    border-bottom: 1px solid var(--line);
+  }
+  .opsflow-flow li::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 1.7rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-top: 1px solid var(--accent);
+    border-right: 1px solid var(--accent);
+    transform: rotate(45deg);
+  }
+  .opsflow-flow li:last-child::after {
+    display: none;
+  }
+  .opsflow-flow .mono {
+    font-size: 0.8rem;
+    color: var(--accent);
+  }
+  .opsflow-architecture ol {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 1.5rem;
+  }
+  .opsflow-architecture li {
+    position: relative;
+    padding: 1rem;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    text-align: center;
+    display: grid;
+    gap: 0.35rem;
+  }
+  .opsflow-architecture li + li::before {
+    content: '';
+    position: absolute;
+    width: 1px;
+    height: 1.5rem;
+    background: var(--accent);
+    left: 50%;
+    top: -1.5rem;
+  }
+  .opsflow-architecture small {
+    color: var(--muted);
+  }
+  .opsflow-screens {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+  }
+  .opsflow-screens figure {
+    min-width: 0;
+  }
+  .opsflow-screens a {
+    display: block;
+  }
+  .opsflow-screens img {
+    width: 100%;
+    height: auto;
+  }
+  .opsflow-benchmarks {
+    padding-block: 1rem;
+    border-block: 1px solid var(--line);
+    font-variant-numeric: tabular-nums;
+  }
+  .opsflow-benchmarks dl {
+    margin: 1.25rem 0 0;
+  }
+  .benchmark-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .benchmark-row dt {
+    font-weight: 600;
+  }
+  .benchmark-row code {
+    display: block;
+    color: var(--muted);
+    font-size: 0.73rem;
+    overflow-wrap: anywhere;
+  }
+  .benchmark-row dd {
+    margin: 0;
+    display: grid;
+    align-content: end;
+    gap: 0.6rem;
+  }
+  .benchmark-row strong {
+    font-family: var(--mono);
+    font-size: 1.3rem;
+  }
+  .benchmark-row small {
+    font-size: 0.8rem;
+    font-weight: 400;
+  }
+  .benchmark-track {
+    display: block;
+    background: var(--surface);
+    height: 0.65rem;
+  }
+  .benchmark-track > span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+  }
+  .benchmark-scale {
+    margin-left: calc(50% + 0.75rem);
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+  @media (max-width: 760px) {
+    .opsflow-flow ol {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .opsflow-screens {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .opsflow-screens figure:last-child {
+      width: 65%;
+      margin-inline: auto;
+    }
+    .benchmark-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.4rem;
+    }
+    .benchmark-scale {
+      margin-left: 0;
+    }
+  }
+</style>

@@ -1,0 +1,149 @@
+---
+locale: zh-tw
+translationKey: opsflow
+title: OpsFlow Mini ERP
+description: 模擬中小型工程與系統整合企業的 ERP，以請購、簽核、採購、分批收貨與領料串起專案成本，展示資料一致性、真實 Bug 修復及可追溯的量化驗證。
+category: ENGINEERING OPERATIONS & RESOURCE MANAGEMENT
+tags:
+  [
+    Vue 3,
+    TypeScript,
+    Vite,
+    Element Plus,
+    Pinia,
+    NestJS,
+    Prisma 7,
+    MySQL,
+    Docker,
+  ]
+highlights:
+  [
+    '採購到領料的交易一致性',
+    '真實 Bug 根因與回歸測試',
+    '100,706 筆異動的本機量測',
+  ]
+status: 已實作・隔離展示
+visibility: public
+repository: https://github.com/Cizing24/opsflow-mini-erp
+featured: true
+order: 3
+sourceCommit: bc922605f9d71ad7fae3b133c005bba85c70363f
+reviewedAt: '2026-11-20'
+cover: ../../../assets/opsflow/desktop.png
+coverAlt: OpsFlow 實際營運工作台，包含合成企業的待簽核、採購收貨與專案成本
+---
+
+import OpsFlowEvidence from '../../../components/OpsFlowEvidence.astro';
+
+<nav aria-label="OpsFlow 案例目錄">
+  <a href="#business-workflow">業務流程</a> ·{' '}
+  <a href="#opsflow-architecture">架構</a> · <a href="#benchmarks">效能量測</a>{' '}
+  · <a href="#maintenance">維護與品質</a> · <a href="#verification">測試證據</a>
+</nav>
+
+<h2 id="opsflow-purpose">把跨部門單據，接成可核對的成本</h2>
+
+OpsFlow 是獨立開發、模擬中小型工程及系統整合企業的 Mini ERP。工程人員提出需求，主管守住簽核與預算，採購建立訂單，倉庫分批收貨，再由專案成員領料。管理者可沿同一條單據鏈核對承諾與實際成本。
+
+這份作品展示 ERP 業務理解、Vue 與 NestJS 全端開發、MySQL 一致性、系統維護與量化驗證能力。虛構企業、專案、人名與交易皆為合成資料，沒有真實企業營運、付款或公開線上 Demo。完整功能來源為 [PR #10](https://github.com/Cizing24/opsflow-mini-erp/pull/10)，已於 2026-11-20 合併；本頁仍以已驗證的 `bc92260` 為查核版本。
+
+<h2 id="business-workflow">從工程需求到領料成本</h2>
+
+<OpsFlowEvidence locale="zh-tw" section="workflow" />
+
+工程師請購 10 件，主管核准後，承諾金額以請購單價快照計算；建立 PO 不會再計一次承諾。先收 4 件時，PO 為 PARTIAL、待收 6 件，倉庫增加 4；收齊後才是 RECEIVED。專案領料 1 件時，庫存減 1，實際成本增加該物料的固定標準成本。
+
+- 主管只能簽同部門他人的單；管理員可跨部門，仍不可自簽。核准在鎖內重讀明細與預算承諾。
+- 一張核准請購只能建立一張 PO；超收、重複簽核、非退回單重送及庫存不足回 409，角色或成員資格不符回 403。
+- ReceiptLine 連到入庫 Movement，領料的 OUT Movement 連到 Project。收貨不直接認列專案實際成本，避免入庫和領料重複計算；承諾與實際成本也不能直接相加。
+
+依據：[業務流程與規則](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/business-process/WORKFLOW.md)。
+
+<h2 id="opsflow-architecture">共享契約與資料庫交易的模組化單體</h2>
+
+<OpsFlowEvidence locale="zh-tw" section="architecture" />
+
+Vue 3、TypeScript、Vite、Element Plus 與 Pinia 負責操作介面；NestJS Modular Monolith 採單一 Nest module，依認證、主檔、採購、庫存、報表及整合分檔。`packages/shared` 保存 Zod 輸入契約、角色與狀態。Prisma 7 經官方 MariaDB driver adapter 連接 MySQL 8.4；Docker Compose 管理本機 App、DB 與隔離供應商模擬，GitHub Actions 執行品質檢查。
+
+後端執行 Cookie Session、Origin／CSRF 驗證、RBAC、Audit Log 與 Request ID；畫面提示不代替授權。這是本機展示架構，未實作微服務或 Message Broker，也沒有宣稱已部署正式環境。
+
+依據：[系統架構](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/architecture/SYSTEM_ARCHITECTURE.md)、[資料關係 ERD](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/architecture/ERD.md)。
+
+<h2 id="product-screenshots">真實產品畫面，合成營運資料</h2>
+
+<OpsFlowEvidence locale="zh-tw" section="screens" />
+
+截圖取自來源 `docs/screenshots/desktop.png` 與 `mobile.png`，展示工作台、待辦、部分收貨及專案成本；不是生成圖片。圖中的 KPI 與金額為合成企業的資料庫結果，不代表商業成效。
+
+<h2 id="data-sources">公開商品目錄與模擬 ERP 資料分開</h2>
+
+UCI Online Retail 轉換程式處理 **541,909 列**歷史零售資料，排除不合條件資料後，商品代碼統一大寫、去重並排序，匯入 **100 個商品衍生目錄**。僅保留商品代碼與名稱；不匯入客戶、發票或歷史交易。
+
+TWD 標準成本、單位與補貨門檻都是合成欄位，沒有把 GBP 售價換算成工程採購成本。企業、專案、供應商與簽核交易由固定 Seed 合成。Microsoft WideWorldImporters 僅研究，**未實際匯入** MySQL。
+
+資料歸屬：Chen, D. (2015), [Online Retail，UCI Machine Learning Repository](https://doi.org/10.24432/C5BW33)，[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)。OpsFlow 將來源商品代碼正規化並加前綴，搭配合成成本；本作品集僅摘要使用方式，未複製資料集。詳見 [Data Sources 與轉換紀錄](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/data-sources/DATA_SOURCES.md)。
+
+<h2 id="benchmarks">有環境與樣本邊界的工程量測</h2>
+
+<OpsFlowEvidence locale="zh-tw" section="benchmarks" />
+
+**測量條件**：2026-11-19 21:34 UTC，Benchmark 程式版本 `7cdf742`、工作樹乾淨。Windows 10.0.26300、Ryzen 5 5600H、12 logical CPUs、15.41 GiB RAM、Node 24.22.1、Docker 29.9.3、MySQL 8.4.13。API 與 Node 負載程序同機，DB 位於 Docker Desktop；資料為 50 專案、1,000 PO、100,706 筆異動。
+
+**SQL 索引觀察**：相同 Movement JOIN Project 查詢，前後各 30 次，平均耗時 **4.324 ms → 2.179 ms**；複合索引為 `(projectId, createdAt)`。原始結果保存 EXPLAIN，索引移除與恢復限隔離 Benchmark DB。
+
+**專案列表彙總觀察**：`/api/projects?page=1&pageSize=20`，16 並行的 P95 **2,291.71 ms → 303.19 ms**。前測版本 `3a98e22`，後測 `7cdf742`；由載回 OUT 明細後在 Node 彙總，改為參數化 SQL `GROUP BY SUM`。此數字屬專案列表，成本報表的後測 P95 為 315.39 ms。
+
+兩次量測未隨機交錯，主機與快取未受控制，其他端點也有時間差，不能將全部差異歸因於 SQL 修改。這是短時間 closed-loop 本機觀察，沒有信賴區間、長時間 soak 或網際網路量測；不是 production SLA 或使用者容量承諾。k6 腳本有提供，**未實際執行**。
+
+依據：[Benchmark 結果](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/RESULTS.md)、[方法與環境](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/METHODOLOGY.md)、[原始樣本與 EXPLAIN](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/results.json)。
+
+<h2 id="maintenance">把維護能力放進可重現的證據</h2>
+
+以下三例是開發與驗證時自然發現的真實 Bug，沒有包裝成歷史企業事故。共同方法是先保留失敗，再完成 Root Cause Analysis、修復與 Regression Testing。[真實維護紀錄](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/REAL_BUG_RECORDS.md)可追查 Issue、修復 Commit 與 RED／GREEN。
+
+### 簽核與重送競態：讓預算檢查讀到正確明細
+
+**問題**：主管可能讀到舊低額明細，卻核准剛重送的高額單。**根因**：核准讀取明細與重送交易之間缺乏鎖定順序。**修復**：先鎖 PurchaseRequest，再讀明細，接著鎖 Project 計算當下承諾。**驗證**：真實 MySQL 用 PROCESSLIST 確認 SQL 等待，重送高額單後，核准由錯誤的 201 改回 409，單據保持 SUBMITTED。**價值**：以可重現競態守住預算約束。見 [Issue #5](https://github.com/Cizing24/opsflow-mini-erp/issues/5)、修復 `35d49c3` 與 [MySQL 回歸測試](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/tests/integration/workflow.test.ts)。
+
+### 舊搜尋覆蓋新結果：狀態也要有版本
+
+**問題**：快速搜尋時，較慢的舊查詢蓋掉新結果。**根因**：Promise 完成順序被當成使用者輸入順序。**修復**：使用遞增 version，只允許最新請求更新 items、total、error 與 loading。**驗證**：最小 Unit 先重現舊結果最後回傳的 RED，再確認 GREEN，並重跑完整 E2E。**價值**：同時處理資料與載入／錯誤狀態，避免介面顯示互相矛盾。見 [Issue #3](https://github.com/Cizing24/opsflow-mini-erp/issues/3)、修復 `575e37e` 與[搜尋回歸測試](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/tests/unit/search-regression.test.ts)。
+
+### Session 過期：恢復登入，也不誤清除新 Session
+
+**問題**：API 回 401 後，畫面仍保留登入者，登出也失敗。**根因**：共享 API client 未同步清理失效 Session。**修復**：當 401 屬於發出請求時的當前 Session，才清除登入狀態，避免舊回應登出剛登入的使用者。**驗證**：兩種 Unit 情境先 RED 再 GREEN；Chromium 清 Cookie 後操作會回登入頁，並可重新登入。**價值**：將失敗恢復納入正常使用流程。見 [Issue #13](https://github.com/Cizing24/opsflow-mini-erp/issues/13)、修復 `7eadd36` 與 [Session 恢復測試](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/tests/unit/session-recovery.test.ts)。
+
+### 隔離故障演練與復原
+
+這一組是 **Simulation，並非自然發生的 Bug 或正式事故**：8 個同 Key 請求只建立一張收貨單與一次異動；12 人搶最後一件為 1 成功、11 個 409；收貨後段失敗時單據、庫存與 Key 一起 rollback。Migration 演練在隨機隔離 DB 故意執行失敗 DDL，標示 rolled-back 後前向修復。供應商無回應與故意錯誤計價 fixture 分別驗證逾時處理及回歸測試能抓到缺陷。
+
+Backup／Restore 另保存實際還原比對：5 專案、120 物料、30 PO、60 異動，資料品質異常為 0，還原結果相符，來源 DB 未修改。依據：[Fault Injection](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/FAULT_INJECTION.md)、[Migration Guide](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/MIGRATION_GUIDE.md)、[Backup／Restore](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/BACKUP_RESTORE.md)。
+
+<h2 id="verification">來源測試與本作品集驗證分別記錄</h2>
+
+| 來源驗證               | 已核對結果                               |
+| ---------------------- | ---------------------------------------- |
+| Unit                   | 7／7                                     |
+| 真實 MySQL Integration | 27／27                                   |
+| Chromium E2E           | 4／4                                     |
+| 合計                   | 38 個測試案例通過，沒有 skip             |
+| GitHub Actions         | Run 44629535764：success，head `bc92260` |
+
+2026-11-20 已核對[對應版本成功 CI](https://github.com/Cizing24/opsflow-mini-erp/actions/runs/44629535764)及交付紀錄。上述 38 案例屬來源 ERP 的歷史驗證；本次作品集驗證檢查內容、路由、圖片、可及性及響應式，不代表重跑 ERP 後端。
+
+來源尚未驗證 Safari、Firefox、真實手機、螢幕閱讀器、長時間負載或完整滲透測試。系統未提供總帳、稅務、移動平均估價、庫存期間快照、SSO 或分散式 limiter。完整邊界見 [Known Limitations](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/KNOWN_LIMITATIONS.md)。
+
+<h2 id="engineering-decisions">五項有實作與測試支持的工程決策</h2>
+
+1. **庫存一致性與並行控制**：讀庫存再扣除會有競態，因此採 `UPDATE Stock ... WHERE quantity >= requested` 原子扣庫存，影響列為 0 回 409。取捨是熱門資料列會競爭；12 人搶最後一件的真實 MySQL 測試核對只成功一次。見 [inventory.ts](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/inventory.ts)。
+2. **Idempotency**：網路重送不能重複入庫。Key 連同 actor、scope、payload 辨識相同請求，回傳已提交結果；內容不同回 409。需要持久化 Key 與請求身分，不以任意寫入重試代替。8 同 Key 並行驗證只入庫一次。見 [transactions.ts](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/transactions.ts)。
+3. **Transaction 與 Rollback**：收貨的 Key、PO、Stock、ReceiptLine、Movement 與 Audit 必須一起成功。採 READ COMMITTED transaction 與 PO 列鎖；取捨是交易較多步驟，需保持短且避免外部網路等待。後段故障測試核對完整回滾。見 [收貨實作](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/inventory.ts)。
+4. **SQL 查詢優化**：大量 OUT 明細傳回 Node 造成彙總負擔，改為參數化 `GROUP BY SUM`，搭配實際查詢索引。取捨是彙總邏輯更依賴 SQL，OFFSET 深分頁仍有成本；Integration 逐筆核對 ledger 金額及數量，Benchmark 另記環境限制。見 [resources.ts](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/resources.ts)。
+5. **以 Regression Testing 維護規則**：先保存可重現的失敗，再做最小修復；真實 Bug 與刻意故障 fixture 分開。成本是額外維護隔離資料庫與證據，但能在未降低測試門檻下確認舊功能。見 [測試策略](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/testing/TEST_STRATEGY.md)。
+
+<h2 id="project-resources">原始碼與可追查的專案資源</h2>
+
+- [公開 Repository](https://github.com/Cizing24/opsflow-mini-erp) · [交付 PR #10](https://github.com/Cizing24/opsflow-mini-erp/pull/10) · [版本 CI](https://github.com/Cizing24/opsflow-mini-erp/actions/runs/44629535764)
+- [技術與交付文件](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/DELIVERY_REPORT.md) · [Benchmark 報告](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/RESULTS.md) · [維護紀錄](https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/REAL_BUG_RECORDS.md)
+
+相關案例：[TravelOps 的票券履約與營運](/zh-tw/projects/travelops/)、[AssetFlow 的設備生命週期](/zh-tw/projects/assetflow/)、[BookFlow 的預約一致性](/zh-tw/projects/bookflow/)。回到[工程實驗室](/zh-tw/notes/)可依技術與品質主題繼續閱讀。
