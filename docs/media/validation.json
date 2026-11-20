@@ -1,0 +1,25 @@
+{
+  "browser": "156.0.8078.4",
+  "views": [
+    {
+      "width": 1280,
+      "images": 7,
+      "loaded": true
+    },
+    {
+      "width": 390,
+      "images": 7,
+      "loaded": true
+    }
+  ],
+  "video": {
+    "duration": 77.28,
+    "width": 1280,
+    "height": 720
+  },
+  "playback": true,
+  "seeks": 3,
+  "gifAnimated": true,
+  "svgDecoded": true,
+  "pageErrors": []
+}
