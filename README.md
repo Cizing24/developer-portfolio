@@ -8,6 +8,9 @@
 - 舊 `island=bookflow`、`island=assetflow`、`studio` 連結仍可回到 Project Harbor，既有 `view` 還原對應展示。
 - 保留原生 dialog、四時段、CIZING、船隻／人物通行、Reduced Motion、WebGL fallback 與 no-JS 案例閱讀。
 - AssetFlow 與 TravelOps 來源維持私人，公開內容只包含已審核素材及工程摘要。
+- OpsFlow Mini ERP 提供完整雙語案例、真實合成資料截圖、採購到成本流程、維護紀錄與本機 Benchmark；出現在作品展館、作品總覽、Engineering Lab 及相關案例導覽，沒有公開 ERP Demo。
+
+OpsFlow 的來源版本、量測條件與本次驗證見 [整合紀錄](docs/OPSFLOW_INTEGRATION.md)。
 
 完整模型、操作與維護教學見 [V3 架構](docs/V3_PROJECT_HARBOR.md)。本輪實測紀錄見 [V3 驗收](docs/V3_PROJECT_HARBOR_VALIDATION.md)。以下七島更新說明保留為前版歷史紀錄，舊作品專屬島描述已由上方功能分區取代。
 

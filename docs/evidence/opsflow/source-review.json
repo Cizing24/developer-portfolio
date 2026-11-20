@@ -1,0 +1,188 @@
+{
+  "reviewedAt": "2026-11-20",
+  "source": {
+    "repository": "https://github.com/Cizing24/opsflow-mini-erp",
+    "commit": "bc922605f9d71ad7fae3b133c005bba85c70363f",
+    "pullRequest": 10,
+    "merged": true,
+    "mergeCommit": "aa2f234dbee3f2e550762dedd5f544cbdc7f5781",
+    "readOnly": true
+  },
+  "ci": {
+    "run": 44629535764,
+    "head": "bc922605f9d71ad7fae3b133c005bba85c70363f",
+    "conclusion": "success",
+    "unit": 7,
+    "mysqlIntegration": 27,
+    "chromiumE2E": 4,
+    "verifiedFrom": "GitHub Actions API and latest run logs"
+  },
+  "benchmark": {
+    "measuredAtUtc": "2026-11-19T21:34:05.923Z",
+    "commit": "7cdf7422fd0215800d1a33d91225337a0cbd8440",
+    "movements": 100706,
+    "apiSamples": 1080,
+    "concurrency": [
+      1,
+      4,
+      16
+    ],
+    "errorRate": 0,
+    "p95At16": {
+      "movements": 137.55,
+      "projects": 303.19,
+      "costs": 315.39
+    },
+    "sqlIndexAverageMs": [
+      4.324,
+      2.179
+    ],
+    "projectListBeforeAfterP95Ms": [
+      2291.71,
+      303.19
+    ],
+    "limitations": "Local closed-loop Node harness; host/cache uncontrolled; no SLA, soak or k6 execution."
+  },
+  "links": [
+    {
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "status": 200,
+      "finalUrl": "https://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "url": "https://doi.org/10.24432/C5BW33",
+      "status": 200,
+      "finalUrl": "https://archive.ics.uci.edu/dataset/352/online+retail"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/actions/runs/44629535764",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/actions/runs/44629535764"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/inventory.ts",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/inventory.ts"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/resources.ts",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/resources.ts"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/transactions.ts",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/apps/api/src/transactions.ts"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/DELIVERY_REPORT.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/DELIVERY_REPORT.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/KNOWN_LIMITATIONS.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/KNOWN_LIMITATIONS.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/architecture/ERD.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/architecture/ERD.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/architecture/SYSTEM_ARCHITECTURE.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/architecture/SYSTEM_ARCHITECTURE.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/METHODOLOGY.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/METHODOLOGY.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/RESULTS.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/RESULTS.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/results.json",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/benchmarks/results.json"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/business-process/WORKFLOW.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/business-process/WORKFLOW.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/data-sources/DATA_SOURCES.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/data-sources/DATA_SOURCES.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/BACKUP_RESTORE.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/BACKUP_RESTORE.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/FAULT_INJECTION.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/FAULT_INJECTION.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/MIGRATION_GUIDE.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/MIGRATION_GUIDE.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/REAL_BUG_RECORDS.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/maintenance/REAL_BUG_RECORDS.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/testing/TEST_STRATEGY.md",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/docs/testing/TEST_STRATEGY.md"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/tests/integration/workflow.test.ts",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/tests/integration/workflow.test.ts"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/tests/unit/search-regression.test.ts",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/tests/unit/search-regression.test.ts"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/tests/unit/session-recovery.test.ts",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/blob/bc922605f9d71ad7fae3b133c005bba85c70363f/tests/unit/session-recovery.test.ts"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/issues/13",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/issues/13"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/issues/3",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/issues/3"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/issues/5",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/issues/5"
+    },
+    {
+      "url": "https://github.com/Cizing24/opsflow-mini-erp/pull/10",
+      "status": 200,
+      "finalUrl": "https://github.com/Cizing24/opsflow-mini-erp/pull/10"
+    }
+  ]
+}
