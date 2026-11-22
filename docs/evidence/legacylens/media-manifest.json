@@ -1,0 +1,117 @@
+{
+  "source": "https://github.com/Cizing24/LegacyLens-Showcase",
+  "sourceCommit": "1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e",
+  "reviewedAt": "2026-11-23",
+  "files": [
+    {
+      "source": "docs/media/cover.png",
+      "destination": "src/assets/legacylens/cover.png",
+      "bytes": 77808,
+      "sha256": "dba7e141b539c4b6556da47e79a2ae7a422dd3e2148286ecf87d85c8da1a0e7b"
+    },
+    {
+      "source": "docs/media/case-search.png",
+      "destination": "src/assets/legacylens/case-search.png",
+      "bytes": 161022,
+      "sha256": "c9b3c32e12b58b8930305b677286ec8cf0c3aa850ec6448a086ed123fe213c14"
+    },
+    {
+      "source": "docs/media/case-detail.png",
+      "destination": "src/assets/legacylens/case-detail.png",
+      "bytes": 125828,
+      "sha256": "3e968769c70b88b86af468831a7d306ace488eb5b9360b25958688477a65fcd3"
+    },
+    {
+      "source": "docs/media/customers.png",
+      "destination": "src/assets/legacylens/customers.png",
+      "bytes": 57850,
+      "sha256": "deb43947cbf5a9f3ce83ef637d18727785685199f6b1b8eb6256cc525dd7c7ab"
+    },
+    {
+      "source": "docs/media/reassignment-history.png",
+      "destination": "src/assets/legacylens/reassignment-history.png",
+      "bytes": 46418,
+      "sha256": "9642c1bc2b10ce9bb38342e1b8db1f128b230e92a3ef55c9239f4101797efbf4"
+    },
+    {
+      "source": "docs/media/audit-report.png",
+      "destination": "src/assets/legacylens/audit-report.png",
+      "bytes": 60939,
+      "sha256": "c2f8ac88fa278a11a27184d24159857d7bed84e6275a76b64bfe6090a8f2a7ac"
+    },
+    {
+      "source": "docs/media/mobile-form.png",
+      "destination": "src/assets/legacylens/mobile-form.png",
+      "bytes": 47232,
+      "sha256": "79333f0e71fe61b2e70b81c00305a595289714f1027901d1c357a0fed416e8d2"
+    },
+    {
+      "source": "docs/media/architecture.svg",
+      "destination": "src/assets/legacylens/architecture.svg",
+      "bytes": 3242,
+      "sha256": "4706f94ab171660aeb4a44d56e74df51fe5aebe304b3954b4eeed3091f3e11cf"
+    },
+    {
+      "source": "docs/media/web001-before.png",
+      "destination": "src/assets/legacylens/web001-before.png",
+      "bytes": 72415,
+      "sha256": "4126f8c82c925f2ee304e304bfcaf305f348ace358963b7b90270e6d44c3ed21"
+    },
+    {
+      "source": "docs/media/demo.mp4",
+      "destination": "public/media/legacylens/demo.mp4",
+      "bytes": 1573726,
+      "sha256": "e0a8eb292b7543d7dd3b8a06f8f0e5341415005be6462f140653c6a691622061"
+    },
+    {
+      "source": "docs/media/workflow.gif",
+      "destination": "public/media/legacylens/workflow.gif",
+      "bytes": 1667498,
+      "sha256": "ed99f56d3e88994c582c481ee57ab3b7e99fe2b06c994ed5a97d46ceeda1850f"
+    },
+    {
+      "source": "docs/media/demo.zh-TW.srt",
+      "destination": "public/media/legacylens/demo.zh-TW.srt",
+      "bytes": 1209,
+      "sha256": "979337a9573b699999327a8189201174afaba32ceba05d97e928e6c1ea9fea5f"
+    },
+    {
+      "source": "docs/media/demo.en.srt",
+      "destination": "public/media/legacylens/demo.en.srt",
+      "bytes": 1218,
+      "sha256": "bb51857c699e35eedbf2d93e25978f1ad6da9c6ddbac4daa985e24ba4dc9f254"
+    },
+    {
+      "source": "docs/media/demo.zh-TW.srt",
+      "destination": "public/media/legacylens/demo.zh-TW.vtt",
+      "transformation": "SRT to WebVTT; timestamps use decimal dots; UTF-8 LF",
+      "bytes": 1178,
+      "sha256": "93c22ea900641e047c57d481cad63922adade8eaabc507bb47268dd2249273b4"
+    },
+    {
+      "source": "docs/media/demo.en.srt",
+      "destination": "public/media/legacylens/demo.en.vtt",
+      "transformation": "SRT to WebVTT; timestamps use decimal dots; UTF-8 LF",
+      "bytes": 1187,
+      "sha256": "dc1d471bbc820e2ddf7d0d510494a0f031875f8f065b2249100aa9b6c88ea198"
+    },
+    {
+      "source": "docs/benchmarks/10000/results.json",
+      "destination": "docs/evidence/legacylens/benchmark-10000.json",
+      "bytes": 9249,
+      "sha256": "58c6411ec2d8488ee8c523250f350a787a995456505832994144600852858014"
+    },
+    {
+      "source": "docs/benchmarks/50000/results.json",
+      "destination": "docs/evidence/legacylens/benchmark-50000.json",
+      "bytes": 9444,
+      "sha256": "1c3260dc40330c35509b5a6ef300fc2568d38a35843a667c23fd230091d64b4f"
+    },
+    {
+      "source": "docs/benchmarks/100000/results.json",
+      "destination": "docs/evidence/legacylens/benchmark-100000.json",
+      "bytes": 9492,
+      "sha256": "921bd81b1c80c9758499775ea39b842ff272b514030205623fe5c7846879fdb6"
+    }
+  ]
+}

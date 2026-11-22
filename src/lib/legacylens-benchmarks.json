@@ -1,0 +1,74 @@
+[
+  {
+    "scale": 10000,
+    "totalRows": 10047,
+    "results": [
+      {
+        "stage": "baseline",
+        "p50Ms": 3.3023000000000002,
+        "p95Ms": 4.1417,
+        "logicalReads": 405
+      },
+      {
+        "stage": "rewrite-only",
+        "p50Ms": 2.466,
+        "p95Ms": 2.9644,
+        "logicalReads": 405
+      },
+      {
+        "stage": "indexed",
+        "p50Ms": 1.1334,
+        "p95Ms": 1.23,
+        "logicalReads": 86
+      }
+    ]
+  },
+  {
+    "scale": 50000,
+    "totalRows": 50047,
+    "results": [
+      {
+        "stage": "baseline",
+        "p50Ms": 11.3786,
+        "p95Ms": 15.210500000000001,
+        "logicalReads": 1672
+      },
+      {
+        "stage": "rewrite-only",
+        "p50Ms": 7.9553,
+        "p95Ms": 10.0961,
+        "logicalReads": 1672
+      },
+      {
+        "stage": "indexed",
+        "p50Ms": 1.0768,
+        "p95Ms": 1.1548,
+        "logicalReads": 88
+      }
+    ]
+  },
+  {
+    "scale": 100000,
+    "totalRows": 100047,
+    "results": [
+      {
+        "stage": "baseline",
+        "p50Ms": 22.342000000000002,
+        "p95Ms": 26.7085,
+        "logicalReads": 3255
+      },
+      {
+        "stage": "rewrite-only",
+        "p50Ms": 16.8213,
+        "p95Ms": 22.1663,
+        "logicalReads": 3255
+      },
+      {
+        "stage": "indexed",
+        "p50Ms": 1.0832000000000002,
+        "p95Ms": 1.3413000000000002,
+        "logicalReads": 87
+      }
+    ]
+  }
+]

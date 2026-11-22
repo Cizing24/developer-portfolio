@@ -12,7 +12,7 @@ CIZING 的繁中／英文工程作品集：從 3D 群島探索作品，也能直
 
 [觀看完整操作影片](docs/media/demo.mp4) · [媒體、版本與本次驗證](docs/SHOWCASE_VALIDATION.md)
 
-影片與截圖來自本機正式建置。互動展示使用合成資料；瀏覽器內的購票、預約及資產操作，不連線來源產品的後端。影片檔隨 PR 交付，GitHub 若只顯示檔案頁，可下載播放。既有網站入口保留，本次沒有部署網站。
+影片與截圖來自本機正式建置。互動展示使用合成資料；瀏覽器內的購票、預約及資產操作，不連線來源產品的後端。影片檔隨 PR 交付，GitHub 若只顯示檔案頁，可下載播放。既有正式網站入口保留，正式站點未在本次任務中部署；PR Preview 由既有 Cloudflare 流程產生。
 
 ## 解決的問題與功能畫面
 
@@ -32,7 +32,7 @@ TravelOps、BookFlow、AssetFlow 依需求載入互動模組。訪客可觀察�
 
 ### 案例閱讀：從產品流程追到工程證據
 
-OpsFlow、TravelOps、BookFlow、AssetFlow 的雙語案例提供真實產品畫面、業務流程與工程摘要。來源產品的測試證據與作品集自身測試分開記錄。
+LegacyLens、OpsFlow、TravelOps、BookFlow、AssetFlow 的雙語案例提供真實產品畫面、業務流程與工程摘要。來源產品的測試證據與作品集自身測試分開記錄。
 
 ![OpsFlow 雙語案例頁面](docs/media/case-study.png)
 
@@ -48,7 +48,7 @@ OpsFlow、TravelOps、BookFlow、AssetFlow 的雙語案例提供真實產品畫�
 
 網站使用 Astro 靜態輸出，沒有業務 API、資料庫或登入服務。`src/content.config.ts` 與 schema 驗證雙語內容；`studio-reader.ts` 處理閱讀與網址狀態，`studio.ts` 按需載入場景，`src/lib/demos/` 分別載入三個操作展示。
 
-[V3 架構與操作](docs/V3_PROJECT_HARBOR.md) · [本次程式碼查核](docs/SHOWCASE_VALIDATION.md) · [雙語內容維護](CONTENT_GUIDE.md)
+[LegacyLens 雙語案例與驗證](docs/LEGACYLENS_INTEGRATION.md) · [V3 架構與操作](docs/V3_PROJECT_HARBOR.md) · [本次程式碼查核](docs/SHOWCASE_VALIDATION.md) · [雙語內容維護](CONTENT_GUIDE.md)
 
 ## Engineering Highlights 與技術決策
 
@@ -60,7 +60,7 @@ OpsFlow、TravelOps、BookFlow、AssetFlow 的雙語案例提供真實產品畫�
 
 ## Testing & Results
 
-本次在 Windows／Node 24.22.1 重跑 `npm test`：**66／66 通過**；`npm run build`：**44 頁建置成功**。本次新增媒體的瀏覽器及文件檢查，見 [SHOWCASE_VALIDATION](docs/SHOWCASE_VALIDATION.md)。
+LegacyLens 整合在 Windows／Node 24.22.1 重跑 `npm test`：**69／69 通過**；`npm run build`：**47 頁建置成功**。雙語案例、原始素材完整性、瀏覽器、無障礙與 SEO 結果見 [LEGACYLENS_INTEGRATION](docs/LEGACYLENS_INTEGRATION.md)。前次全站展示素材的檢查保留於 [SHOWCASE_VALIDATION](docs/SHOWCASE_VALIDATION.md)。
 
 既有 [OpsFlow 整合驗證](docs/OPSFLOW_INTEGRATION.md)記錄首輪 188 項 E2E 中 180 通過，修正後重跑受影響的 24 項全數通過；沒有把兩輪描述成修正後完整重跑 188 項。[Project Harbor 驗收](docs/V3_PROJECT_HARBOR_VALIDATION.md)另保留互動規則、lazy loading、axe 及效能取樣限制。歷史效能數據不代表目前版本或真實裝置結果。
 
@@ -100,9 +100,9 @@ npm run preview
 
 ## Project Status
 
-目前是雙語靜態作品集，四個案例中三個具前端互動展示。OpsFlow 只有案例與工程證據，沒有公開 ERP 登入服務。來源產品的權限、資料庫、金流與背景工作不在本站執行；棉麻屋的客戶畫面與部署網址維持私有。
+目前是雙語靜態作品集，五個案例中三個具前端互動展示。LegacyLens 提供真實 Web Forms 操作影片、SQL Benchmark 與維護案例，OpsFlow 提供 ERP 案例與工程證據，兩者都沒有公開登入服務。來源產品的權限、資料庫、金流與背景工作不在本站執行；棉麻屋的客戶畫面與部署網址維持私有。
 
-未驗證 Safari／Firefox、真實手機、人工讀屏與正式負載。Three.js 場景仍有大於 500 kB 的 chunk 建置警示；本次只改善 README 與素材，不變更網站 UI 或部署設定。前版歷史效能資料保留在原文件，不能當作目前版本數據。
+未驗證 Safari／Firefox、真實手機、人工讀屏與正式負載。Three.js 場景仍有大於 500 kB 的 chunk 建置警示；本次新增 LegacyLens 案例、媒體與證據入口，沿用既有場景與全站視覺，未變更正式部署設定。前版歷史效能資料保留在原文件，不能當作目前版本數據。
 
 <details>
 <summary>既有開發協作紀錄</summary>

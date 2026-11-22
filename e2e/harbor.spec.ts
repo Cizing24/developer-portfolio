@@ -86,7 +86,10 @@ test('Harbor offers data-driven entries without scene loading for direct reading
   await expect(harbor).toBeVisible();
   await expect(harbor.locator('[data-harbor-entry]:visible')).toHaveCount(3);
   await harbor.getByLabel('Project group').selectOption('other');
-  await expect(harbor.locator('[data-harbor-entry]:visible')).toHaveCount(0);
+  await expect(harbor.locator('[data-harbor-entry]:visible')).toHaveCount(1);
+  await expect(harbor.locator('[data-harbor-entry]:visible h3')).toHaveText(
+    'LegacyLens',
+  );
   await harbor.getByLabel('Project group').selectOption('featured');
   await expect(harbor.locator('[data-harbor-entry]:visible')).toHaveCount(3);
   expect(requests.some((r) => r.includes('studio-scene'))).toBe(false);

@@ -1,0 +1,89 @@
+{
+  "reviewedAt": "2026-11-23",
+  "environment": {
+    "os": "Windows",
+    "node": "24.22.1",
+    "playwright": "1.64.1",
+    "browser": "Chromium",
+    "viewports": [
+      [
+        1440,
+        1000
+      ],
+      [
+        768,
+        1024
+      ],
+      [
+        390,
+        844
+      ],
+      [
+        320,
+        760
+      ]
+    ],
+    "additionalLegacyLensViewport": [
+      1280,
+      900
+    ]
+  },
+  "checks": {
+    "npmCi": "pass",
+    "lint": "pass",
+    "format": "pass",
+    "astro": {
+      "errors": 0,
+      "warnings": 0,
+      "hints": 0
+    },
+    "typescript": "pass",
+    "vitest": {
+      "passed": 69
+    },
+    "content": "pass",
+    "build": {
+      "pages": 47
+    },
+    "seo": {
+      "localizedPages": 24,
+      "previewNoindex": true,
+      "configuredOriginFixture": true
+    },
+    "publicScan": "pass",
+    "npmAuditModerate": {
+      "vulnerabilities": 0
+    }
+  },
+  "e2eFullRun": {
+    "passed": 204,
+    "failed": 4,
+    "failure": "Existing Harbor test assumed Other Projects was empty; final content adds LegacyLens as its first member.",
+    "durationMs": 691656.304
+  },
+  "e2eCorrectedHarborRecheck": {
+    "passed": 4,
+    "failed": 0,
+    "durationMs": 6332.814
+  },
+  "legacyLensE2E": {
+    "passed": 20,
+    "failed": 0,
+    "includes": "both locales, real media, captions, all scales, no-JS, Harbor/Lab/Skills, keyboard, axe, console and overflow"
+  },
+  "mediaIntegrity": {
+    "stagedHashesVerified": 18,
+    "videoDurationSeconds": 118,
+    "gifDurationSeconds": 20.01,
+    "videoPlaybackChecked": true
+  },
+  "notVerified": [
+    "real devices",
+    "Safari",
+    "Firefox",
+    "manual screen readers",
+    "production load",
+    "historical V2 visual baseline",
+    "Lighthouse rerun"
+  ]
+}

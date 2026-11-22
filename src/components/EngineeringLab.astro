@@ -62,6 +62,24 @@ const allGroups = [
         .filter((note) => note.data.section === 'engineering')
         .map(noteItem),
       caseItem(
+        'legacylens',
+        en
+          ? 'LegacyLens SQL plans and covering indexes'
+          : 'LegacyLens SQL 計畫與 Covering Index',
+        en
+          ? 'C# / ASP.NET Web Forms / .NET Framework / ADO.NET: compare 10k, 50k and 100k SQL Server queries, reads and transaction boundaries.'
+          : 'C#／ASP.NET Web Forms／.NET Framework／ADO.NET：比較 10k、50k、100k SQL Server 查詢、讀取與交易邊界。',
+        [
+          'C#',
+          'ASP.NET Web Forms',
+          '.NET Framework',
+          'SQL Server',
+          'ADO.NET',
+          'Performance Optimization',
+        ],
+        '#sql-001',
+      ),
+      caseItem(
         'opsflow',
         en
           ? 'OpsFlow transactions and query measurements'
@@ -78,6 +96,25 @@ const allGroups = [
     id: 'quality',
     title: en ? 'Testing & quality' : '測試與工程品質',
     items: [
+      caseItem(
+        'legacylens',
+        en
+          ? 'LegacyLens debugging and compatible change'
+          : 'LegacyLens 根因調查與相容性變更',
+        en
+          ? 'Root cause analysis, regression testing, backward compatibility, migration and feature rollback; 58 NUnit and 13 Playwright source tests.'
+          : 'Root Cause Analysis、Regression Testing、Backward Compatibility、Migration 與 Feature Rollback；來源 58 項 NUnit 及 13 項 Playwright。',
+        [
+          'Debugging',
+          'Testing',
+          'NUnit',
+          'Playwright',
+          'Backward Compatibility',
+          'Migration',
+          'Rollback',
+        ],
+        '#web-001',
+      ),
       caseItem(
         'opsflow',
         en

@@ -30,6 +30,20 @@ const ids = [
   ...(slug === 'travelops'
     ? ['travelops-demo', 'engineering-decisions', 'verification']
     : []),
+  ...(slug === 'legacylens'
+    ? [
+        'legacylens-demo',
+        'product-screenshots',
+        'web-001',
+        'sql-001',
+        'benchmarks',
+        'change-001',
+        'development-issues',
+        'verification',
+        'engineering-decisions',
+        'known-limitations',
+      ]
+    : []),
   ...(slug === 'opsflow'
     ? [
         'business-workflow',
@@ -85,11 +99,9 @@ const ids = [
         {en
           ? 'Actual product screen with synthetic test data.'
           : '實際產品畫面，使用合成測試資料。'}
-        {slug === 'travelops' && (
+        {['travelops', 'legacylens'].includes(slug) && (
           <a href={data.cover.src} target="_blank" rel="noopener">
-            {en
-              ? ' Open full-size catalog (new tab)'
-              : ' 開啟原尺寸目錄（新分頁）'}
+            {en ? ' Open full-size image (new tab)' : ' 開啟原圖（新分頁）'}
           </a>
         )}
       </figcaption>
@@ -143,6 +155,7 @@ const ids = [
     margin: 60px auto;
   }
   .simple-project-source {
+    overflow-wrap: anywhere;
     max-width: 850px;
     margin: 40px auto;
     border-top: 1px solid var(--line);

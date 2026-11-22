@@ -1,0 +1,154 @@
+---
+locale: en
+translationKey: legacylens
+title: LegacyLens
+description: An ASP.NET Web Forms maintenance case study tracing draft loss, SQL query plans and compatible reassignment changes through reproducible failures, decisions and regression evidence.
+category: ENTERPRISE SOFTWARE MAINTENANCE & RELIABILITY
+tags:
+  [
+    C#,
+    ASP.NET Web Forms,
+    .NET Framework,
+    SQL Server,
+    ADO.NET,
+    NUnit,
+    Playwright,
+    Debugging,
+    Testing,
+    Performance Optimization,
+  ]
+highlights:
+  - 'Reproduce Postback draft loss and verify the repair'
+  - '100k SQL query: P95 26.7085 to 1.3413 ms'
+  - 'Compatible reassignment with transaction and replay protection'
+status: Implemented · isolated showcase
+visibility: public
+repository: https://github.com/Cizing24/LegacyLens-Showcase
+featured: false
+order: 5
+sourceCommit: 1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e
+reviewedAt: '2026-11-23'
+cover: ../../../assets/legacylens/cover.png
+coverAlt: Actual LegacyLens case search showing status filters and paginated synthetic case records
+---
+
+import LegacyLensEvidence from '../../../components/LegacyLensEvidence.astro';
+
+<nav aria-label="LegacyLens case contents">
+  <a href="#legacylens-demo">Watch recording</a> ·{' '}
+  <a href="#product-screenshots">Product screens</a> ·{' '}
+  <a href="#legacylens-architecture">Architecture</a> ·{' '}
+  <a href="#web-001">WEB-001</a> · <a href="#sql-001">SQL-001</a> ·{' '}
+  <a href="#change-001">CHANGE-001</a> ·{' '}
+  <a href="#verification">Test evidence</a>
+</nav>
+
+<h2 id="legacylens-purpose">
+  Maintain an existing system with inspectable evidence
+</h2>
+
+LegacyLens is an **ASP.NET Legacy Maintenance Engineering Case Study** built around a working customer-service case system. It demonstrates how to understand Page Lifecycle, reproduce a defect, investigate SQL plans and introduce a compatible rule change. The purpose is to show maintenance reasoning, rather than count CRM features.
+
+The source application was built for this independent exercise; it is not an inherited corporate production system. WEB-001 is **Controlled Fault Injection**, SQL-001 combines **Public Dataset Observation** with a local experiment, and CHANGE-001 is a **Synthetic Scenario**. Actual development problems are recorded separately. There is no public Web Forms login, backend deployment or enterprise adoption claim.
+
+<h2 id="legacylens-demo">118 seconds inside the running application</h2>
+
+<LegacyLensEvidence locale="en" section="video" />
+
+<h2 id="legacylens-features">
+  Implemented workflow and actual product screens
+</h2>
+
+The application supports role-checked customer maintenance; case creation, editing, status changes and history; subject/status search with 20-row pages; manager reassignment with a reason; and audit/statistics. Manager, Agent and Viewer checks run on the server. A closed case must be reopened by a manager before reassignment. Screens show synthetic customer and staff data, not real business operations.
+
+<h3 id="product-screenshots">Search, edit, reassign and inspect history</h3>
+
+<LegacyLensEvidence locale="en" section="screens" />
+
+<h2 id="legacylens-architecture">
+  Four assemblies with explicit responsibilities
+</h2>
+
+<LegacyLensEvidence locale="en" section="architecture" />
+
+**Web Forms UI / code-behind → Application → Domain / Infrastructure → SQL Server.** Web handles controls and Page Lifecycle. Application services apply case and reassignment rules; Domain provides models and conflict types. Infrastructure uses typed ADO.NET parameters and explicit transactions. Application does not depend on System.Web or the database.
+
+ViewState and posted data load before Page_Load, followed by control events. Binding at the wrong point can destroy the restored draft. Updates use **rowversion** to reject stale writes; case changes, history and audit commit in one transaction. **Correlation IDs** connect errors and important operations to diagnostic records. Regression tests cover the real database and browser, not just compilation.
+
+Stack: ASP.NET Web Forms, C#, .NET Framework 4.8, SQL Server 2019 LocalDB, ADO.NET, IIS Express, MSBuild, NUnit, Playwright and GitHub Actions Windows. [Architecture evidence](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/architecture/README.md).
+
+<h2 id="web-001">WEB-001: Postback draft overwrite</h2>
+
+**Classification: Controlled Fault Injection, not an enterprise incident.** The reproduction tool changes guarded binding into unconditional Page_Load binding in an isolated local copy. A browser test opens a case, edits its title and description, changes category, then waits for the real POST response and server hint. The draft returns to the stored value before Save is clicked.
+
+**Root cause:** Page_Load reloads SQL values after Web Forms restores posted data. SelectedIndexChanged therefore receives controls whose draft values have already been overwritten. This is a binding-time problem, not a failed database save.
+
+**Alternatives and decision:** binding only on the first request preserves ViewState with a small change; rebuilding controls during Init is appropriate for dynamic controls but adds complexity here; reading Request.Form before Save cannot repair a draft already lost on screen. The chosen fix is `!IsPostBack`, with Post/Redirect/Get after a successful save and separate history refresh.
+
+<LegacyLensEvidence locale="en" section="failure" />
+
+**Regression evidence:** the identical title/description assertions move from **1 failed to 1 passed**. The repair tool recompiles the isolated source. An initial file-copy restore preserved an old timestamp and let incremental MSBuild skip compilation; the harness was corrected before claiming green. Dynamic controls or disabling ViewState would require a fresh lifecycle review.
+
+[RCA, reproduction and red/green reports](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/incidents/WEB-001.md) · [ADR 0002](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/decisions/0002-postback-binding.md).
+
+<h2 id="sql-001">
+  SQL-001: investigate reads before changing the query contract
+</h2>
+
+Official **NYC 311** records were cumulatively imported at 10k, 50k and 100k. Only five public fields were requested; no addresses, coordinates, contact details or free text were downloaded. Customers and assignees are synthetic mappings, not B2B source data. The dataset metadata has no licenseId; the source documents the official use policy without calling the data CC0 or MIT. [Dataset provenance](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/datasets/PROVENANCE.md).
+
+The baseline uses optional-OR predicates. The rewrite composes fixed predicate fragments with typed parameters. Two covering indexes support status-filtered and unfiltered lists; the status index is `(Status, CreatedAt DESC, Id DESC) INCLUDE (Title, CustomerId, AssignedTo)`. Stable ordering and the existing OFFSET page contract remain intact.
+
+<h3 id="benchmarks">Three scales, three stages, one measurement method</h3>
+
+<LegacyLensEvidence locale="en" section="benchmarks" />
+
+**Measurement boundary:** one local client and an already-open SqlConnection to SQL Server 2019 LocalDB; warm cache; **5 warmups and 40 timed executions per stage**, nearest-rank percentiles. The query uses `Status='Open'`, an empty title filter, offset 0 and 21 returned rows: 20 UI rows plus a next-page sentinel. Public rows are supplemented by 45 synthetic seed cases and a few E2E cases; the 100k run records **100,047 total rows**. Timing includes ExecuteReader and reading results; it excludes connection open, authentication, network and full HTTP latency. Background activity was not eliminated. These are not production SLA measurements.
+
+**Execution plan evidence:** rewriting alone retains 3,255 total logical reads at 100k. With covering indexes, Cases reads drop from 3,171 pages to 3; Users/Customers contribute 84, yielding **87 total**. Actual plans and STATISTICS IO were captured separately from latency. Ordered IDs match at offsets **0, 20 and 200** for every stage; application regression tests also cover nonempty subjects and other statuses. [Plans, IO and correctness](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/benchmarks/RESULTS.md).
+
+**Trade-offs:** Open is relatively rare in this snapshot; other filters need not improve by the same ratio. Substring `LIKE '%term%'` and deep OFFSET remain limited. All nonclustered indexes total 16,872 KB at 100k, including an existing unique index; this is not the size of only the two new indexes. Index write overhead was not quantified. No benchmark was rerun for this portfolio integration.
+
+<h2 id="change-001">
+  CHANGE-001: compatible reassignment without invented history
+</h2>
+
+**Classification: Synthetic Scenario.** The baseline allowed assignee changes through ordinary case editing. The exercise introduces manager-only reassignment, a valid active Agent/Manager target and a 5-500 character reason, while preserving old cases and history. The ordinary edit endpoint must reject an owner change; a disabled control alone is insufficient.
+
+**Additive migration and backfill:** migration 003 adds policy version, nullable history fields, a transfer-operation ledger and a feature flag. Existing cases receive policy 1; new cases default to 2. Historical reasons and request IDs stay null rather than being fabricated. A real initial DDL metadata compilation issue was fixed before the migration was recorded as passing.
+
+**Transaction and idempotency:** a required Request ID with the same payload replays without a second transfer or history record; reuse with a different payload conflicts. An 8-byte rowversion rejects stale edits. The transaction rechecks authorization and current state, then commits owner, operation ledger, History and Audit together, or rolls them all back.
+
+**Regression and rollback:** real SQL tests cover permissions, inactive/Viewer targets, closed cases, invalid reasons, stale versions, the old write path, duplicate and concurrent replay, payload conflicts, migration failure rollback, reruns, backfill and legacy reads. Browser tests submit an invalid reason, complete a transfer and inspect its history. Feature rollback pauses new transfers while retaining cases and ledger; rerunning the migration does not re-enable the flag. Arbitrary historical binary write downgrades are unverified.
+
+[Change case and verification](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/incidents/CHANGE-001.md) · [ADR 0004](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/decisions/0004-reassignment-compatibility.md).
+
+<h2 id="development-issues">Actual development issues, recorded separately</h2>
+
+- **DEV-001:** Windows PowerShell 5.1 misread UTF-8 without BOM, breaking Chinese SQL strings. After fixing encoding, seed assumptions about IDs failed because transaction rollback does not reclaim IDENTITY values. UTF-8 BOM and lookup by stable synthetic business keys allowed reruns without deleting data or reseeding IDs. [Investigation](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/incidents/DEV-001-bootstrap.md).
+- **DEV-002:** CSP blocked the string-based timeout generated by AutoPostBack. External JavaScript uses native `requestSubmit()` instead of adding unsafe-eval. The regression now waits for HTTP POST=200 and CategoryHint before asserting draft retention. A draft that survives because no request occurred is not a successful lifecycle test. [Investigation](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/incidents/DEV-002-postback-csp.md).
+- **Build and CI:** the fixture explicitly initializes the installed LocalDB engine; missing SQL or IIS fails Windows CI. Preserved restore timestamps also explained the misleading incremental build during WEB-001 repair. These are development and harness findings, separate from injected failures.
+
+<h2 id="verification">Source verification and portfolio checks are separate</h2>
+
+| Source check                | Reviewed result                                                    |
+| --------------------------- | ------------------------------------------------------------------ |
+| NUnit                       | **58/58**, 25 Unit + 33 real SQL integration/regression, 0 skipped |
+| Playwright                  | **13/13**, Chromium with actual IIS Express and SQL                |
+| Showcase tools              | **6/6**, report sanitization and public scanning                   |
+| MSBuild Release             | Local and Windows CI success, warnings treated as errors           |
+| Windows CI at reviewed main | **Success**, run 45011724113                                       |
+
+[Raw test reports](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/testing/README.md) · [Reviewed commit CI](https://github.com/Cizing24/LegacyLens-Showcase/actions/runs/45011724113). These are existing source-system results, not tests executed by this static portfolio. This integration's build, browser, SEO and accessibility results are recorded separately in the portfolio's [integration report](https://github.com/Cizing24/developer-portfolio/blob/feat/integrate-legacylens-case-study/docs/LEGACYLENS_INTEGRATION.md).
+
+<h2 id="engineering-decisions">Decisions and their maintenance costs</h2>
+
+- **Web Forms / .NET Framework:** required by the maintenance exercise. This is not evidence of a corporate rewrite decision. A small, explicit change preserves the existing control lifecycle and contracts. [ADR 0001](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/decisions/0001-webforms-and-local-sql.md).
+- **ADO.NET:** already in the Framework and exposes the exact SQL and transaction boundary. Dapper could reduce mapping; EF would add migration cost unrelated to the investigation. Neither was added.
+- **Covering indexes and OFFSET:** improve the measured access path while retaining page numbers. Keyset pagination would change cursor and previous-page state. [ADR 0003](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/decisions/0003-search-plan.md).
+- **Additive migration:** retains data and legacy reads; feature rollback stops new work without a destructive down migration.
+- **Security:** typed SQL parameters, server-side role checks, session-bound ViewState MAC, encryption and EventValidation remain enabled. Forms Authentication with salted PBKDF2-SHA256 and lockout is maintained locally; MFA and enterprise SSO are outside the exercise. Maintenance and security costs remain real.
+
+<h2 id="known-limitations">Known limits and what has not been verified</h2>
+
+No public interactive Web Forms demo, production deployment or real enterprise rollout. SQL measurements are local warm-cache query tests, without long-running concurrency, cold-cache results, quantified index write cost or production SLA. No complete penetration test, broad real-device validation, Safari/Firefox coverage or manual screen-reader validation is claimed. The portfolio presents the reviewed public snapshot, recordings and evidence; it does not execute the source application.
