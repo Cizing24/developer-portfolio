@@ -1,3 +1,13 @@
+# 2026-11-23 LegacyLens 整合補充
+
+LegacyLens 只使用公開 `Cizing24/LegacyLens-Showcase`，查核版本與媒體 SHA-256 見 [整合報告](docs/LEGACYLENS_INTEGRATION.md)。雙語 MDX 沿用 Content Collections；`featured: false`、`order: 5`，沒有 `demo` 或 `demoModule`。Project Harbor 自動讀取並維持每頁三件，不新增島嶼。
+
+`LegacyLensEvidence.astro` 只在獨立案例頁輸出影片、截圖、架構與 Benchmark；首頁只有封面與連結。影片手動播放、preload=none、雙語 WebVTT；20 秒 GIF 由原生 details 主動展開。PNG 經 Astro Image 產生 WebP，保留原圖連結。來源字幕及原始 JSON 保留 bytes，避免跨平台換行改變 SHA-256；WebVTT 是明確記錄的轉換檔。
+
+Benchmark 展示資料由三份既有 results.json 擷取；Vitest 核對 40 個 samples、nearest-rank P50/P95、IO、等價結果及媒體 hash，不執行 SQL。更新來源時同步兩語 sourceCommit、reviewedAt、元件證據連結、原始結果、manifest、Lab／Skills 與 E2E。所有章節 ID 兩語相同，案例頁 anchor map 保留切語言的位置。
+
+WEB-001 為 Controlled Fault Injection，CHANGE-001 為 Synthetic Scenario；真實 DEV-001／002 另列。來源 58 NUnit／13 E2E／6 工具測試與 Portfolio 驗證分開記錄。沒有公開 Web Forms 登入，不將影片當成 Live Demo。
+
 # 2026-11-12 TravelOps 維護補充
 
 TravelOps 的 `translationKey` 為 `travelops`，來源原始碼維持私有，`visibility: private` 不隱藏公開案例。沿用現有 schema，不加入私人 repository 或未驗證的 demo 連結。

@@ -1,0 +1,143 @@
+---
+locale: zh-tw
+translationKey: legacylens
+title: LegacyLens
+description: 以 ASP.NET Web Forms 案件系統，透過草稿覆寫重現、SQL 查詢計畫與相容性轉派變更，展示如何理解、修復及驗證既有系統。
+category: 企業軟體維護與可靠性
+tags:
+  [
+    C#,
+    ASP.NET Web Forms,
+    .NET Framework,
+    SQL Server,
+    ADO.NET,
+    NUnit,
+    Playwright,
+    Debugging,
+    Testing,
+    Performance Optimization,
+  ]
+highlights:
+  - '重現 Postback 草稿覆寫並以相同測試驗證修復'
+  - '100k SQL 查詢 P95：26.7085 → 1.3413 ms'
+  - '相容性轉派：交易、版本檢查與重送防護'
+status: 已實作・隔離展示
+visibility: public
+repository: https://github.com/Cizing24/LegacyLens-Showcase
+featured: false
+order: 5
+sourceCommit: 1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e
+reviewedAt: '2026-11-23'
+cover: ../../../assets/legacylens/cover.png
+coverAlt: LegacyLens 真實案件搜尋畫面，顯示狀態篩選與合成案件分頁資料
+---
+
+import LegacyLensEvidence from '../../../components/LegacyLensEvidence.astro';
+
+<nav aria-label="LegacyLens 案例目錄">
+  <a href="#legacylens-demo">觀看操作影片</a> ·{' '}
+  <a href="#product-screenshots">產品畫面</a> ·{' '}
+  <a href="#legacylens-architecture">架構</a> · <a href="#web-001">WEB-001</a> ·{' '}
+  <a href="#sql-001">SQL-001</a> · <a href="#change-001">CHANGE-001</a> ·{' '}
+  <a href="#verification">測試證據</a>
+</nav>
+
+<h2 id="legacylens-purpose">以可查證的過程，說明如何維護既有系統</h2>
+
+LegacyLens 是一份 **ASP.NET Legacy Maintenance Engineering Case Study**，以真正可操作的客服案件系統為載體，展示如何理解 Page Lifecycle、重現缺陷、調查 SQL 計畫，並在保留既有契約下加入規則變更。重點是維護時的判斷與驗證，而非 CRM 功能數量。
+
+來源應用是為這次獨立練習建立的系統，並非接手企業正式系統。WEB-001 為 **Controlled Fault Injection（受控故障注入）**；SQL-001 結合 **Public Dataset Observation（公開資料觀察）** 與本機實驗；CHANGE-001 是 **Synthetic Scenario（合成需求情境）**。真實開發問題另行記錄。沒有公開 Web Forms 登入、後端部署或企業導入宣稱。
+
+<h2 id="legacylens-demo">118 秒，查看實際執行的系統</h2>
+
+<LegacyLensEvidence locale="zh-tw" section="video" />
+
+<h2 id="legacylens-features">已實作流程與真實產品畫面</h2>
+
+系統支援具角色檢查的客戶維護；案件建立、編輯、狀態變更及歷程；主旨／狀態搜尋與每頁 20 筆分頁；附理由的主管轉派，以及 Audit／統計。Manager、Agent、Viewer 權限在後端檢查；Closed 案件須先由主管重新開啟才能轉派。畫面中的客戶、人員與案件欄位為合成資料，不代表真實營運。
+
+<h3 id="product-screenshots">搜尋、編輯、轉派與歷程</h3>
+
+<LegacyLensEvidence locale="zh-tw" section="screens" />
+
+<h2 id="legacylens-architecture">四個 Assembly，各自負責明確邊界</h2>
+
+<LegacyLensEvidence locale="zh-tw" section="architecture" />
+
+**Web Forms UI／Code-behind → Application → Domain／Infrastructure → SQL Server。** Web 處理控制項與 Page Lifecycle；Application Service 執行案件及轉派規則；Domain 保存模型與衝突型別；Infrastructure 以明確型別的 ADO.NET 參數及 transaction 存取資料。Application 不依賴 System.Web 或資料庫。
+
+ViewState 與 posted data 先載入，接著才是 Page_Load 與控制項事件；錯誤的 binding 時機會破壞已還原的草稿。更新透過 **rowversion** 拒絕過期寫入，案件、History 與 Audit 在同一 transaction 提交。**Correlation ID** 將錯誤和重要操作連回診斷紀錄。Regression Testing 同時涵蓋真實 SQL 與瀏覽器，不能只以編譯通過驗收。
+
+技術：ASP.NET Web Forms、C#、.NET Framework 4.8、SQL Server 2019 LocalDB、ADO.NET、IIS Express、MSBuild、NUnit、Playwright、GitHub Actions Windows。[架構證據](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/architecture/README.md)。
+
+<h2 id="web-001">WEB-001：Postback 覆寫尚未儲存的草稿</h2>
+
+**分類：Controlled Fault Injection，不是企業事故。** 重現工具只在隔離本機複本，將有 guard 的 binding 改為每次 Page_Load 無條件載入。瀏覽器測試開啟案件、修改主旨與說明、切換分類，再等待真正 POST 回應與伺服器提示；尚未按 Save，草稿就回到資料庫舊值。
+
+**根因：** Web Forms 還原 posted data 後，Page_Load 再載入 SQL 舊值。接著 SelectedIndexChanged 取得的控制項值已被覆寫；問題在 binding 時機，不是資料庫 Save 失敗。
+
+**替代方案與決策：** 只在初次請求 binding，改動小且保留 ViewState；在 Init 重建控制項適用動態表單，但本案會增加複雜度；Save 前讀 Request.Form 無法補救畫面已遺失的草稿。採用 `!IsPostBack`，儲存成功後 Post/Redirect/Get，歷程獨立刷新。
+
+<LegacyLensEvidence locale="zh-tw" section="failure" />
+
+**回歸證據：** 相同主旨與說明斷言由 **1 failed → 1 passed**。修復工具會重新編譯隔離原始碼。最初複製還原檔案保留舊時間戳，讓 incremental MSBuild 跳過編譯；先修正 harness 才取得真正 green。未來若新增動態控制項或關閉 ViewState，仍需重新檢查生命週期。
+
+[RCA、重現與 red／green 報告](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/incidents/WEB-001.md) · [ADR 0002](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/decisions/0002-postback-binding.md)。
+
+<h2 id="sql-001">SQL-001：先查讀取成本，再決定是否改變查詢契約</h2>
+
+以官方 **NYC 311** 紀錄累積匯入 10k、50k、100k，只下載五個公開欄位，沒有取得地址、座標、聯絡資料或自由文字。客戶與承辦是合成映射，不將公共服務請求冒充 B2B 資料。來源 metadata 的 licenseId 為空，依據官方使用政策，不誤稱 CC0 或 MIT。[資料來源與使用依據](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/datasets/PROVENANCE.md)。
+
+Baseline 使用 optional-OR predicate；Query Rewrite 改為固定 SQL 片段與型別參數。兩個 covering indexes 分別支援有／無狀態條件的列表；狀態索引為 `(Status, CreatedAt DESC, Id DESC) INCLUDE (Title, CustomerId, AssignedTo)`，保留穩定排序與 OFFSET 頁碼契約。
+
+<h3 id="benchmarks">三個規模、三個方案、相同量測方法</h3>
+
+<LegacyLensEvidence locale="zh-tw" section="benchmarks" />
+
+**量測邊界：** 單一本機 client、已開啟的 SqlConnection、SQL Server 2019 LocalDB、Warm Cache；每方案 **5 次預熱、40 次正式計時**，百分位使用 nearest rank。條件為 `Status='Open'`、空主旨、offset 0，回傳 21 筆：20 筆顯示加一筆判斷下一頁。公開紀錄另加 45 筆合成 Seed 與少量 E2E 案件，100k 當次 **totalRows 為 100,047**。時間包含 ExecuteReader 與讀完結果，不含開連線、登入、網路或完整 HTTP 請求；也未排除所有背景活動。這不是正式環境 SLA。
+
+**Execution Plan 證據：** 100k 僅 Query Rewrite 仍需 3,255 次總 Logical Reads；加 covering indexes 後，Cases 由 3,171 pages 降為 3，加 Users／Customers 的 84，合計 **87**。Actual plans 與 STATISTICS IO 獨立於延遲蒐集。每個方案在 offsets **0、20、200** 的有序 ID 相同；應用回歸另涵蓋非空主旨與其他狀態。[計畫、IO 與正確性](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/benchmarks/RESULTS.md)。
+
+**取捨：** Open 在本快照占比較低，其他篩選不一定有相同比例改善；substring `LIKE '%term%'` 和深頁 OFFSET 仍有限制。100k 的所有 nonclustered indexes 合計 16,872 KB，包含既有 unique index，不能全算為新增兩個索引的成本。寫入 overhead 尚未定量；此次作品集整合沒有重跑 Benchmark。
+
+<h2 id="change-001">CHANGE-001：新增轉派規則，不替舊歷史編造原因</h2>
+
+**分類：Synthetic Scenario。** Baseline 的一般案件編輯可以修改承辦人。新練習要求僅主管能轉派、目標為有效 Agent／Manager，並填寫 5–500 字理由，同時保留舊案件與歷史。一般編輯入口必須拒絕承辦異動，不能只靠 UI disabled。
+
+**Additive Migration 與 Backfill：** 003 增加 policy version、可空的歷史欄位、轉派操作 ledger 與 feature flag。舊案件 policy=1，新案件 default=2；舊歷史原因及 Request ID 保持 null，不虛構補值。初稿實際遇到 DDL metadata 編譯問題，修正後才記錄 migration 成功。
+
+**Transaction 與 Idempotency：** 必填 Request ID，相同 payload 重送不新增轉派或歷史；同 key 不同 payload 拒絕。8-byte rowversion 防止過期編輯。交易內重新檢查權限與當下狀態，再一次提交 owner、操作 ledger、History 與 Audit；失敗全部 rollback。
+
+**回歸與 Rollback：** 真實 SQL 測試涵蓋權限、inactive／Viewer 目標、Closed 案件、短原因、過期版本、舊寫入入口、重複及併發重送、payload conflict、migration 失敗 rollback、重跑、backfill 與舊資料讀取。瀏覽器先送無效原因，再完成轉派並確認歷程。Feature rollback 只暫停新轉派，保留案件與 ledger；重跑 migration 不會自動重開 flag。任意歷史 binary 的可寫入降版未驗證。
+
+[變更案例與驗證](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/incidents/CHANGE-001.md) · [ADR 0004](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/decisions/0004-reassignment-compatibility.md)。
+
+<h2 id="development-issues">真實開發問題，與演練分開記錄</h2>
+
+- **DEV-001：** Windows PowerShell 5.1 誤讀無 BOM 的 UTF-8，造成中文 SQL 字串錯誤。修正編碼後，又發現 Seed 假設 ID 固定；transaction rollback 不會回收 IDENTITY，導致重跑 FK 衝突。採 UTF-8 BOM 與穩定合成 business key 查詢，不刪資料、不重設 ID。[調查紀錄](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/incidents/DEV-001-bootstrap.md)。
+- **DEV-002：** CSP 阻擋 AutoPostBack 產生的字串 timeout。外部 JavaScript 改以原生 `requestSubmit()`，不開 unsafe-eval。回歸須先確認 HTTP POST=200 與 CategoryHint，再檢查草稿；沒有送出請求而保留草稿，不能算生命週期測試成功。[調查紀錄](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/incidents/DEV-002-postback-csp.md)。
+- **建置與 CI：** fixture 明確初始化已安裝的 LocalDB engine；缺 SQL 或 IIS 時 Windows CI 直接失敗。WEB-001 修復過程也查出還原時間戳造成 incremental build 跳過，這些屬開發與 harness 問題，與刻意注入故障分開。
+
+<h2 id="verification">來源系統驗證，與本次作品集測試分開</h2>
+
+| 來源檢查                | 查核結果                                                             |
+| ----------------------- | -------------------------------------------------------------------- |
+| NUnit                   | **58/58**，25 Unit ＋ 33 真實 SQL integration／regression，0 skipped |
+| Playwright              | **13/13**，Chromium、真正 IIS Express 與 SQL                         |
+| Showcase 工具           | **6/6**，報告清理與公開掃描                                          |
+| MSBuild Release         | 本機與 Windows CI 成功，warnings 視為 errors                         |
+| 查核 main 的 Windows CI | **Success**，run 45011724113                                         |
+
+[原始測試報告](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/testing/README.md) · [查核版本 CI](https://github.com/Cizing24/LegacyLens-Showcase/actions/runs/45011724113)。這是既有來源系統的結果，不是靜態作品集重新執行的測試；此次 build、瀏覽器、SEO 與無障礙結果另記於作品集的[整合報告](https://github.com/Cizing24/developer-portfolio/blob/feat/integrate-legacylens-case-study/docs/LEGACYLENS_INTEGRATION.md)。
+
+<h2 id="engineering-decisions">技術決策，以及留下的維護成本</h2>
+
+- **Web Forms／.NET Framework：** 維護練習的既定需求，不冒稱企業全面重寫決策。以小範圍修正保留控制項生命週期與既有契約。[ADR 0001](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/decisions/0001-webforms-and-local-sql.md)。
+- **ADO.NET：** Framework 已內建，能直接保存 SQL 與交易邊界；Dapper 可減少 mapping，EF 會增加與調查無關的 migration 成本，均未新增。
+- **Covering Index 與 OFFSET：** 改善實測存取路徑並保留頁碼。Keyset pagination 會改變 cursor 與上一頁狀態，現階段沒有足夠證據要求換契約。[ADR 0003](https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/docs/decisions/0003-search-plan.md)。
+- **Additive Migration：** 保留資料與舊版讀取，feature rollback 停止新操作，不採刪資料的 down migration。
+- **安全：** 保留型別 SQL 參數、後端角色檢查、session-bound ViewState MAC、加密及 EventValidation。Forms Authentication、獨立 salt 的 PBKDF2-SHA256 與鎖定仍需自行維護；MFA／企業 SSO 不在練習範圍。
+
+<h2 id="known-limitations">已知限制與未驗證範圍</h2>
+
+沒有公開可操作 Web Forms Demo、正式部署或真實企業導入。SQL 僅本機暖快取查詢量測，沒有長時間併發、cold cache、索引寫入成本定量或 production SLA。未宣稱完成完整滲透測試、全面實機、Safari／Firefox 或人工螢幕閱讀器驗證。作品集呈現已查核的公開快照、錄影與證據，不執行來源應用。

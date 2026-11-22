@@ -24,6 +24,11 @@ const rows = [
     links: [
       [en ? 'Booking and permissions' : '預約與權限', 'projects/bookflow'],
       ['OpsFlow · NestJS / MySQL', 'projects/opsflow'],
+      [
+        'LegacyLens · C# / ASP.NET Web Forms / .NET Framework / ADO.NET',
+        'projects/legacylens',
+        '#legacylens-architecture',
+      ],
     ],
   },
   {
@@ -34,6 +39,11 @@ const rows = [
     links: [
       [en ? 'Date contracts' : '日期契約', 'notes/date-contracts'],
       [en ? 'Booking consistency' : '預約一致性', 'notes/booking-consistency'],
+      [
+        'LegacyLens · SQL Server / Performance Optimization',
+        'projects/legacylens',
+        '#sql-001',
+      ],
     ],
   },
   {
@@ -45,6 +55,11 @@ const rows = [
       ['AssetFlow CI', 'projects/assetflow'],
       ['BookFlow CI', 'projects/bookflow'],
       ['OpsFlow · Regression / Benchmark', 'projects/opsflow'],
+      [
+        'LegacyLens · Debugging / Testing / NUnit / Playwright',
+        'projects/legacylens',
+        '#verification',
+      ],
     ],
   },
   {
@@ -73,8 +88,8 @@ const rows = [
         <dd>
           <p>{row.text}</p>
           <div class="skill-links">
-            {row.links.map(([label, path]) => (
-              <a class="text-link" href={localizedPath(locale, path)}>
+            {row.links.map(([label, path, anchor = '']) => (
+              <a class="text-link" href={localizedPath(locale, path) + anchor}>
                 {label}
               </a>
             ))}

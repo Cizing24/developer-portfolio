@@ -1,0 +1,401 @@
+---
+import { Image } from 'astro:assets';
+import search from '../assets/legacylens/case-search.png';
+import detail from '../assets/legacylens/case-detail.png';
+import customers from '../assets/legacylens/customers.png';
+import transfer from '../assets/legacylens/reassignment-history.png';
+import audit from '../assets/legacylens/audit-report.png';
+import mobile from '../assets/legacylens/mobile-form.png';
+import failure from '../assets/legacylens/web001-before.png';
+import architecture from '../assets/legacylens/architecture.svg';
+import cover from '../assets/legacylens/cover.png';
+import benchmarks from '../lib/legacylens-benchmarks.json';
+import type { Locale } from '../lib/i18n';
+interface Props {
+  locale: Locale;
+  section: 'video' | 'screens' | 'architecture' | 'benchmarks' | 'failure';
+}
+const { locale, section } = Astro.props;
+const en = locale === 'en';
+const t = (zh: string, english: string) => (en ? english : zh);
+const source =
+  'https://github.com/Cizing24/LegacyLens-Showcase/blob/1d2e0dd841b2c9fe1c1bd73f9246d0661c16481e/';
+const fullSize = t('開啟原圖（新分頁）', 'Open full size (new tab)');
+const shots =
+  section === 'screens'
+    ? ([
+        [
+          search,
+          t(
+            '案件搜尋、狀態篩選與穩定分頁。',
+            'Case search, status filters and stable pagination.',
+          ),
+        ],
+        [
+          detail,
+          t(
+            '案件編輯、分類 Postback 與處理歷程。',
+            'Case editing, category Postback and history.',
+          ),
+        ],
+        [
+          customers,
+          t(
+            '合成客戶的搜尋與維護。',
+            'Search and maintenance of synthetic customers.',
+          ),
+        ],
+        [
+          transfer,
+          t(
+            '主管轉派、必要原因與歷程。',
+            'Manager reassignment, required reason and history.',
+          ),
+        ],
+        [
+          audit,
+          t(
+            '狀態統計與重要操作 Audit。',
+            'Status statistics and audit of important operations.',
+          ),
+        ],
+        [
+          mobile,
+          t(
+            '390px 案件表單，實際 Chromium 畫面。',
+            'Case form at 390px, captured in Chromium.',
+          ),
+        ],
+      ] as const)
+    : section === 'failure'
+      ? ([
+          [
+            failure,
+            t(
+              '隔離故障注入後，Postback 將草稿覆寫回資料庫舊值。',
+              'In the isolated fault injection, Postback overwrites the draft with stored values.',
+            ),
+          ],
+        ] as const)
+      : [];
+const stages: Record<string, string> = {
+  baseline: 'Baseline',
+  'rewrite-only': t('僅 Query Rewrite', 'Query rewrite only'),
+  indexed: t('Rewrite ＋ Covering Index', 'Rewrite + covering indexes'),
+};
+---
+
+<div class="legacylens-evidence" data-legacylens-evidence={section}>
+  {section === 'video' && (
+    <>
+      <p>
+        {t(
+          '118 秒真實操作錄影；使用合成客戶與案件欄位。影片保留錄製時的舊測試數，最新來源結果為 58/58 NUnit、13/13 E2E、6/6 工具測試。',
+          '118-second recording of the running application, using synthetic customer and case fields. Test counts in the recording are historical; the reviewed source reports 58/58 NUnit, 13/13 E2E and 6/6 tool tests.',
+        )}
+      </p>
+      <video
+        controls
+        playsinline
+        preload="none"
+        poster={cover.src}
+        width="1280"
+        height="720"
+        aria-label={t(
+          'LegacyLens 實際操作影片',
+          'LegacyLens application recording',
+        )}
+      >
+        <source src="/media/legacylens/demo.mp4" type="video/mp4" />
+        <track
+          kind="captions"
+          src="/media/legacylens/demo.zh-TW.vtt"
+          srclang="zh-TW"
+          label="繁體中文"
+          default={!en}
+        />
+        <track
+          kind="captions"
+          src="/media/legacylens/demo.en.vtt"
+          srclang="en"
+          label="English"
+          default={en}
+        />
+        <a href="/media/legacylens/demo.mp4">
+          {t('下載影片', 'Download video')}
+        </a>
+      </video>
+      <p>
+        <a href="/media/legacylens/demo.mp4">
+          {t('觀看／下載 MP4', 'Watch / download MP4')}
+        </a>{' '}
+        ·{' '}
+        <a href="/media/legacylens/demo.zh-TW.srt">
+          {t('繁中 SRT', 'Traditional Chinese SRT')}
+        </a>{' '}
+        · <a href="/media/legacylens/demo.en.srt">English SRT</a>
+      </p>
+      <details>
+        <summary>{t('影片文字摘要', 'Recording transcript summary')}</summary>
+        <p>
+          {t(
+            '依序展示建立案件、隔離 WEB-001 故障、修復後分類 Postback 保留草稿、SQL Benchmark 報告、主管轉派與 Audit。受控故障不是企業事故；影片不是公開登入服務。',
+            'The recording shows case creation, isolated WEB-001 fault injection, draft retention after a repaired category Postback, the SQL benchmark report, manager reassignment and audit. The injected defect is a drill; the recording does not provide a public login service.',
+          )}
+        </p>
+      </details>
+      <details>
+        <summary>
+          {t('播放 20 秒 GIF 操作節錄', 'Play the 20-second GIF excerpt')}
+        </summary>
+        <p>
+          {t(
+            '展開後播放，收合即可停止觀看。Reduced Motion 使用者可閱讀文字摘要或手動播放影片。',
+            'Expand to view; collapse to stop viewing. Reduced Motion readers can use the text summary or the manually controlled video.',
+          )}
+        </p>
+        <img
+          src="/media/legacylens/workflow.gif"
+          width="800"
+          height="450"
+          loading="lazy"
+          alt={t(
+            '真實建立與更新案件的操作節錄，使用合成資料。',
+            'Actual case creation and update excerpt using synthetic data.',
+          )}
+        />
+      </details>
+    </>
+  )}
+  {shots.map(([src, caption]) => (
+    <figure class:list={{ 'phone-shot': src.width === 390 }}>
+      <a
+        href={src.src}
+        target="_blank"
+        rel="noopener"
+        aria-label={`${caption} ${fullSize}`}
+      >
+        <Image
+          src={src}
+          alt={caption}
+          widths={src.width === 390 ? [390, 780] : [480, 850, 1600]}
+          sizes={
+            src.width === 390
+              ? '(max-width:480px) 90vw,390px'
+              : '(max-width:960px) 90vw,850px'
+          }
+          loading="lazy"
+          decoding="async"
+        />
+      </a>
+      <figcaption>
+        {caption}{' '}
+        <a href={src.src} target="_blank" rel="noopener">
+          {fullSize}
+        </a>
+      </figcaption>
+    </figure>
+  ))}
+  {section === 'screens' && (
+    <p>
+      {t(
+        '實際 IIS Express 介面；客戶、人員與案件欄位為合成展示資料。來源介面使用繁體中文，英文案例保留原始畫面。',
+        'Actual IIS Express interface with synthetic customers, staff and case fields. The product UI is in Traditional Chinese; the English case preserves the original screens.',
+      )}
+    </p>
+  )}
+  {section === 'architecture' && (
+    <figure>
+      <a
+        href={architecture.src}
+        target="_blank"
+        rel="noopener"
+        aria-label={fullSize}
+      >
+        <img
+          src={architecture.src}
+          width="1200"
+          height="660"
+          loading="lazy"
+          alt={t(
+            'Web Forms UI 與 Code-behind 呼叫 Application；Domain 定義規則，Infrastructure 經 ADO.NET 存取 SQL Server。',
+            'Web Forms UI and code-behind call Application; Domain defines models and rules, and Infrastructure accesses SQL Server through ADO.NET.',
+          )}
+        />
+      </a>
+      <figcaption>
+        {t(
+          '來源真實四個 Assembly；Application 不依賴 System.Web 或資料庫。',
+          'Four actual source assemblies; Application has no dependency on System.Web or the database.',
+        )}{' '}
+        <a href={architecture.src} target="_blank" rel="noopener">
+          {fullSize}
+        </a>
+      </figcaption>
+    </figure>
+  )}
+  {section === 'benchmarks' && (
+    <>
+      <p>
+        {t(
+          '100k：同一比例比較 P95（ms），數值越低越好。完整三方案、三規模見下表。',
+          '100k: P95 in milliseconds on a shared scale; lower is better. All three stages and scales are tabulated below.',
+        )}
+      </p>
+      <dl class="benchmark-bars">
+        {benchmarks[2]!.results.map((r) => (
+          <div>
+            <dt>{stages[r.stage]}</dt>
+            <dd>
+              <span
+                class="bar"
+                style={`width:${(r.p95Ms / benchmarks[2]!.results[0]!.p95Ms) * 100}%`}
+                aria-hidden="true"
+              ></span>
+              <strong>{r.p95Ms.toFixed(4)} ms</strong>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <div
+        class="benchmark-table"
+        tabindex="0"
+        role="region"
+        aria-label={t(
+          'SQL Benchmark 數據，可水平捲動',
+          'SQL benchmark data, scroll horizontally',
+        )}
+      >
+        <table>
+          <caption>
+            {t(
+              '2026-11-22 本機暖快取實測；非網站端到端延遲',
+              'Local warm-cache measurements, November 22, 2026; not end-to-end website latency',
+            )}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">{t('公開筆數', 'Public rows')}</th>
+              <th scope="col">{t('方案', 'Stage')}</th>
+              <th scope="col">P50 ms</th>
+              <th scope="col">P95 ms</th>
+              <th scope="col">Logical Reads</th>
+            </tr>
+          </thead>
+          <tbody>
+            {benchmarks.flatMap(({ scale, results }) =>
+              results.map((r) => (
+                <tr>
+                  <th scope="row">{scale.toLocaleString('en-US')}</th>
+                  <td>{stages[r.stage]}</td>
+                  <td>{r.p50Ms.toFixed(4)}</td>
+                  <td>{r.p95Ms.toFixed(4)}</td>
+                  <td>{r.logicalReads.toLocaleString('en-US')}</td>
+                </tr>
+              )),
+            )}
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <a href={source + 'docs/benchmarks/RESULTS.md'}>
+          {t('量測方法與報告', 'Method and report')}
+        </a>{' '}
+        ·{' '}
+        {benchmarks.map(({ scale }) => (
+          <a
+            class="sample-link"
+            href={source + `docs/benchmarks/${scale}/results.json`}
+          >
+            {scale / 1000}k samples / environment
+          </a>
+        ))}
+      </p>
+    </>
+  )}
+</div>
+
+<style>
+  .legacylens-evidence {
+    min-width: 0;
+  }
+  figure {
+    margin: 40px 0;
+  }
+  img,
+  video {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  img {
+    border: 1px solid var(--line);
+  }
+  video {
+    background: var(--text);
+    aspect-ratio: 16 / 9;
+  }
+  .phone-shot {
+    max-width: 390px;
+    margin-inline: auto;
+  }
+  figcaption {
+    color: var(--muted);
+    font-size: 0.875rem;
+    line-height: 1.7;
+  }
+  figcaption a,
+  .sample-link {
+    display: inline-block;
+    padding: 8px 4px;
+  }
+  details {
+    border-bottom: 1px solid var(--line);
+    margin-block: 24px;
+    padding-block: 12px;
+  }
+  summary {
+    min-height: 44px;
+    padding-block: 8px;
+    cursor: pointer;
+  }
+  .benchmark-bars {
+    margin-block: 32px;
+    font-variant-numeric: tabular-nums;
+  }
+  .benchmark-bars > div {
+    margin-block: 20px;
+  }
+  .benchmark-bars dd {
+    margin: 8px 0 0;
+  }
+  .bar {
+    display: block;
+    min-width: 3px;
+    height: 14px;
+    background: var(--accent);
+    margin-bottom: 6px;
+  }
+  .benchmark-table {
+    overflow-x: auto;
+  }
+  .legacylens-evidence table {
+    display: table;
+    overflow: visible;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.875rem;
+  }
+  caption {
+    text-align: start;
+    color: var(--muted);
+    padding-bottom: 12px;
+  }
+  th,
+  td {
+    white-space: nowrap;
+  }
+  .benchmark-table:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
+  }
+</style>

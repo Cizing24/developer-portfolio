@@ -9,6 +9,7 @@ const paths = [
   'projects/bookflow/',
   'projects/travelops/',
   'projects/opsflow/',
+  'projects/legacylens/',
   'notes/',
   'notes/booking-consistency/',
   'notes/date-contracts/',

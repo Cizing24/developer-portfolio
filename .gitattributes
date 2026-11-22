@@ -1,3 +1,8 @@
 * text=auto eol=lf
 *.png binary
 *.webp binary
+
+# Preserve copied LegacyLens evidence bytes for SHA-256 verification.
+src/assets/legacylens/architecture.svg -text whitespace=cr-at-eol
+public/media/legacylens/*.srt -text whitespace=cr-at-eol
+docs/evidence/legacylens/benchmark-*.json -text whitespace=cr-at-eol

@@ -1,0 +1,39 @@
+1
+00:00:00,000 --> 00:00:13,000
+LegacyLens: a running ASP.NET Web Forms service-case application
+Public NYC 311 categories; synthetic customers and assignees
+
+2
+00:00:13,000 --> 00:00:33,000
+Create and update a real SQL-backed case with history
+This is an explicitly synthetic demonstration
+
+3
+00:00:33,000 --> 00:00:46,000
+WEB-001: unconditional Page_Load binding is injected in isolation
+A real Postback overwrites the unsaved draft
+
+4
+00:00:46,000 --> 00:01:02,000
+Fix: bind only on the initial request and preserve posted values
+The identical regression fails before and passes after repair
+
+5
+00:01:02,000 --> 00:01:20,000
+SQL-001: 100,000 official records, 5 warmups and 40 measured runs
+Local warm-cache results; no production SLA claim
+
+6
+00:01:20,000 --> 00:01:41,000
+CHANGE-001: manager-only transfer, reason and concurrency checks
+An identical request key does not duplicate history
+
+7
+00:01:41,000 --> 00:01:49,000
+Case changes, history and audit commit in one SQL transaction
+Correlation IDs connect the evidence
+
+8
+00:01:49,000 --> 00:01:58,000
+Small layers, reproducible measurements and traceable maintenance
+54 NUnit/SQL tests and 11 Chromium E2E passed locally

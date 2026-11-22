@@ -52,6 +52,16 @@ const en = locale === 'en';
                 : '一般作品'}
           </p>
           <div class="reader-actions">
+            {entry.data.translationKey === 'legacylens' && (
+              <a
+                href={
+                  localizedPath(locale, 'projects/legacylens') +
+                  '#legacylens-demo'
+                }
+              >
+                {en ? 'Watch demo recording' : '觀看 Demo 影片'}
+              </a>
+            )}
             {entry.data.repository && (
               <a href={entry.data.repository}>GitHub</a>
             )}
